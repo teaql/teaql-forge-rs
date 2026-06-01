@@ -1,2 +1,47 @@
-# teaql-forge-rs
-Local-first code generation for TeaQL, written in Rust.
+# TeaQL Forge Server
+
+TeaQL Forge Server is a local-first code generation engine for TeaQL, written entirely in Rust. It provides lightning-fast generation of Rust libraries and fully configured workspace scaffolds based on your TeaQL `.xml` domain models.
+
+## Features
+- **In-Memory Generation:** Renders Rust files directly in memory and packages them as a streamable `.zip` file for speed.
+- **Multiple Scopes:** Supports generating simple library crates (`rust-lib`) and full application workspaces (`rust-workspace`).
+- **Axum Web Server:** Highly concurrent and memory-safe web server backend listening on configurable ports.
+- **Lightweight Docker Image:** Built on top of `debian-slim` via a multi-stage Docker build, resulting in a minimal footprint.
+
+## Quick Start via Docker
+
+The easiest way to run the local server is via Docker:
+
+```bash
+docker run -d --name teaql-forge-server -p 8080:8080 teaql/teaql-forge-server:latest
+```
+
+Once running, the server will expose the following endpoints:
+- `GET /version` - Returns the current server version.
+- `POST /generate` - Accepts `multipart/form-data` with an `xml` file and a `scope` string.
+
+## Usage with `cargo-teaql`
+
+You can seamlessly integrate the local server with your existing `cargo-teaql` CLI workflow by pointing it to your local endpoint:
+
+```bash
+cargo-teaql gen-workspace --endpoint-prefix http://127.0.0.1:8080/ models/model.xml
+```
+
+This command will send your model to the Docker container, receive the generated zip file in-memory, and unpack the domain and workspace directly into your project directory.
+
+## Configuration
+
+When running the binary manually (outside of Docker), you can pass the following command-line arguments:
+
+- `--host`: The interface to bind to (e.g., `0.0.0.0` to expose to the network, `127.0.0.1` for local-only).
+- `-p, --port`: The port to listen on (default `8080`).
+
+**Example:**
+```bash
+cargo run --bin teaql-forge-server -- --host 0.0.0.0 --port 8080
+```
+> **Warning:** Binding to `0.0.0.0` will expose the TeaQL local server to the network. Use Enterprise Mode or configure TLS/auth for production environments.
+
+## License
+MIT License
