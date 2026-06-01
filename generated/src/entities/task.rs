@@ -229,11 +229,11 @@ impl teaql_core::Entity for Task {
         if let Some(val) = record.remove("version") {
             if let teaql_core::Value::I64(v) = val { entity.version = v; }
         }
-        if let Some(val) = record.remove("status_id") {
+        if let Some(val) = record.remove("status_id").or_else(|| record.remove("status")) {
             if let teaql_core::Value::U64(v) = val { entity.status_id = Some(v); }
             else if let teaql_core::Value::I64(v) = val { entity.status_id = Some(v as u64); }
         }
-        if let Some(val) = record.remove("platform_id") {
+        if let Some(val) = record.remove("platform_id").or_else(|| record.remove("platform")) {
             if let teaql_core::Value::U64(v) = val { entity.platform_id = Some(v); }
             else if let teaql_core::Value::I64(v) = val { entity.platform_id = Some(v as u64); }
         }

@@ -177,7 +177,7 @@ impl teaql_core::Entity for TaskExecutionLog {
         if let Some(val) = record.remove("version") {
             if let teaql_core::Value::I64(v) = val { entity.version = v; }
         }
-        if let Some(val) = record.remove("task_id") {
+        if let Some(val) = record.remove("task_id").or_else(|| record.remove("task")) {
             if let teaql_core::Value::U64(v) = val { entity.task_id = Some(v); }
             else if let teaql_core::Value::I64(v) = val { entity.task_id = Some(v as u64); }
         }

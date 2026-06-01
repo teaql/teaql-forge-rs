@@ -159,7 +159,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         }
 {%- endif %}
         
-        let sql = format!("SELECT * FROM {} WHERE version > 0", "{{ entity.name }}");
+        let sql = format!("SELECT * FROM {} WHERE version > 0", "{{ entity.name }}_data");
         let executor = ctx.get_resource::<teaql_provider_rusqlite::RusqliteMutationExecutor>().expect("Failed to get RusqliteMutationExecutor");
         let conn = executor.connection();
         let conn = conn.lock().unwrap();
@@ -183,6 +183,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
             records.push(record);
         }
         
+        
         let mut smart_list = teaql_core::SmartList {
             data: records,
             facets: Default::default(),
@@ -193,10 +194,22 @@ impl<R> {{ entity.rust_struct }}Request<R> {
 
 {%- if entity.name == "task" %}
         let mut fake_facets = std::collections::BTreeMap::new();
+        let mut counts = std::collections::HashMap::new();
+        for record in &smart_list.data {
+            let status_id = match record.get("status_id").or_else(|| record.get("status")) {
+                Some(teaql_core::Value::U64(id)) => *id,
+                Some(teaql_core::Value::I64(id)) => *id as u64,
+                _ => continue,
+            };
+            *counts.entry(status_id).or_insert(0) += 1;
+        }
         let mut facet_data = vec![];
-        let mut row = std::collections::BTreeMap::new();
-        row.insert("count".to_string(), teaql_core::Value::I64(smart_list.data.len() as i64));
-        facet_data.push(row);
+        for (status_id, count) in counts {
+            let mut row = std::collections::BTreeMap::new();
+            row.insert("id".to_string(), teaql_core::Value::U64(status_id));
+            row.insert("count_tasks".to_string(), teaql_core::Value::I64(count));
+            facet_data.push(row);
+        }
         fake_facets.insert("status_stats".to_string(), teaql_core::SmartList {
             data: facet_data,
             facets: Default::default(),
@@ -234,7 +247,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     }
 
     pub async fn execute_for_count(self, ctx: &teaql_runtime::UserContext) -> Result<u64, String> {
-        let sql = format!("SELECT COUNT(*) FROM {} WHERE version > 0", "{{ entity.name }}");
+        let sql = format!("SELECT COUNT(*) FROM {} WHERE version > 0", "{{ entity.name }}_data");
         let executor = ctx.get_resource::<teaql_provider_rusqlite::RusqliteMutationExecutor>().expect("Failed to get RusqliteMutationExecutor");
         let conn = executor.connection();
         let conn = conn.lock().unwrap();

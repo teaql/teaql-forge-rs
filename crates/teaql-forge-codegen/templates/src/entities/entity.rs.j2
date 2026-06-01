@@ -267,7 +267,7 @@ impl teaql_core::Entity for {{ entity.rust_struct }} {
             if let teaql_core::Value::I64(v) = val { entity.version = v; }
         }
         {%- for rel in entity.relations %}
-        if let Some(val) = record.remove("{{ rel.rust_name }}_id") {
+        if let Some(val) = record.remove("{{ rel.rust_name }}_id").or_else(|| record.remove("{{ rel.name }}")) {
             if let teaql_core::Value::U64(v) = val { entity.{{ rel.rust_name }}_id = Some(v); }
             else if let teaql_core::Value::I64(v) = val { entity.{{ rel.rust_name }}_id = Some(v as u64); }
         }
