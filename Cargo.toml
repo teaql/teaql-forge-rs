@@ -2,7 +2,7 @@
 members = [
     "crates/teaql-forge-model",
     "crates/teaql-forge-codegen",
-    "crates/teaql-forge-cli",
+    "crates/teaql-forge-cli", "crates/teaql-forge-server", "crates/teaql-forge-server",
 ]
 resolver = "2"
 
