@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/li
 COPY Cargo.toml Cargo.lock ./
 COPY teaql-forge-model ./teaql-forge-model
 COPY teaql-forge-codegen ./teaql-forge-codegen
-COPY teaql-forge-cli ./teaql-forge-cli
 COPY teaql-forge-server ./teaql-forge-server
 
 # Build the server binary

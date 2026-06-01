@@ -2,7 +2,6 @@
 members = [
     "teaql-forge-model",
     "teaql-forge-codegen",
-    "teaql-forge-cli",
     "teaql-forge-server",
 ]
 resolver = "2"
