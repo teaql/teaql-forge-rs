@@ -1,0 +1,19 @@
+[package]
+name = "teaql-forge-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+default-run = "teaql-forge"
+
+[[bin]]
+name = "teaql-forge"
+path = "src/main.rs"
+
+[dependencies]
+teaql-forge-model = { path = "../teaql-forge-model" }
+teaql-forge-codegen = { path = "../teaql-forge-codegen" }
+clap.workspace = true
+thiserror.workspace = true
+miette.workspace = true
+serde_json.workspace = true

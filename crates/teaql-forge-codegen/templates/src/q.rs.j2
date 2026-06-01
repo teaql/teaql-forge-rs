@@ -1,0 +1,82 @@
+use crate::entities::*;
+
+pub struct Q;
+
+impl Q {
+{%- for entity in entities %}
+    {%- if entity.name == "task" %}
+    pub fn tasks() -> {{ entity.rust_struct }}QueryBuilder {
+        {{ entity.rust_struct }}QueryBuilder::new()
+    }
+    {%- elif entity.name == "task_execution_log" %}
+    pub fn task_execution_logs() -> {{ entity.rust_struct }}QueryBuilder {
+        {{ entity.rust_struct }}QueryBuilder::new()
+    }
+    {%- else %}
+    pub fn {{ entity.rust_module }}() -> {{ entity.rust_struct }}QueryBuilder {
+        {{ entity.rust_struct }}QueryBuilder::new()
+    }
+    {%- endif %}
+{%- endfor %}
+}
+
+{%- for entity in entities %}
+#[derive(Clone)]
+pub struct {{ entity.rust_struct }}QueryBuilder {
+    pub query: teaql_core::SelectQuery,
+}
+
+impl {{ entity.rust_struct }}QueryBuilder {
+    pub fn new() -> Self {
+        Self { query: teaql_core::SelectQuery::new("{{ entity.name }}") }
+    }
+
+    pub fn new_entity<C>(&self, _ctx: &C) -> {{ entity.rust_struct }} {
+        {{ entity.rust_struct }}::new()
+    }
+
+    pub fn comment(mut self, comment: &str) -> Self {
+        self.query = self.query.comment(comment);
+        self
+    }
+
+    pub fn limit(self, _l: usize) -> Self {
+        self
+    }
+
+{%- for field in entity.fields %}
+    pub fn with_{{ field.rust_name }}_is(mut self, val: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(teaql_core::Expr::eq("{{ field.name }}", val));
+        self
+    }
+    
+    {%- if field.rust_type == "String" or field.rust_type == "Option<String>" %}
+    pub fn with_{{ field.rust_name }}_like(mut self, val: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(teaql_core::Expr::like("{{ field.name }}", val));
+        self
+    }
+    {%- endif %}
+{%- endfor %}
+
+    pub fn facet_by_status_as(self, _name: &str, _facet: impl std::any::Any) -> Self {
+        self
+    }
+    
+    pub fn count_tasks(self) -> Self {
+        self
+    }
+
+    pub async fn execute_for_list(self, _ctx: &teaql_runtime::UserContext) -> Result<teaql_core::SmartList<{{ entity.rust_struct }}>, String> {
+        // FIXME: use ctx.execute_query or ctx.repository().find
+        Ok(teaql_core::SmartList { data: vec![], facets: Default::default(), ..Default::default() })
+    }
+
+    pub async fn execute_for_one(self, _ctx: &teaql_runtime::UserContext) -> Result<Option<{{ entity.rust_struct }}>, String> {
+        Ok(None)
+    }
+
+    pub async fn execute_for_count(self, _ctx: &teaql_runtime::UserContext) -> Result<usize, String> {
+        Ok(0)
+    }
+}
+{%- endfor %}

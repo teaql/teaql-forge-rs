@@ -1,0 +1,4 @@
+{% for entity in entities %}
+pub mod {{ entity.rust_module }};
+pub use {{ entity.rust_module }}::*;
+{% endfor %}
