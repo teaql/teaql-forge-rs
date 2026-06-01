@@ -17,6 +17,11 @@ pub struct RenderEntity {
     pub table_name: String,
     pub fields: Vec<RenderField>,
     pub relations: Vec<RenderRelation>,
+    pub reverse_relations: Vec<RenderReverseRelation>,
+    pub is_human: bool,
+    pub attribute_predicate_prefix: String,
+    pub attribute_predicate_suffix: String,
+    pub bool_predicate_prefix: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -41,25 +46,80 @@ pub struct RenderRelation {
     pub delete_missing: bool,
 }
 
+#[derive(Debug, Serialize)]
+pub struct RenderReverseRelation {
+    pub name: String,
+    pub rust_name: String,
+    pub target_method: String,
+    pub target_struct: String,
+    pub target_module: String,
+    pub target: String,
+    pub local_key: String,
+    pub many: bool,
+    pub delete_missing: bool,
+}
+
 pub fn build_render_context(domain: &Domain) -> RenderDomain {
     let crate_name = domain.name.to_snake_case();
     let module_name = crate_name.clone();
 
-    let mut reverse_relations: std::collections::HashMap<String, Vec<RenderRelation>> = std::collections::HashMap::new();
+    let mut reverse_relations_map: std::collections::HashMap<String, Vec<RenderReverseRelation>> = std::collections::HashMap::new();
     for e in &domain.entities {
-        for r in &e.relations {
-            let reverse_name = format!("{}_list", e.name.to_snake_case());
-            let reverse_rust_name = inflector::string::pluralize::to_plural(&e.name.to_snake_case());
-            reverse_relations.entry(r.target.to_pascal_case()).or_default().push(RenderRelation {
+        let relations_only = e.members.iter().filter_map(|m| match m {
+            teaql_forge_model::ir::EntityMember::Relation(r) => Some(r),
+            _ => None,
+        }).collect::<Vec<_>>();
+
+        for r in &relations_only {
+            let target_struct = r.target.to_pascal_case();
+            let collision_count = relations_only.iter().filter(|r2| r2.target == r.target).count();
+            let has_many = collision_count > 1;
+
+            let many = match r.cardinality {
+                teaql_forge_model::ir::Cardinality::OneToOne => false,
+                _ => true,
+            };
+
+            let reverse_name = if !many {
+                if has_many {
+                    format!("{}_as_{}", e.name.to_snake_case(), r.name.to_snake_case())
+                } else {
+                    e.name.to_snake_case()
+                }
+            } else {
+                if has_many {
+                    format!("{}_list_as_{}", e.name.to_snake_case(), r.name.to_snake_case())
+                } else {
+                    format!("{}_list", e.name.to_snake_case())
+                }
+            };
+
+            let reverse_rust_name = if !many {
+                if has_many {
+                    format!("{}_as_{}", e.name.to_snake_case(), r.name.to_snake_case())
+                } else {
+                    e.name.to_snake_case()
+                }
+            } else {
+                if has_many {
+                    format!("{}_as_{}", inflector::string::pluralize::to_plural(&e.name.to_snake_case()), r.name.to_snake_case())
+                } else {
+                    inflector::string::pluralize::to_plural(&e.name.to_snake_case())
+                }
+            };
+
+            let target_method = reverse_rust_name.clone();
+
+            reverse_relations_map.entry(target_struct.clone()).or_default().push(RenderReverseRelation {
                 name: reverse_name,
-                rust_name: reverse_rust_name.clone(),
-                target_method: inflector::string::pluralize::to_plural(&e.name.to_snake_case()),
+                rust_name: reverse_rust_name,
+                target_method,
                 target_struct: e.name.to_pascal_case(),
                 target_module: e.name.to_snake_case(),
                 target: e.name.clone(),
                 local_key: format!("{}_id", r.name.to_snake_case()),
-                many: true,
-                delete_missing: e.name == "TaskExecutionLog",
+                many,
+                delete_missing: false,
             });
         }
     }
@@ -69,7 +129,10 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         let rust_module = e.name.to_snake_case();
         let table_name = e.table.clone().unwrap_or_else(|| e.name.to_snake_case());
 
-        let fields = e.fields.iter().map(|f| {
+        let fields = e.members.iter().filter_map(|m| match m {
+            teaql_forge_model::ir::EntityMember::Field(f) => Some(f),
+            _ => None,
+        }).map(|f| {
             let rust_name = f.name.to_snake_case();
             let column_name = f.name.to_snake_case();
             let rust_type = match f.ty {
@@ -100,7 +163,10 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             }
         }).collect();
 
-        let mut relations: Vec<RenderRelation> = e.relations.iter().map(|r| {
+        let relations: Vec<RenderRelation> = e.members.iter().filter_map(|m| match m {
+            teaql_forge_model::ir::EntityMember::Relation(r) => Some(r),
+            _ => None,
+        }).map(|r| {
             RenderRelation {
                 name: r.name.clone(),
                 rust_name: r.name.to_snake_case(),
@@ -113,10 +179,8 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 delete_missing: false,
             }
         }).collect();
-        
-        if let Some(rev_rels) = reverse_relations.remove(&rust_struct) {
-            relations.extend(rev_rels);
-        }
+
+        let reverse_relations = reverse_relations_map.remove(&rust_struct).unwrap_or_default();
 
         RenderEntity {
             name: e.name.clone(),
@@ -125,6 +189,11 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             table_name,
             fields,
             relations,
+            reverse_relations,
+            is_human: e.is_human,
+            attribute_predicate_prefix: if e.is_human { "whose".to_string() } else { "with".to_string() },
+            attribute_predicate_suffix: if e.is_human { "s".to_string() } else { "ing".to_string() },
+            bool_predicate_prefix: if e.is_human { "who_are".to_string() } else { "which_are".to_string() },
         }
     }).collect();
 

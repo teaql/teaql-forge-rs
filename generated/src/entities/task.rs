@@ -6,9 +6,11 @@ use std::pin::Pin;
 pub struct Task {
     pub id: u64,
     pub name: Option<String>,
+    pub status: Option<Box<crate::entities::task_status::TaskStatus>>,
     pub status_id: Option<u64>,
+    pub platform: Option<Box<crate::entities::platform::Platform>>,
     pub platform_id: Option<u64>,
-    pub task_execution_log_list: Vec<crate::entities::task_execution_log::TaskExecutionLog>,
+    pub task_execution_logs: Vec<crate::entities::task_execution_log::TaskExecutionLog>,
     pub version: i64,
     pub comment: String,
     pub deleted: bool,
@@ -19,9 +21,11 @@ impl Task {
         Self {
             id: 0,
             name: None,
+            status: None,
             status_id: None,
+            platform: None,
             platform_id: None,
-            task_execution_log_list: vec![],
+            task_execution_logs: Vec::new(),
             version: 0,
             comment: String::new(),
             deleted: false,
@@ -53,8 +57,8 @@ impl Task {
     pub fn mark_as_delete(&mut self) {
         self.deleted = true;
     }
-    pub fn task_execution_log_list_mut(&mut self) -> &mut Vec<crate::entities::task_execution_log::TaskExecutionLog> {
-        &mut self.task_execution_log_list
+    pub fn task_execution_logs_mut(&mut self) -> &mut Vec<crate::entities::task_execution_log::TaskExecutionLog> {
+        &mut self.task_execution_logs
     }
     pub fn name(&self) -> String {
         self.name.clone().unwrap_or_default()
@@ -121,27 +125,25 @@ impl Task {
             if !self.comment.is_empty() {
                 node.comment = Some(self.comment.clone());
             }
-            let mut logs = Vec::new();
-            let log_list = std::mem::take(&mut self.task_execution_log_list);
-            for log in log_list {
+            let mut items = Vec::new();
+            let mut list = std::mem::take(&mut self.task_execution_logs);
+            for item in list {
                 let mut log_node = teaql_runtime::GraphNode::new("task_execution_log");
-                if log.deleted {
+                if item.deleted {
                     log_node.operation = teaql_runtime::GraphOperation::Remove;
-                } else if log.id == 0 {
+                } else if item.id == 0 {
                     log_node.operation = teaql_runtime::GraphOperation::Create;
                 } else {
                     log_node.operation = teaql_runtime::GraphOperation::Upsert;
                 }
-                if !log.comment.is_empty() {
-                    log_node.comment = Some(log.comment.clone());
-                }
-                log_node.values = teaql_core::Entity::into_record(log);
-                logs.push(log_node);
+                log_node.values = teaql_core::Entity::into_record(item);
+                items.push(log_node);
             }
-            if !logs.is_empty() {
-                node.relations.insert("task_execution_log_list".to_string(), logs);
+            if !items.is_empty() {
+                node.relations.insert("task_execution_log_list".to_string(), items);
             }
-            let mut values = teaql_core::Entity::into_record(self);
+            
+            let values = teaql_core::Entity::into_record(self);
             node.values = values;
             repo.save_graph(node).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
         })

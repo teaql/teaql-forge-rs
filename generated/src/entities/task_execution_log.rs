@@ -7,6 +7,7 @@ pub struct TaskExecutionLog {
     pub id: u64,
     pub action: Option<String>,
     pub detail: Option<String>,
+    pub task: Option<Box<crate::entities::task::Task>>,
     pub task_id: Option<u64>,
     pub version: i64,
     pub comment: String,
@@ -19,6 +20,7 @@ impl TaskExecutionLog {
             id: 0,
             action: None,
             detail: None,
+            task: None,
             task_id: None,
             version: 0,
             comment: String::new(),
@@ -89,7 +91,8 @@ impl TaskExecutionLog {
             if !self.comment.is_empty() {
                 node.comment = Some(self.comment.clone());
             }
-            let mut values = teaql_core::Entity::into_record(self);
+            
+            let values = teaql_core::Entity::into_record(self);
             node.values = values;
             repo.save_graph(node).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
         })

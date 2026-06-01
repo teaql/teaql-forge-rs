@@ -10,6 +10,7 @@ pub struct TaskStatus {
     pub color: Option<String>,
     pub display_order: Option<i32>,
     pub progress: Option<i32>,
+    pub tasks: Vec<crate::entities::task::Task>,
     pub version: i64,
     pub comment: String,
     pub deleted: bool,
@@ -24,6 +25,7 @@ impl TaskStatus {
             color: None,
             display_order: None,
             progress: None,
+            tasks: Vec::new(),
             version: 0,
             comment: String::new(),
             deleted: false,
@@ -54,6 +56,9 @@ impl TaskStatus {
 
     pub fn mark_as_delete(&mut self) {
         self.deleted = true;
+    }
+    pub fn tasks_mut(&mut self) -> &mut Vec<crate::entities::task::Task> {
+        &mut self.tasks
     }
     pub fn name(&self) -> String {
         self.name.clone().unwrap_or_default()
@@ -106,7 +111,25 @@ impl TaskStatus {
             if !self.comment.is_empty() {
                 node.comment = Some(self.comment.clone());
             }
-            let mut values = teaql_core::Entity::into_record(self);
+            let mut items = Vec::new();
+            let mut list = std::mem::take(&mut self.tasks);
+            for item in list {
+                let mut log_node = teaql_runtime::GraphNode::new("task");
+                if item.deleted {
+                    log_node.operation = teaql_runtime::GraphOperation::Remove;
+                } else if item.id == 0 {
+                    log_node.operation = teaql_runtime::GraphOperation::Create;
+                } else {
+                    log_node.operation = teaql_runtime::GraphOperation::Upsert;
+                }
+                log_node.values = teaql_core::Entity::into_record(item);
+                items.push(log_node);
+            }
+            if !items.is_empty() {
+                node.relations.insert("task_list".to_string(), items);
+            }
+            
+            let values = teaql_core::Entity::into_record(self);
             node.values = values;
             repo.save_graph(node).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
         })

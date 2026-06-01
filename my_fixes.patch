@@ -1,0 +1,1307 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index beb771d..f947279 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2,6 +2,16 @@
+ # It is not intended for manual editing.
+ version = 4
+ 
++[[package]]
++name = "Inflector"
++version = "0.11.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
++dependencies = [
++ "lazy_static",
++ "regex",
++]
++
+ [[package]]
+ name = "addr2line"
+ version = "0.25.1"
+@@ -17,6 +27,15 @@ version = "2.0.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+ 
++[[package]]
++name = "aho-corasick"
++version = "1.1.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
++dependencies = [
++ "memchr",
++]
++
+ [[package]]
+ name = "anstream"
+ version = "1.0.0"
+@@ -189,6 +208,12 @@ version = "1.0.18"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
++[[package]]
++name = "lazy_static"
++version = "1.5.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
++
+ [[package]]
+ name = "libc"
+ version = "0.2.186"
+@@ -301,6 +326,35 @@ dependencies = [
+  "proc-macro2",
+ ]
+ 
++[[package]]
++name = "regex"
++version = "1.12.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276"
++dependencies = [
++ "aho-corasick",
++ "memchr",
++ "regex-automata",
++ "regex-syntax",
++]
++
++[[package]]
++name = "regex-automata"
++version = "0.4.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
++dependencies = [
++ "aho-corasick",
++ "memchr",
++ "regex-syntax",
++]
++
++[[package]]
++name = "regex-syntax"
++version = "0.8.10"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
++
+ [[package]]
+ name = "roxmltree"
+ version = "0.20.0"
+@@ -423,6 +477,7 @@ dependencies = [
+ name = "teaql-forge-codegen"
+ version = "0.1.0"
+ dependencies = [
++ "Inflector",
+  "heck",
+  "miette",
+  "minijinja",
+diff --git a/crates/teaql-forge-codegen/Cargo.toml b/crates/teaql-forge-codegen/Cargo.toml
+index d7cefc9..694e0d7 100644
+--- a/crates/teaql-forge-codegen/Cargo.toml
++++ b/crates/teaql-forge-codegen/Cargo.toml
+@@ -12,3 +12,4 @@ thiserror.workspace = true
+ miette.workspace = true
+ heck = "0.5.0"
+ serde = { workspace = true, features = ["derive"] }
++Inflector = "0.11.4"
+diff --git a/crates/teaql-forge-codegen/src/context.rs b/crates/teaql-forge-codegen/src/context.rs
+index 74b5118..c8a1b50 100644
+--- a/crates/teaql-forge-codegen/src/context.rs
++++ b/crates/teaql-forge-codegen/src/context.rs
+@@ -32,13 +32,38 @@ pub struct RenderField {
+ pub struct RenderRelation {
+     pub name: String,
+     pub rust_name: String,
++    pub target_method: String,
+     pub target_struct: String,
++    pub target_module: String,
++    pub target: String,
++    pub local_key: String,
++    pub many: bool,
++    pub delete_missing: bool,
+ }
+ 
+ pub fn build_render_context(domain: &Domain) -> RenderDomain {
+     let crate_name = domain.name.to_snake_case();
+     let module_name = crate_name.clone();
+ 
++    let mut reverse_relations: std::collections::HashMap<String, Vec<RenderRelation>> = std::collections::HashMap::new();
++    for e in &domain.entities {
++        for r in &e.relations {
++            let reverse_name = format!("{}_list", e.name.to_snake_case());
++            let reverse_rust_name = inflector::string::pluralize::to_plural(&e.name.to_snake_case());
++            reverse_relations.entry(r.target.to_pascal_case()).or_default().push(RenderRelation {
++                name: reverse_name,
++                rust_name: reverse_rust_name.clone(),
++                target_method: inflector::string::pluralize::to_plural(&e.name.to_snake_case()),
++                target_struct: e.name.to_pascal_case(),
++                target_module: e.name.to_snake_case(),
++                target: e.name.clone(),
++                local_key: format!("{}_id", r.name.to_snake_case()),
++                many: true,
++                delete_missing: e.name == "TaskExecutionLog",
++            });
++        }
++    }
++
+     let entities = domain.entities.iter().map(|e| {
+         let rust_struct = e.name.to_pascal_case();
+         let rust_module = e.name.to_snake_case();
+@@ -75,13 +100,23 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
+             }
+         }).collect();
+ 
+-        let relations = e.relations.iter().map(|r| {
++        let mut relations: Vec<RenderRelation> = e.relations.iter().map(|r| {
+             RenderRelation {
+                 name: r.name.clone(),
+                 rust_name: r.name.to_snake_case(),
++                target_method: inflector::string::pluralize::to_plural(&r.target.to_snake_case()),
+                 target_struct: r.target.to_pascal_case(),
++                target_module: r.target.to_snake_case(),
++                target: r.target.clone(),
++                local_key: format!("{}_id", r.name.to_snake_case()),
++                many: false,
++                delete_missing: false,
+             }
+         }).collect();
++        
++        if let Some(rev_rels) = reverse_relations.remove(&rust_struct) {
++            relations.extend(rev_rels);
++        }
+ 
+         RenderEntity {
+             name: e.name.clone(),
+diff --git a/crates/teaql-forge-codegen/templates/src/entities/entity.rs.j2 b/crates/teaql-forge-codegen/templates/src/entities/entity.rs.j2
+index 9b39ce1..3304bba 100644
+--- a/crates/teaql-forge-codegen/templates/src/entities/entity.rs.j2
++++ b/crates/teaql-forge-codegen/templates/src/entities/entity.rs.j2
+@@ -8,7 +8,9 @@ pub struct {{ entity.rust_struct }} {
+     pub {{ field.rust_name }}: {{ field.rust_type }},
+ {%- endfor %}
+ {%- for rel in entity.relations %}
++{%- if not rel.many %}
+     pub {{ rel.rust_name }}_id: Option<u64>,
++{%- endif %}
+ {%- endfor %}
+ {%- if entity.name == "task" %}
+     pub task_execution_log_list: Vec<crate::entities::task_execution_log::TaskExecutionLog>,
+@@ -35,7 +37,9 @@ impl {{ entity.rust_struct }} {
+             {%- endif %}
+         {%- endfor %}
+         {%- for rel in entity.relations %}
++        {%- if not rel.many %}
+             {{ rel.rust_name }}_id: None,
++        {%- endif %}
+         {%- endfor %}
+         {%- if entity.name == "task" %}
+             task_execution_log_list: vec![],
+@@ -101,6 +105,7 @@ impl {{ entity.rust_struct }} {
+ {%- endfor %}
+ 
+ {%- for rel in entity.relations %}
++{%- if not rel.many %}
+     pub fn {{ rel.rust_name }}_id(&self) -> u64 {
+         self.{{ rel.rust_name }}_id.unwrap_or_default()
+     }
+@@ -109,6 +114,7 @@ impl {{ entity.rust_struct }} {
+         self.{{ rel.rust_name }}_id = Some(value.into());
+         self
+     }
++{%- endif %}
+ {%- endfor %}
+ 
+ {%- if entity.name == "task" %}
+@@ -229,6 +235,7 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
+                 {%- endif %}
+                 {%- endfor %}
+                 {%- for rel in entity.relations %}
++                {%- if not rel.many %}
+                 teaql_core::PropertyDescriptor {
+                     name: "{{ rel.rust_name }}_id".to_string(),
+                     column_name: "{{ rel.name }}".to_string(),
+@@ -237,20 +244,21 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
+                     is_id: false,
+                     is_version: false,
+                 },
++                {%- endif %}
+                 {%- endfor %}
+             ],
+             relations: vec![
+-                {%- if entity.name == "task" %}
++                {%- for rel in entity.relations %}
+                 teaql_core::RelationDescriptor {
+-                    name: "task_execution_log_list".to_string(),
+-                    target_entity: "task_execution_log".to_string(),
+-                    local_key: "id".to_string(),
+-                    foreign_key: "task_id".to_string(),
+-                    many: true,
+-                    attach: true,
+-                    delete_missing: true,
++                    name: "{{ rel.name }}".to_string(),
++                    target_entity: "{{ rel.target_module }}".to_string(),
++                    local_key: "{{ 'id' if rel.many else rel.local_key }}".to_string(),
++                    foreign_key: "{{ rel.local_key if rel.many else 'id' }}".to_string(),
++                    many: {{ "true" if rel.many else "false" }},
++                    attach: false,
++                    delete_missing: {{ "true" if rel.delete_missing else "false" }},
+                 },
+-                {%- endif %}
++                {%- endfor %}
+             ],
+         }
+     }
+@@ -267,10 +275,12 @@ impl teaql_core::Entity for {{ entity.rust_struct }} {
+             if let teaql_core::Value::I64(v) = val { entity.version = v; }
+         }
+         {%- for rel in entity.relations %}
++        {%- if not rel.many %}
+         if let Some(val) = record.remove("{{ rel.rust_name }}_id").or_else(|| record.remove("{{ rel.name }}")) {
+             if let teaql_core::Value::U64(v) = val { entity.{{ rel.rust_name }}_id = Some(v); }
+             else if let teaql_core::Value::I64(v) = val { entity.{{ rel.rust_name }}_id = Some(v as u64); }
+         }
++        {%- endif %}
+         {%- endfor %}
+         {%- for field in entity.fields %}
+         {%- if field.rust_name != "id" and field.rust_name != "version" and field.rust_name != "deleted" %}
+@@ -297,9 +307,11 @@ impl teaql_core::Entity for {{ entity.rust_struct }} {
+         record.insert("id".to_string(), teaql_core::Value::U64(self.id));
+         record.insert("version".to_string(), teaql_core::Value::I64(self.version));
+         {%- for rel in entity.relations %}
++        {%- if not rel.many %}
+         if let Some(v) = self.{{ rel.rust_name }}_id {
+-            record.insert("{{ rel.rust_name }}_id".to_string(), teaql_core::Value::U64(v));
++            record.insert("{{ rel.name }}".to_string(), teaql_core::Value::U64(v));
+         }
++        {%- endif %}
+         {%- endfor %}
+         {%- for field in entity.fields %}
+         {%- if field.rust_name != "id" and field.rust_name != "version" and field.rust_name != "deleted" %}
+diff --git a/generated/Cargo.lock b/generated/Cargo.lock
+index 2a3a275..4a82c78 100644
+--- a/generated/Cargo.lock
++++ b/generated/Cargo.lock
+@@ -505,6 +505,7 @@ name = "robot_kanban_service"
+ version = "0.1.0"
+ dependencies = [
+  "chrono",
++ "rusqlite",
+  "serde",
+  "serde_json",
+  "teaql-core",
+diff --git a/generated/src/entities/platform.rs b/generated/src/entities/platform.rs
+index 8e54748..4e1662b 100644
+--- a/generated/src/entities/platform.rs
++++ b/generated/src/entities/platform.rs
+@@ -144,6 +144,15 @@ impl teaql_core::TeaqlEntity for Platform {
+                 },
+             ],
+             relations: vec![
++                teaql_core::RelationDescriptor {
++                    name: "task_list".to_string(),
++                    target_entity: "task".to_string(),
++                    local_key: "id".to_string(),
++                    foreign_key: "platform_id".to_string(),
++                    many: true,
++                    attach: false,
++                    delete_missing: false,
++                },
+             ],
+         }
+     }
+diff --git a/generated/src/entities/task.rs b/generated/src/entities/task.rs
+index 5cdd692..a2c5550 100644
+--- a/generated/src/entities/task.rs
++++ b/generated/src/entities/task.rs
+@@ -205,14 +205,32 @@ impl teaql_core::TeaqlEntity for Task {
+                 },
+             ],
+             relations: vec![
++                teaql_core::RelationDescriptor {
++                    name: "status".to_string(),
++                    target_entity: "task_status".to_string(),
++                    local_key: "status_id".to_string(),
++                    foreign_key: "id".to_string(),
++                    many: false,
++                    attach: false,
++                    delete_missing: false,
++                },
++                teaql_core::RelationDescriptor {
++                    name: "platform".to_string(),
++                    target_entity: "platform".to_string(),
++                    local_key: "platform_id".to_string(),
++                    foreign_key: "id".to_string(),
++                    many: false,
++                    attach: false,
++                    delete_missing: false,
++                },
+                 teaql_core::RelationDescriptor {
+                     name: "task_execution_log_list".to_string(),
+                     target_entity: "task_execution_log".to_string(),
+                     local_key: "id".to_string(),
+                     foreign_key: "task_id".to_string(),
+                     many: true,
+-                    attach: true,
+-                    delete_missing: true,
++                    attach: false,
++                    delete_missing: false,
+                 },
+             ],
+         }
+@@ -248,10 +266,10 @@ impl teaql_core::Entity for Task {
+         record.insert("id".to_string(), teaql_core::Value::U64(self.id));
+         record.insert("version".to_string(), teaql_core::Value::I64(self.version));
+         if let Some(v) = self.status_id {
+-            record.insert("status_id".to_string(), teaql_core::Value::U64(v));
++            record.insert("status".to_string(), teaql_core::Value::U64(v));
+         }
+         if let Some(v) = self.platform_id {
+-            record.insert("platform_id".to_string(), teaql_core::Value::U64(v));
++            record.insert("platform".to_string(), teaql_core::Value::U64(v));
+         }
+         if let Some(v) = self.name { record.insert("name".to_string(), teaql_core::Value::Text(v)); }
+         record
+diff --git a/generated/src/entities/task_execution_log.rs b/generated/src/entities/task_execution_log.rs
+index a9004f6..ca0d38f 100644
+--- a/generated/src/entities/task_execution_log.rs
++++ b/generated/src/entities/task_execution_log.rs
+@@ -162,6 +162,15 @@ impl teaql_core::TeaqlEntity for TaskExecutionLog {
+                 },
+             ],
+             relations: vec![
++                teaql_core::RelationDescriptor {
++                    name: "task".to_string(),
++                    target_entity: "task".to_string(),
++                    local_key: "task_id".to_string(),
++                    foreign_key: "id".to_string(),
++                    many: false,
++                    attach: false,
++                    delete_missing: false,
++                },
+             ],
+         }
+     }
+@@ -195,7 +204,7 @@ impl teaql_core::Entity for TaskExecutionLog {
+         record.insert("id".to_string(), teaql_core::Value::U64(self.id));
+         record.insert("version".to_string(), teaql_core::Value::I64(self.version));
+         if let Some(v) = self.task_id {
+-            record.insert("task_id".to_string(), teaql_core::Value::U64(v));
++            record.insert("task".to_string(), teaql_core::Value::U64(v));
+         }
+         if let Some(v) = self.action { record.insert("action".to_string(), teaql_core::Value::Text(v)); }
+         if let Some(v) = self.detail { record.insert("detail".to_string(), teaql_core::Value::Text(v)); }
+diff --git a/generated/src/entities/task_status.rs b/generated/src/entities/task_status.rs
+index c957090..5e20b5e 100644
+--- a/generated/src/entities/task_status.rs
++++ b/generated/src/entities/task_status.rs
+@@ -222,6 +222,15 @@ impl teaql_core::TeaqlEntity for TaskStatus {
+                 },
+             ],
+             relations: vec![
++                teaql_core::RelationDescriptor {
++                    name: "task_list".to_string(),
++                    target_entity: "task".to_string(),
++                    local_key: "id".to_string(),
++                    foreign_key: "status_id".to_string(),
++                    many: true,
++                    attach: false,
++                    delete_missing: false,
++                },
+             ],
+         }
+     }
+diff --git a/generated/src/q.rs b/generated/src/q.rs
+index 5b5e8fd..129d580 100644
+--- a/generated/src/q.rs
++++ b/generated/src/q.rs
+@@ -176,6 +176,37 @@ impl<R> PlatformRequest<R> {
+         crate::Platform::new()
+     }
+ 
++
++    pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
++        self.query = self.query.count(alias);
++        self
++    }
++
++    pub fn aggregate_count_field(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.count_field(field, alias);
++        self
++    }
++
++    pub fn aggregate_sum(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.sum(field, alias);
++        self
++    }
++
++    pub fn aggregate_avg(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.avg(field, alias);
++        self
++    }
++
++    pub fn aggregate_min(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.min(field, alias);
++        self
++    }
++
++    pub fn aggregate_max(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.max(field, alias);
++        self
++    }
++
+     pub async fn execute_for_list(self, ctx: &teaql_runtime::UserContext) -> Result<teaql_core::SmartList<R>, String> where R: teaql_core::Entity {
+         
+         let sql = format!("SELECT * FROM {} WHERE version > 0", "platform_data");
+@@ -461,6 +492,45 @@ impl<R> PlatformRequest<R> {
+         self.query = self.query.order_desc("id");
+         self
+     }
++    pub fn count_id(self) -> Self {
++        self.count_id_as("id_count")
++    }
++
++    pub fn count_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("id", alias)
++    }
++
++    pub fn sum_id(self) -> Self {
++        self.sum_id_as("sum_id")
++    }
++
++    pub fn sum_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("id", alias)
++    }
++
++    pub fn avg_id(self) -> Self {
++        self.avg_id_as("avg_id")
++    }
++
++    pub fn avg_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("id", alias)
++    }
++
++    pub fn min_id(self) -> Self {
++        self.min_id_as("min_id")
++    }
++
++    pub fn min_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("id", alias)
++    }
++
++    pub fn max_id(self) -> Self {
++        self.max_id_as("max_id")
++    }
++
++    pub fn max_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("id", alias)
++    }
+     pub fn select_name(mut self) -> Self {
+         self.query = self.query.project("name");
+         self
+@@ -625,6 +695,45 @@ impl<R> PlatformRequest<R> {
+         self.query = self.query.and_filter(Expr::like("name", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_name(self) -> Self {
++        self.count_name_as("name_count")
++    }
++
++    pub fn count_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("name", alias)
++    }
++
++    pub fn sum_name(self) -> Self {
++        self.sum_name_as("sum_name")
++    }
++
++    pub fn sum_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("name", alias)
++    }
++
++    pub fn avg_name(self) -> Self {
++        self.avg_name_as("avg_name")
++    }
++
++    pub fn avg_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("name", alias)
++    }
++
++    pub fn min_name(self) -> Self {
++        self.min_name_as("min_name")
++    }
++
++    pub fn min_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("name", alias)
++    }
++
++    pub fn max_name(self) -> Self {
++        self.max_name_as("max_name")
++    }
++
++    pub fn max_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("name", alias)
++    }
+     pub fn select_founded(mut self) -> Self {
+         self.query = self.query.project("founded");
+         self
+@@ -751,11 +860,64 @@ impl<R> PlatformRequest<R> {
+         self.query = self.query.order_desc("founded");
+         self
+     }
++    pub fn count_founded(self) -> Self {
++        self.count_founded_as("founded_count")
++    }
+ 
+-    pub fn facet_by_status_as(self, _name: &str, _facet: impl std::any::Any) -> Self {
++    pub fn count_founded_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("founded", alias)
++    }
++
++    pub fn sum_founded(self) -> Self {
++        self.sum_founded_as("sum_founded")
++    }
++
++    pub fn sum_founded_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("founded", alias)
++    }
++
++    pub fn avg_founded(self) -> Self {
++        self.avg_founded_as("avg_founded")
++    }
++
++    pub fn avg_founded_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("founded", alias)
++    }
++
++    pub fn min_founded(self) -> Self {
++        self.min_founded_as("min_founded")
++    }
++
++    pub fn min_founded_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("founded", alias)
++    }
++
++    pub fn max_founded(self) -> Self {
++        self.max_founded_as("max_founded")
++    }
++
++    pub fn max_founded_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("founded", alias)
++    }
++    pub fn with_task_list_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
++        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+         self
+     }
+     pub fn count_tasks(self) -> Self {
++        self.count_tasks_as("count_tasks")
++    }
++
++    pub fn count_tasks_as(self, alias: impl Into<String>) -> Self {
++        self.count_tasks_with(alias, crate::Q::tasks().unlimited())
++    }
++    pub fn count_tasks_with(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
++        let selection = request.into();
++        self.query_options.relation_aggregates.push(RelationAggregate::new(
++            "task_list",
++            alias,
++            selection,
++            true,
++        ));
+         self
+     }
+ }
+@@ -828,6 +990,37 @@ impl<R> TaskStatusRequest<R> {
+         crate::TaskStatus::new()
+     }
+ 
++
++    pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
++        self.query = self.query.count(alias);
++        self
++    }
++
++    pub fn aggregate_count_field(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.count_field(field, alias);
++        self
++    }
++
++    pub fn aggregate_sum(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.sum(field, alias);
++        self
++    }
++
++    pub fn aggregate_avg(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.avg(field, alias);
++        self
++    }
++
++    pub fn aggregate_min(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.min(field, alias);
++        self
++    }
++
++    pub fn aggregate_max(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.max(field, alias);
++        self
++    }
++
+     pub async fn execute_for_list(self, ctx: &teaql_runtime::UserContext) -> Result<teaql_core::SmartList<R>, String> where R: teaql_core::Entity {
+         
+         let sql = format!("SELECT * FROM {} WHERE version > 0", "task_status_data");
+@@ -1113,6 +1306,45 @@ impl<R> TaskStatusRequest<R> {
+         self.query = self.query.order_desc("id");
+         self
+     }
++    pub fn count_id(self) -> Self {
++        self.count_id_as("id_count")
++    }
++
++    pub fn count_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("id", alias)
++    }
++
++    pub fn sum_id(self) -> Self {
++        self.sum_id_as("sum_id")
++    }
++
++    pub fn sum_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("id", alias)
++    }
++
++    pub fn avg_id(self) -> Self {
++        self.avg_id_as("avg_id")
++    }
++
++    pub fn avg_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("id", alias)
++    }
++
++    pub fn min_id(self) -> Self {
++        self.min_id_as("min_id")
++    }
++
++    pub fn min_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("id", alias)
++    }
++
++    pub fn max_id(self) -> Self {
++        self.max_id_as("max_id")
++    }
++
++    pub fn max_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("id", alias)
++    }
+     pub fn select_name(mut self) -> Self {
+         self.query = self.query.project("name");
+         self
+@@ -1277,6 +1509,45 @@ impl<R> TaskStatusRequest<R> {
+         self.query = self.query.and_filter(Expr::like("name", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_name(self) -> Self {
++        self.count_name_as("name_count")
++    }
++
++    pub fn count_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("name", alias)
++    }
++
++    pub fn sum_name(self) -> Self {
++        self.sum_name_as("sum_name")
++    }
++
++    pub fn sum_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("name", alias)
++    }
++
++    pub fn avg_name(self) -> Self {
++        self.avg_name_as("avg_name")
++    }
++
++    pub fn avg_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("name", alias)
++    }
++
++    pub fn min_name(self) -> Self {
++        self.min_name_as("min_name")
++    }
++
++    pub fn min_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("name", alias)
++    }
++
++    pub fn max_name(self) -> Self {
++        self.max_name_as("max_name")
++    }
++
++    pub fn max_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("name", alias)
++    }
+     pub fn select_code(mut self) -> Self {
+         self.query = self.query.project("code");
+         self
+@@ -1441,6 +1712,45 @@ impl<R> TaskStatusRequest<R> {
+         self.query = self.query.and_filter(Expr::like("code", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_code(self) -> Self {
++        self.count_code_as("code_count")
++    }
++
++    pub fn count_code_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("code", alias)
++    }
++
++    pub fn sum_code(self) -> Self {
++        self.sum_code_as("sum_code")
++    }
++
++    pub fn sum_code_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("code", alias)
++    }
++
++    pub fn avg_code(self) -> Self {
++        self.avg_code_as("avg_code")
++    }
++
++    pub fn avg_code_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("code", alias)
++    }
++
++    pub fn min_code(self) -> Self {
++        self.min_code_as("min_code")
++    }
++
++    pub fn min_code_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("code", alias)
++    }
++
++    pub fn max_code(self) -> Self {
++        self.max_code_as("max_code")
++    }
++
++    pub fn max_code_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("code", alias)
++    }
+     pub fn select_color(mut self) -> Self {
+         self.query = self.query.project("color");
+         self
+@@ -1605,6 +1915,45 @@ impl<R> TaskStatusRequest<R> {
+         self.query = self.query.and_filter(Expr::like("color", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_color(self) -> Self {
++        self.count_color_as("color_count")
++    }
++
++    pub fn count_color_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("color", alias)
++    }
++
++    pub fn sum_color(self) -> Self {
++        self.sum_color_as("sum_color")
++    }
++
++    pub fn sum_color_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("color", alias)
++    }
++
++    pub fn avg_color(self) -> Self {
++        self.avg_color_as("avg_color")
++    }
++
++    pub fn avg_color_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("color", alias)
++    }
++
++    pub fn min_color(self) -> Self {
++        self.min_color_as("min_color")
++    }
++
++    pub fn min_color_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("color", alias)
++    }
++
++    pub fn max_color(self) -> Self {
++        self.max_color_as("max_color")
++    }
++
++    pub fn max_color_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("color", alias)
++    }
+     pub fn select_display_order(mut self) -> Self {
+         self.query = self.query.project("display_order");
+         self
+@@ -1731,6 +2080,45 @@ impl<R> TaskStatusRequest<R> {
+         self.query = self.query.order_desc("display_order");
+         self
+     }
++    pub fn count_display_order(self) -> Self {
++        self.count_display_order_as("display_order_count")
++    }
++
++    pub fn count_display_order_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("display_order", alias)
++    }
++
++    pub fn sum_display_order(self) -> Self {
++        self.sum_display_order_as("sum_display_order")
++    }
++
++    pub fn sum_display_order_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("display_order", alias)
++    }
++
++    pub fn avg_display_order(self) -> Self {
++        self.avg_display_order_as("avg_display_order")
++    }
++
++    pub fn avg_display_order_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("display_order", alias)
++    }
++
++    pub fn min_display_order(self) -> Self {
++        self.min_display_order_as("min_display_order")
++    }
++
++    pub fn min_display_order_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("display_order", alias)
++    }
++
++    pub fn max_display_order(self) -> Self {
++        self.max_display_order_as("max_display_order")
++    }
++
++    pub fn max_display_order_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("display_order", alias)
++    }
+     pub fn select_progress(mut self) -> Self {
+         self.query = self.query.project("progress");
+         self
+@@ -1857,11 +2245,64 @@ impl<R> TaskStatusRequest<R> {
+         self.query = self.query.order_desc("progress");
+         self
+     }
++    pub fn count_progress(self) -> Self {
++        self.count_progress_as("progress_count")
++    }
++
++    pub fn count_progress_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("progress", alias)
++    }
++
++    pub fn sum_progress(self) -> Self {
++        self.sum_progress_as("sum_progress")
++    }
++
++    pub fn sum_progress_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("progress", alias)
++    }
++
++    pub fn avg_progress(self) -> Self {
++        self.avg_progress_as("avg_progress")
++    }
++
++    pub fn avg_progress_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("progress", alias)
++    }
++
++    pub fn min_progress(self) -> Self {
++        self.min_progress_as("min_progress")
++    }
++
++    pub fn min_progress_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("progress", alias)
++    }
+ 
+-    pub fn facet_by_status_as(self, _name: &str, _facet: impl std::any::Any) -> Self {
++    pub fn max_progress(self) -> Self {
++        self.max_progress_as("max_progress")
++    }
++
++    pub fn max_progress_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("progress", alias)
++    }
++    pub fn with_task_list_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
++        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+         self
+     }
+     pub fn count_tasks(self) -> Self {
++        self.count_tasks_as("count_tasks")
++    }
++
++    pub fn count_tasks_as(self, alias: impl Into<String>) -> Self {
++        self.count_tasks_with(alias, crate::Q::tasks().unlimited())
++    }
++    pub fn count_tasks_with(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
++        let selection = request.into();
++        self.query_options.relation_aggregates.push(RelationAggregate::new(
++            "task_list",
++            alias,
++            selection,
++            true,
++        ));
+         self
+     }
+ }
+@@ -1934,6 +2375,37 @@ impl<R> TaskRequest<R> {
+         crate::Task::new()
+     }
+ 
++
++    pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
++        self.query = self.query.count(alias);
++        self
++    }
++
++    pub fn aggregate_count_field(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.count_field(field, alias);
++        self
++    }
++
++    pub fn aggregate_sum(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.sum(field, alias);
++        self
++    }
++
++    pub fn aggregate_avg(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.avg(field, alias);
++        self
++    }
++
++    pub fn aggregate_min(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.min(field, alias);
++        self
++    }
++
++    pub fn aggregate_max(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.max(field, alias);
++        self
++    }
++
+     pub async fn execute_for_list(self, ctx: &teaql_runtime::UserContext) -> Result<teaql_core::SmartList<R>, String> where R: teaql_core::Entity {
+         if let Some(comment) = &self.query.comment {
+             if comment == "Get active tasks" {
+@@ -2248,6 +2720,45 @@ impl<R> TaskRequest<R> {
+         self.query = self.query.order_desc("id");
+         self
+     }
++    pub fn count_id(self) -> Self {
++        self.count_id_as("id_count")
++    }
++
++    pub fn count_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("id", alias)
++    }
++
++    pub fn sum_id(self) -> Self {
++        self.sum_id_as("sum_id")
++    }
++
++    pub fn sum_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("id", alias)
++    }
++
++    pub fn avg_id(self) -> Self {
++        self.avg_id_as("avg_id")
++    }
++
++    pub fn avg_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("id", alias)
++    }
++
++    pub fn min_id(self) -> Self {
++        self.min_id_as("min_id")
++    }
++
++    pub fn min_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("id", alias)
++    }
++
++    pub fn max_id(self) -> Self {
++        self.max_id_as("max_id")
++    }
++
++    pub fn max_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("id", alias)
++    }
+     pub fn select_name(mut self) -> Self {
+         self.query = self.query.project("name");
+         self
+@@ -2412,19 +2923,86 @@ impl<R> TaskRequest<R> {
+         self.query = self.query.and_filter(Expr::like("name", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_name(self) -> Self {
++        self.count_name_as("name_count")
++    }
++
++    pub fn count_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("name", alias)
++    }
++
++    pub fn sum_name(self) -> Self {
++        self.sum_name_as("sum_name")
++    }
++
++    pub fn sum_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("name", alias)
++    }
++
++    pub fn avg_name(self) -> Self {
++        self.avg_name_as("avg_name")
++    }
++
++    pub fn avg_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("name", alias)
++    }
++
++    pub fn min_name(self) -> Self {
++        self.min_name_as("min_name")
++    }
++
++    pub fn min_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("name", alias)
++    }
++
++    pub fn max_name(self) -> Self {
++        self.max_name_as("max_name")
++    }
++
++    pub fn max_name_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("name", alias)
++    }
+     pub fn with_status_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+         self
+     }
++    pub fn count_status(self) -> Self {
++        self.count_status_as("count_status")
++    }
++
++    pub fn count_status_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("status_id", alias)
++    }
+     pub fn with_platform_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+         self
+     }
++    pub fn count_platform(self) -> Self {
++        self.count_platform_as("count_platform")
++    }
+ 
+-    pub fn facet_by_status_as(self, _name: &str, _facet: impl std::any::Any) -> Self {
++    pub fn count_platform_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("platform_id", alias)
++    }
++    pub fn with_task_execution_log_list_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
++        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+         self
+     }
+-    pub fn count_tasks(self) -> Self {
++    pub fn count_task_execution_logs(self) -> Self {
++        self.count_task_execution_logs_as("count_task_execution_logs")
++    }
++
++    pub fn count_task_execution_logs_as(self, alias: impl Into<String>) -> Self {
++        self.count_task_execution_logs_with(alias, crate::Q::task_execution_logs().unlimited())
++    }
++    pub fn count_task_execution_logs_with(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
++        let selection = request.into();
++        self.query_options.relation_aggregates.push(RelationAggregate::new(
++            "task_execution_log_list",
++            alias,
++            selection,
++            true,
++        ));
+         self
+     }
+ }
+@@ -2497,6 +3075,37 @@ impl<R> TaskExecutionLogRequest<R> {
+         crate::TaskExecutionLog::new()
+     }
+ 
++
++    pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
++        self.query = self.query.count(alias);
++        self
++    }
++
++    pub fn aggregate_count_field(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.count_field(field, alias);
++        self
++    }
++
++    pub fn aggregate_sum(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.sum(field, alias);
++        self
++    }
++
++    pub fn aggregate_avg(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.avg(field, alias);
++        self
++    }
++
++    pub fn aggregate_min(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.min(field, alias);
++        self
++    }
++
++    pub fn aggregate_max(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
++        self.query = self.query.max(field, alias);
++        self
++    }
++
+     pub async fn execute_for_list(self, ctx: &teaql_runtime::UserContext) -> Result<teaql_core::SmartList<R>, String> where R: teaql_core::Entity {
+         
+         let sql = format!("SELECT * FROM {} WHERE version > 0", "task_execution_log_data");
+@@ -2782,6 +3391,45 @@ impl<R> TaskExecutionLogRequest<R> {
+         self.query = self.query.order_desc("id");
+         self
+     }
++    pub fn count_id(self) -> Self {
++        self.count_id_as("id_count")
++    }
++
++    pub fn count_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("id", alias)
++    }
++
++    pub fn sum_id(self) -> Self {
++        self.sum_id_as("sum_id")
++    }
++
++    pub fn sum_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("id", alias)
++    }
++
++    pub fn avg_id(self) -> Self {
++        self.avg_id_as("avg_id")
++    }
++
++    pub fn avg_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("id", alias)
++    }
++
++    pub fn min_id(self) -> Self {
++        self.min_id_as("min_id")
++    }
++
++    pub fn min_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("id", alias)
++    }
++
++    pub fn max_id(self) -> Self {
++        self.max_id_as("max_id")
++    }
++
++    pub fn max_id_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("id", alias)
++    }
+     pub fn select_action(mut self) -> Self {
+         self.query = self.query.project("action");
+         self
+@@ -2946,6 +3594,45 @@ impl<R> TaskExecutionLogRequest<R> {
+         self.query = self.query.and_filter(Expr::like("action", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_action(self) -> Self {
++        self.count_action_as("action_count")
++    }
++
++    pub fn count_action_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("action", alias)
++    }
++
++    pub fn sum_action(self) -> Self {
++        self.sum_action_as("sum_action")
++    }
++
++    pub fn sum_action_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("action", alias)
++    }
++
++    pub fn avg_action(self) -> Self {
++        self.avg_action_as("avg_action")
++    }
++
++    pub fn avg_action_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("action", alias)
++    }
++
++    pub fn min_action(self) -> Self {
++        self.min_action_as("min_action")
++    }
++
++    pub fn min_action_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("action", alias)
++    }
++
++    pub fn max_action(self) -> Self {
++        self.max_action_as("max_action")
++    }
++
++    pub fn max_action_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("action", alias)
++    }
+     pub fn select_detail(mut self) -> Self {
+         self.query = self.query.project("detail");
+         self
+@@ -3110,15 +3797,54 @@ impl<R> TaskExecutionLogRequest<R> {
+         self.query = self.query.and_filter(Expr::like("detail", format!("%{}", value.into())));
+         self
+     }
++    pub fn count_detail(self) -> Self {
++        self.count_detail_as("detail_count")
++    }
++
++    pub fn count_detail_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("detail", alias)
++    }
++
++    pub fn sum_detail(self) -> Self {
++        self.sum_detail_as("sum_detail")
++    }
++
++    pub fn sum_detail_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_sum("detail", alias)
++    }
++
++    pub fn avg_detail(self) -> Self {
++        self.avg_detail_as("avg_detail")
++    }
++
++    pub fn avg_detail_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_avg("detail", alias)
++    }
++
++    pub fn min_detail(self) -> Self {
++        self.min_detail_as("min_detail")
++    }
++
++    pub fn min_detail_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_min("detail", alias)
++    }
++
++    pub fn max_detail(self) -> Self {
++        self.max_detail_as("max_detail")
++    }
++
++    pub fn max_detail_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_max("detail", alias)
++    }
+     pub fn with_task_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+         self
+     }
+-
+-    pub fn facet_by_status_as(self, _name: &str, _facet: impl std::any::Any) -> Self {
+-        self
++    pub fn count_task(self) -> Self {
++        self.count_task_as("count_task")
+     }
+-    pub fn count_tasks(self) -> Self {
+-        self
++
++    pub fn count_task_as(self, alias: impl Into<String>) -> Self {
++        self.aggregate_count_field("task_id", alias)
+     }
+ }
+\ No newline at end of file

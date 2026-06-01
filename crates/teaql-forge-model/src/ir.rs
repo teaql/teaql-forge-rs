@@ -10,8 +10,14 @@ pub struct Domain {
 pub struct Entity {
     pub name: String,
     pub table: Option<String>,
-    pub fields: Vec<Field>,
-    pub relations: Vec<Relation>,
+    pub members: Vec<EntityMember>,
+    pub is_human: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EntityMember {
+    Field(Field),
+    Relation(Relation),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

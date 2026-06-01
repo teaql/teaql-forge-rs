@@ -8,13 +8,20 @@ pub struct {{ entity.rust_struct }} {
     pub {{ field.rust_name }}: {{ field.rust_type }},
 {%- endfor %}
 {%- for rel in entity.relations %}
-{%- if not rel.many %}
+{%- if rel.many %}
+    pub {{ rel.rust_name }}: Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>,
+{%- else %}
+    pub {{ rel.rust_name }}: Option<Box<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>>,
     pub {{ rel.rust_name }}_id: Option<u64>,
 {%- endif %}
 {%- endfor %}
-{%- if entity.name == "task" %}
-    pub task_execution_log_list: Vec<crate::entities::task_execution_log::TaskExecutionLog>,
+{%- for rel in entity.reverse_relations %}
+{%- if rel.many %}
+    pub {{ rel.rust_name }}: Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>,
+{%- else %}
+    pub {{ rel.rust_name }}: Option<Box<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>>,
 {%- endif %}
+{%- endfor %}
     pub version: i64,
     pub comment: String,
     pub deleted: bool,
@@ -37,13 +44,20 @@ impl {{ entity.rust_struct }} {
             {%- endif %}
         {%- endfor %}
         {%- for rel in entity.relations %}
-        {%- if not rel.many %}
+            {%- if rel.many %}
+            {{ rel.rust_name }}: Vec::new(),
+            {%- else %}
+            {{ rel.rust_name }}: None,
             {{ rel.rust_name }}_id: None,
-        {%- endif %}
+            {%- endif %}
         {%- endfor %}
-        {%- if entity.name == "task" %}
-            task_execution_log_list: vec![],
-        {%- endif %}
+        {%- for rel in entity.reverse_relations %}
+            {%- if rel.many %}
+            {{ rel.rust_name }}: Vec::new(),
+            {%- else %}
+            {{ rel.rust_name }}: None,
+            {%- endif %}
+        {%- endfor %}
             version: 0,
             comment: String::new(),
             deleted: false,
@@ -76,11 +90,13 @@ impl {{ entity.rust_struct }} {
         self.deleted = true;
     }
 
-{%- if entity.name == "task" %}
-    pub fn task_execution_log_list_mut(&mut self) -> &mut Vec<crate::entities::task_execution_log::TaskExecutionLog> {
-        &mut self.task_execution_log_list
+{%- for rel in entity.reverse_relations %}
+{%- if rel.many %}
+    pub fn {{ rel.rust_name }}_mut(&mut self) -> &mut Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}> {
+        &mut self.{{ rel.rust_name }}
     }
 {%- endif %}
+{%- endfor %}
 
 {%- for field in entity.fields %}
 {%- if field.rust_name != "id" %}
@@ -161,29 +177,30 @@ impl {{ entity.rust_struct }} {
             if !self.comment.is_empty() {
                 node.comment = Some(self.comment.clone());
             }
-            {%- if entity.name == "task" %}
-            let mut logs = Vec::new();
-            let log_list = std::mem::take(&mut self.task_execution_log_list);
-            for log in log_list {
-                let mut log_node = teaql_runtime::GraphNode::new("task_execution_log");
-                if log.deleted {
+            
+            {%- for rel in entity.reverse_relations %}
+            {%- if rel.many %}
+            let mut items = Vec::new();
+            let mut list = std::mem::take(&mut self.{{ rel.rust_name }});
+            for item in list {
+                let mut log_node = teaql_runtime::GraphNode::new("{{ rel.target_module }}");
+                if item.deleted {
                     log_node.operation = teaql_runtime::GraphOperation::Remove;
-                } else if log.id == 0 {
+                } else if item.id == 0 {
                     log_node.operation = teaql_runtime::GraphOperation::Create;
                 } else {
                     log_node.operation = teaql_runtime::GraphOperation::Upsert;
                 }
-                if !log.comment.is_empty() {
-                    log_node.comment = Some(log.comment.clone());
-                }
-                log_node.values = teaql_core::Entity::into_record(log);
-                logs.push(log_node);
+                log_node.values = teaql_core::Entity::into_record(item);
+                items.push(log_node);
             }
-            if !logs.is_empty() {
-                node.relations.insert("task_execution_log_list".to_string(), logs);
+            if !items.is_empty() {
+                node.relations.insert("{{ rel.name }}".to_string(), items);
             }
             {%- endif %}
-            let mut values = teaql_core::Entity::into_record(self);
+            {%- endfor %}
+            
+            let values = teaql_core::Entity::into_record(self);
             node.values = values;
             repo.save_graph(node).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
         })
@@ -249,6 +266,17 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
             ],
             relations: vec![
                 {%- for rel in entity.relations %}
+                teaql_core::RelationDescriptor {
+                    name: "{{ rel.name }}".to_string(),
+                    target_entity: "{{ rel.target_module }}".to_string(),
+                    local_key: "{{ 'id' if rel.many else rel.local_key }}".to_string(),
+                    foreign_key: "{{ rel.local_key if rel.many else 'id' }}".to_string(),
+                    many: {{ "true" if rel.many else "false" }},
+                    attach: false,
+                    delete_missing: {{ "true" if rel.delete_missing else "false" }},
+                },
+                {%- endfor %}
+                {%- for rel in entity.reverse_relations %}
                 teaql_core::RelationDescriptor {
                     name: "{{ rel.name }}".to_string(),
                     target_entity: "{{ rel.target_module }}".to_string(),

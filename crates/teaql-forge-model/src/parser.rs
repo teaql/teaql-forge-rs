@@ -1,5 +1,5 @@
 use crate::error::ParseError;
-use crate::ir::{Cardinality, Domain, Entity, Field, FieldType, Relation};
+use crate::ir::{Cardinality, Domain, Entity, EntityMember, Field, FieldType, Relation};
 
 pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
     let doc = roxmltree::Document::parse(src)?;
@@ -17,12 +17,20 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
     for node in root_node.children().filter(|n| n.is_element()) {
         let entity_name = node.tag_name().name().to_string();
 
-        let mut fields = Vec::new();
-        let mut relations = Vec::new();
+        let mut members = Vec::new();
         let mut has_id = false;
+        let mut is_human = false;
 
         for attr in node.attributes() {
             let attr_name = attr.name();
+            let attr_value = attr.value();
+
+            if attr_name == "_category" || attr_name == "category" {
+                if attr_value.eq_ignore_ascii_case("human") {
+                    is_human = true;
+                }
+            }
+
             // Skip metadata attributes starting with '_'
             if attr_name.starts_with('_') {
                 continue;
@@ -31,35 +39,42 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
             let attr_value = attr.value();
 
             if attr_name == "id" && (attr_value == "id()" || attr_value == "id") {
-                fields.push(Field {
+                members.push(EntityMember::Field(Field {
                     name: attr_name.to_string(),
                     ty: FieldType::Id,
                     required: true,
                     unique: true,
-                });
+                }));
                 has_id = true;
                 continue;
             }
 
-            // Simple heuristic to distinguish fields vs relations:
-            // if value is like `xxx()` and `xxx` is another entity, it's a relation.
-            // For MVP, if it contains `()` we check the prefix.
-            let (is_relation, rel_target) = if attr_value.ends_with("()") {
-                let prefix = attr_value.trim_end_matches("()");
-                match prefix {
-                    "string" | "number" | "bool" | "date" | "datetime" | "money" | "text" | "createTime" => (false, ""),
-                    _ => (true, prefix),
+            // Parse relations with or without metadata in parenthesis
+            let (is_relation, rel_target, cardinality) = if let Some(idx) = attr_value.find('(') {
+                if attr_value.ends_with(')') {
+                    let prefix = &attr_value[..idx];
+                    let inside = &attr_value[idx + 1..attr_value.len() - 1];
+                    let mut rel_type = Cardinality::ManyToOne;
+                    if inside.contains("relationType=oneToOne") || inside.contains("relationType=OneToOne") {
+                        rel_type = Cardinality::OneToOne;
+                    }
+                    match prefix {
+                        "string" | "number" | "bool" | "date" | "datetime" | "money" | "text" | "createTime" | "updateTime" | "id" => (false, "", Cardinality::ManyToOne),
+                        _ => (true, prefix, rel_type),
+                    }
+                } else {
+                    (false, "", Cardinality::ManyToOne)
                 }
             } else {
-                (false, "")
+                (false, "", Cardinality::ManyToOne)
             };
 
             if is_relation {
-                relations.push(Relation {
+                members.push(EntityMember::Relation(Relation {
                     name: attr_name.to_string(),
                     target: rel_target.to_string(),
-                    cardinality: Cardinality::ManyToOne,
-                });
+                    cardinality,
+                }));
             } else {
                 let ty = if attr_value.contains("string") || attr_value.contains('|') {
                     FieldType::String
@@ -75,29 +90,29 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
                     FieldType::String // fallback
                 };
 
-                fields.push(Field {
+                members.push(EntityMember::Field(Field {
                     name: attr_name.to_string(),
                     ty,
                     required: false, // simplified for now
                     unique: false,
-                });
+                }));
             }
         }
 
         if !has_id {
-            fields.insert(0, Field {
+            members.insert(0, EntityMember::Field(Field {
                 name: "id".to_string(),
                 ty: FieldType::Id,
                 required: true,
                 unique: true,
-            });
+            }));
         }
 
         entities.push(Entity {
             name: entity_name,
             table: None, // Can be derived in normalize/naming step
-            fields,
-            relations,
+            members,
+            is_human,
         });
     }
 

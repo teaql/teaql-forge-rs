@@ -4,6 +4,7 @@ use crate::entities::*;
 use teaql_core::Entity;
 use teaql_core::Expr;
 use std::marker::PhantomData;
+use serde_json::Value as JsonValue;
 
 pub mod request_support {
     #![allow(unused_imports)]
@@ -1138,7 +1139,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     pub fn group_by_{{ field.rust_name }}(self) -> Self { self.group_by("{{ field.name }}") }
     
 
-    pub fn with_{{ field.rust_name }}(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         let field_name = "{{ field.name }}";
         let expr = match operator {
@@ -1174,32 +1175,32 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self
     }
     
-    pub fn with_{{ field.rust_name }}_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::between("{{ field.name }}", min.into(), max.into()));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
         self.query = self.query.and_filter(Expr::between("{{ field.name }}", range.start.clone().into(), range.end.clone().into()));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_is_unknown(mut self) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_is_unknown(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_null("{{ field.name }}"));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_is_known(mut self) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_is_known(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_not_null("{{ field.name }}"));
         self
     }
     
-    pub fn with_{{ field.rust_name }}_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_sound{{ entity.attribute_predicate_suffix }}_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::sound_like("{{ field.name }}", value.into()));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("{{ field.name }}", val.clone()));
         if "{{ field.name }}" == "id" {
@@ -1212,37 +1213,37 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self
     }
     
-    pub fn with_{{ field.rust_name }}_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::ne("{{ field.name }}", value));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_greater_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_greater_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("{{ field.name }}", value));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_greater_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_greater_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gte("{{ field.name }}", value));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_less_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_less_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("{{ field.name }}", value));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_less_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_less_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lte("{{ field.name }}", value));
         self
     }
     
-    pub fn with_{{ field.rust_name }}_in(mut self, values: impl IntoIterator<Item = impl Into<teaql_core::Value>>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_in(mut self, values: impl IntoIterator<Item = impl Into<teaql_core::Value>>) -> Self {
         self.query = self.query.and_filter(Expr::in_list("{{ field.name }}", values.into_iter().map(Into::into)));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_not_in(mut self, values: impl IntoIterator<Item = impl Into<teaql_core::Value>>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_not_in(mut self, values: impl IntoIterator<Item = impl Into<teaql_core::Value>>) -> Self {
         self.query = self.query.and_filter(Expr::not_in_list("{{ field.name }}", values.into_iter().map(Into::into)));
         self
     }
@@ -1258,42 +1259,55 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     }
 
     {%- if field.rust_type == "String" or field.rust_type == "Option<String>" %}
-    pub fn with_{{ field.rust_name }}_containing(mut self, value: impl Into<String>) -> Self {
-        self.query = self.query.and_filter(Expr::like("{{ field.name }}", format!("%{}%", value.into())));
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_contain{{ entity.attribute_predicate_suffix }}(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::contain("{{ field.name }}", value.into()));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_not_containing(mut self, value: impl Into<String>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_not_contain{{ entity.attribute_predicate_suffix }}(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::not_contain("{{ field.name }}", value.into()));
         self
     }
-    
-    pub fn with_{{ field.rust_name }}_not_starting_with(mut self, value: impl Into<String>) -> Self {
+
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_not_start{{ entity.attribute_predicate_suffix }}_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::not_begin_with("{{ field.name }}", value.into()));
         self
     }
-    
-    pub fn with_{{ field.rust_name }}_not_ending_with(mut self, value: impl Into<String>) -> Self {
+
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_not_end{{ entity.attribute_predicate_suffix }}_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::not_end_with("{{ field.name }}", value.into()));
         self
     }
     
-    pub fn with_{{ field.rust_name }}_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("{{ field.name }}", value.into()));
         self
     }
     
-    pub fn with_{{ field.rust_name }}_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("{{ field.name }}", value.into()));
         self
     }
 
-    pub fn with_{{ field.rust_name }}_starts_with(mut self, value: impl Into<String>) -> Self {
-        self.query = self.query.and_filter(Expr::like("{{ field.name }}", format!("{}%", value.into())));
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_start{{ entity.attribute_predicate_suffix }}_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::begin_with("{{ field.name }}", value.into()));
         self
     }
-    pub fn with_{{ field.rust_name }}_ends_with(mut self, value: impl Into<String>) -> Self {
-        self.query = self.query.and_filter(Expr::like("{{ field.name }}", format!("%{}", value.into())));
+
+    pub fn {{ entity.attribute_predicate_prefix }}_{{ field.rust_name }}_end{{ entity.attribute_predicate_suffix }}_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::end_with("{{ field.name }}", value.into()));
+        self
+    }
+    {%- endif %}
+
+    {%- if field.rust_type == "bool" or field.rust_type == "Option<bool>" %}
+    pub fn {{ entity.bool_predicate_prefix }}_{{ field.rust_name }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::eq("{{ field.name }}", true));
+        self
+    }
+    
+    pub fn {{ entity.bool_predicate_prefix }}_not_{{ field.rust_name }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::eq("{{ field.name }}", false));
         self
     }
     {%- endif %}
@@ -1339,8 +1353,37 @@ impl<R> {{ entity.rust_struct }}Request<R> {
 {%- endfor %}
 
 {%- for relation in entity.relations %}
-    pub fn with_{{ relation.name }}_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_{{ relation.rust_name }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("{{ relation.local_key }}"));
+        self
+    }
+
+    pub fn have_no_{{ relation.rust_name }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("{{ relation.local_key }}"));
+        self
+    }
+
+    pub fn with_{{ relation.name }}_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "{{ relation.local_key }}",
+            <crate::{{ relation.target_struct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("{{ relation.rust_name }}", selection));
+        self
+    }
+
+    pub fn without_{{ relation.name }}_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "{{ relation.local_key }}",
+            <crate::{{ relation.target_struct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("{{ relation.rust_name }}", selection));
         self
     }
 
@@ -1352,7 +1395,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
 
     pub fn count_{{ plural_name }}_as(self, alias: impl Into<String>) -> Self {
 {%- if relation.many %}
-        self.count_{{ plural_name }}_with(alias, crate::Q::{{ target_method }}().unlimited())
+        self.count_{{ plural_name }}_with(alias, crate::Q::{{ relation.target_module }}{%- if relation.target_module != "task_status" %}s{%- endif %}().unlimited())
 {%- else %}
         self.aggregate_count_field("{{ relation.local_key }}", alias)
 {%- endif %}
@@ -1389,6 +1432,214 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self
     }
 {%- endfor %}
+
+{%- for relation in entity.reverse_relations %}
+    pub fn have_{{ relation.rust_name }}(self) -> Self {
+        self.with_{{ relation.name }}_matching(crate::Q::{{ relation.target_module }}{%- if relation.target_module != "task_status" %}s{%- endif %}())
+    }
+
+    pub fn have_no_{{ relation.rust_name }}(self) -> Self {
+        self.without_{{ relation.name }}_matching(crate::Q::{{ relation.target_module }}{%- if relation.target_module != "task_status" %}s{%- endif %}())
+    }
+
+    pub fn with_{{ relation.name }}_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "id",
+            <crate::{{ relation.target_struct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "{{ relation.foreign_key }}",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("{{ relation.rust_name }}", selection));
+        self
+    }
+
+    pub fn without_{{ relation.name }}_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "id",
+            <crate::{{ relation.target_struct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "{{ relation.foreign_key }}",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("{{ relation.rust_name }}", selection));
+        self
+    }
+{%- set plural_name = relation.rust_name %}
+    pub fn count_{{ plural_name }}(self) -> Self {
+        self.count_{{ plural_name }}_as("count_{{ plural_name }}")
+    }
+
+    pub fn count_{{ plural_name }}_as(self, alias: impl Into<String>) -> Self {
+{%- if relation.many %}
+        self.count_{{ plural_name }}_with(alias, crate::Q::{{ relation.target_module }}{%- if relation.target_module != "task_status" %}s{%- endif %}().unlimited())
+{%- else %}
+        self.aggregate_count_field("{{ relation.local_key }}", alias)
+{%- endif %}
+    }
+
+{%- if relation.many %}
+    pub fn count_{{ plural_name }}_with(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query_options.relation_aggregates.push(RelationAggregate::new(
+            "{{ relation.name }}",
+            alias,
+            selection,
+            true,
+        ));
+        self
+    }
+{%- endif %}
+
+{%- endfor %}
+
+    pub fn filter_by_json(self, json_expr: impl Into<String>) -> Self {
+        self.merge_dynamic_json_expr(json_expr.into())
+    }
+
+    fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
+        let json = serde_json::from_str::<JsonValue>(&json_expr)
+            .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
+        self.merge_dynamic_json(&json)
+    }
+
+    fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
+        let Some(object) = json.as_object() else {
+            return self;
+        };
+
+        for (field, value) in object {
+            if field.starts_with('_') {
+                continue;
+            }
+            self = self.apply_dynamic_json_filter(field, value);
+        }
+
+        self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
+
+        if let Some(offset) = request_support::dynamic_json_u64_field(object, "_start") {
+            self = self.skip(offset);
+        }
+        if let Some(size) = request_support::dynamic_json_u64_field(object, "_size") {
+            self = self.limit(size);
+        }
+
+        if let Some(page_size) = request_support::dynamic_json_u64_field(object, "_pageSize") {
+            self = self.limit(page_size);
+        }
+        if let Some(page_number) = request_support::dynamic_json_u64_field(object, "_page") {
+            if page_number > 0 {
+                let size = request_support::dynamic_json_u64_field(object, "_pageSize")
+                    .or_else(|| self.query.slice.as_ref().and_then(|slice| slice.limit))
+                    .unwrap_or(10);
+                let offset = page_number.saturating_sub(1).saturating_mul(size);
+                self = self.page_offset(offset, size);
+            }
+        }
+
+        self
+    }
+
+    pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
+        if let Some((head, tail)) = field.split_once('.') {
+            self.apply_dynamic_json_chain_filter(head, tail, value)
+        } else if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+            self.and_filter(request_support::dynamic_json_filter_expr(storage_field, value))
+        } else {
+            self
+        }
+    }
+
+    fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
+        match order_by {
+            Some(JsonValue::String(field)) => {
+                if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+                    self.query = self.query.order_desc(storage_field);
+                }
+            }
+            Some(JsonValue::Object(order_by)) => {
+                self = self.apply_dynamic_json_single_order_by(order_by);
+            }
+            Some(JsonValue::Array(order_bys)) => {
+                for order_by in order_bys {
+                    if let Some(order_by) = order_by.as_object() {
+                        self = self.apply_dynamic_json_single_order_by(order_by);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    fn apply_dynamic_json_single_order_by(
+        mut self,
+        order_by: &serde_json::Map<String, JsonValue>,
+    ) -> Self {
+        let Some(field) = order_by.get("field").and_then(JsonValue::as_str) else {
+            return self;
+        };
+        let Some(storage_field) = Self::dynamic_json_self_field(field) else {
+            return self;
+        };
+        if order_by
+            .get("useAsc")
+            .and_then(JsonValue::as_bool)
+            .unwrap_or(false)
+        {
+            self.query = self.query.order_asc(storage_field);
+        } else {
+            self.query = self.query.order_desc(storage_field);
+        }
+        self
+    }
+
+    fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
+        match field {
+{%- for field in entity.fields %}
+{%- if field.rust_name != field.name %}
+            "{{ field.rust_name }}" | "{{ field.name }}" => Some("{{ field.name }}"),
+{%- else %}
+            "{{ field.name }}" => Some("{{ field.name }}"),
+{%- endif %}
+{%- endfor %}
+{%- for relation in entity.relations %}
+{%- if not relation.many %}
+{%- if relation.rust_name != relation.name %}
+            "{{ relation.rust_name }}" | "{{ relation.name }}" => Some("{{ relation.local_key }}"),
+{%- else %}
+            "{{ relation.name }}" => Some("{{ relation.local_key }}"),
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+            _ => None,
+        }
+    }
+
+    fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
+        let _ = (tail, value);
+        match head {
+{%- for relation in entity.relations %}
+{%- if not relation.many %}
+            "{{ relation.rust_name }}" | "{{ relation.name }}" => {
+                self.with_{{ relation.name }}_matching(
+                    crate::Q::{{ relation.target_module }}{%- if relation.target_module != "task_status" %}s{%- endif %}()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+{%- endif %}
+{%- endfor %}
+{%- for relation in entity.reverse_relations %}
+            "{{ relation.rust_name }}" | "{{ relation.name }}" => {
+                self.with_{{ relation.name }}_matching(
+                    crate::Q::{{ relation.target_module }}{%- if relation.target_module != "task_status" %}s{%- endif %}()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+{%- endfor %}
+            _ => self,
+        }
+    }
 }
 
 {%- endfor %}

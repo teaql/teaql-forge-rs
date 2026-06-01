@@ -4,6 +4,7 @@ use crate::entities::*;
 use teaql_core::Entity;
 use teaql_core::Expr;
 use std::marker::PhantomData;
+use serde_json::Value as JsonValue;
 
 pub mod request_support {
     #![allow(unused_imports)]
@@ -1707,8 +1708,35 @@ impl<R> PlatformRequest<R> {
     pub fn max_founded_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("founded", alias)
     }
-    pub fn with_task_list_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_tasks(self) -> Self {
+        self.with_task_list_matching(crate::Q::tasks())
+    }
+
+    pub fn have_no_tasks(self) -> Self {
+        self.without_task_list_matching(crate::Q::tasks())
+    }
+
+    pub fn with_task_list_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "id",
+            <crate::Task as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("tasks", selection));
+        self
+    }
+
+    pub fn without_task_list_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "id",
+            <crate::Task as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("tasks", selection));
         self
     }
     pub fn count_tasks(self) -> Self {
@@ -1728,23 +1756,128 @@ impl<R> PlatformRequest<R> {
         ));
         self
     }
-    pub fn facet_by_tasks_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
-        self.facet_by_tasks_as_with_options(facet_name, request, true)
+
+    pub fn filter_by_json(self, json_expr: impl Into<String>) -> Self {
+        self.merge_dynamic_json_expr(json_expr.into())
     }
 
-    pub fn facet_by_tasks_as_with_options(
-        mut self,
-        facet_name: impl Into<String>,
-        request: impl Into<QuerySelection>,
-        include_all_facets: bool,
-    ) -> Self {
-        self.query_options.facets.push(FacetRequest::new(
-            facet_name,
-            "task_list",
-            request,
-            include_all_facets,
-        ));
+    fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
+        let json = serde_json::from_str::<JsonValue>(&json_expr)
+            .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
+        self.merge_dynamic_json(&json)
+    }
+
+    fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
+        let Some(object) = json.as_object() else {
+            return self;
+        };
+
+        for (field, value) in object {
+            if field.starts_with('_') {
+                continue;
+            }
+            self = self.apply_dynamic_json_filter(field, value);
+        }
+
+        self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
+
+        if let Some(offset) = request_support::dynamic_json_u64_field(object, "_start") {
+            self = self.skip(offset);
+        }
+        if let Some(size) = request_support::dynamic_json_u64_field(object, "_size") {
+            self = self.limit(size);
+        }
+
+        if let Some(page_size) = request_support::dynamic_json_u64_field(object, "_pageSize") {
+            self = self.limit(page_size);
+        }
+        if let Some(page_number) = request_support::dynamic_json_u64_field(object, "_page") {
+            if page_number > 0 {
+                let size = request_support::dynamic_json_u64_field(object, "_pageSize")
+                    .or_else(|| self.query.slice.as_ref().and_then(|slice| slice.limit))
+                    .unwrap_or(10);
+                let offset = page_number.saturating_sub(1).saturating_mul(size);
+                self = self.page_offset(offset, size);
+            }
+        }
+
         self
+    }
+
+    pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
+        if let Some((head, tail)) = field.split_once('.') {
+            self.apply_dynamic_json_chain_filter(head, tail, value)
+        } else if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+            self.and_filter(request_support::dynamic_json_filter_expr(storage_field, value))
+        } else {
+            self
+        }
+    }
+
+    fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
+        match order_by {
+            Some(JsonValue::String(field)) => {
+                if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+                    self.query = self.query.order_desc(storage_field);
+                }
+            }
+            Some(JsonValue::Object(order_by)) => {
+                self = self.apply_dynamic_json_single_order_by(order_by);
+            }
+            Some(JsonValue::Array(order_bys)) => {
+                for order_by in order_bys {
+                    if let Some(order_by) = order_by.as_object() {
+                        self = self.apply_dynamic_json_single_order_by(order_by);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    fn apply_dynamic_json_single_order_by(
+        mut self,
+        order_by: &serde_json::Map<String, JsonValue>,
+    ) -> Self {
+        let Some(field) = order_by.get("field").and_then(JsonValue::as_str) else {
+            return self;
+        };
+        let Some(storage_field) = Self::dynamic_json_self_field(field) else {
+            return self;
+        };
+        if order_by
+            .get("useAsc")
+            .and_then(JsonValue::as_bool)
+            .unwrap_or(false)
+        {
+            self.query = self.query.order_asc(storage_field);
+        } else {
+            self.query = self.query.order_desc(storage_field);
+        }
+        self
+    }
+
+    fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
+        match field {
+            "id" => Some("id"),
+            "name" => Some("name"),
+            "founded" => Some("founded"),
+            _ => None,
+        }
+    }
+
+    fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
+        let _ = (tail, value);
+        match head {
+            "tasks" | "task_list" => {
+                self.with_task_list_matching(
+                    crate::Q::tasks()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+            _ => self,
+        }
     }
 }
 pub struct TaskStatusRequest<R = crate::TaskStatus> {
@@ -3142,8 +3275,35 @@ impl<R> TaskStatusRequest<R> {
     pub fn max_progress_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("progress", alias)
     }
-    pub fn with_task_list_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_tasks(self) -> Self {
+        self.with_task_list_matching(crate::Q::tasks())
+    }
+
+    pub fn have_no_tasks(self) -> Self {
+        self.without_task_list_matching(crate::Q::tasks())
+    }
+
+    pub fn with_task_list_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "id",
+            <crate::Task as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("tasks", selection));
+        self
+    }
+
+    pub fn without_task_list_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "id",
+            <crate::Task as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("tasks", selection));
         self
     }
     pub fn count_tasks(self) -> Self {
@@ -3163,23 +3323,131 @@ impl<R> TaskStatusRequest<R> {
         ));
         self
     }
-    pub fn facet_by_tasks_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
-        self.facet_by_tasks_as_with_options(facet_name, request, true)
+
+    pub fn filter_by_json(self, json_expr: impl Into<String>) -> Self {
+        self.merge_dynamic_json_expr(json_expr.into())
     }
 
-    pub fn facet_by_tasks_as_with_options(
-        mut self,
-        facet_name: impl Into<String>,
-        request: impl Into<QuerySelection>,
-        include_all_facets: bool,
-    ) -> Self {
-        self.query_options.facets.push(FacetRequest::new(
-            facet_name,
-            "task_list",
-            request,
-            include_all_facets,
-        ));
+    fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
+        let json = serde_json::from_str::<JsonValue>(&json_expr)
+            .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
+        self.merge_dynamic_json(&json)
+    }
+
+    fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
+        let Some(object) = json.as_object() else {
+            return self;
+        };
+
+        for (field, value) in object {
+            if field.starts_with('_') {
+                continue;
+            }
+            self = self.apply_dynamic_json_filter(field, value);
+        }
+
+        self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
+
+        if let Some(offset) = request_support::dynamic_json_u64_field(object, "_start") {
+            self = self.skip(offset);
+        }
+        if let Some(size) = request_support::dynamic_json_u64_field(object, "_size") {
+            self = self.limit(size);
+        }
+
+        if let Some(page_size) = request_support::dynamic_json_u64_field(object, "_pageSize") {
+            self = self.limit(page_size);
+        }
+        if let Some(page_number) = request_support::dynamic_json_u64_field(object, "_page") {
+            if page_number > 0 {
+                let size = request_support::dynamic_json_u64_field(object, "_pageSize")
+                    .or_else(|| self.query.slice.as_ref().and_then(|slice| slice.limit))
+                    .unwrap_or(10);
+                let offset = page_number.saturating_sub(1).saturating_mul(size);
+                self = self.page_offset(offset, size);
+            }
+        }
+
         self
+    }
+
+    pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
+        if let Some((head, tail)) = field.split_once('.') {
+            self.apply_dynamic_json_chain_filter(head, tail, value)
+        } else if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+            self.and_filter(request_support::dynamic_json_filter_expr(storage_field, value))
+        } else {
+            self
+        }
+    }
+
+    fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
+        match order_by {
+            Some(JsonValue::String(field)) => {
+                if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+                    self.query = self.query.order_desc(storage_field);
+                }
+            }
+            Some(JsonValue::Object(order_by)) => {
+                self = self.apply_dynamic_json_single_order_by(order_by);
+            }
+            Some(JsonValue::Array(order_bys)) => {
+                for order_by in order_bys {
+                    if let Some(order_by) = order_by.as_object() {
+                        self = self.apply_dynamic_json_single_order_by(order_by);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    fn apply_dynamic_json_single_order_by(
+        mut self,
+        order_by: &serde_json::Map<String, JsonValue>,
+    ) -> Self {
+        let Some(field) = order_by.get("field").and_then(JsonValue::as_str) else {
+            return self;
+        };
+        let Some(storage_field) = Self::dynamic_json_self_field(field) else {
+            return self;
+        };
+        if order_by
+            .get("useAsc")
+            .and_then(JsonValue::as_bool)
+            .unwrap_or(false)
+        {
+            self.query = self.query.order_asc(storage_field);
+        } else {
+            self.query = self.query.order_desc(storage_field);
+        }
+        self
+    }
+
+    fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
+        match field {
+            "id" => Some("id"),
+            "name" => Some("name"),
+            "code" => Some("code"),
+            "color" => Some("color"),
+            "display_order" => Some("display_order"),
+            "progress" => Some("progress"),
+            _ => None,
+        }
+    }
+
+    fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
+        let _ = (tail, value);
+        match head {
+            "tasks" | "task_list" => {
+                self.with_task_list_matching(
+                    crate::Q::tasks()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+            _ => self,
+        }
     }
 }
 pub struct TaskRequest<R = crate::Task> {
@@ -3841,8 +4109,37 @@ impl<R> TaskRequest<R> {
     pub fn max_name_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("name", alias)
     }
-    pub fn with_status_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_status(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("status_id"));
+        self
+    }
+
+    pub fn have_no_status(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("status_id"));
+        self
+    }
+
+    pub fn with_status_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "status_id",
+            <crate::TaskStatus as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("status", selection));
+        self
+    }
+
+    pub fn without_status_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "status_id",
+            <crate::TaskStatus as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("status", selection));
         self
     }
     pub fn count_status(self) -> Self {
@@ -3870,8 +4167,37 @@ impl<R> TaskRequest<R> {
         ));
         self
     }
-    pub fn with_platform_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_platform(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("platform_id"));
+        self
+    }
+
+    pub fn have_no_platform(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("platform_id"));
+        self
+    }
+
+    pub fn with_platform_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "platform_id",
+            <crate::Platform as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("platform", selection));
+        self
+    }
+
+    pub fn without_platform_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "platform_id",
+            <crate::Platform as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("platform", selection));
         self
     }
     pub fn count_platform(self) -> Self {
@@ -3899,8 +4225,35 @@ impl<R> TaskRequest<R> {
         ));
         self
     }
-    pub fn with_task_execution_log_list_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_task_execution_logs(self) -> Self {
+        self.with_task_execution_log_list_matching(crate::Q::task_execution_logs())
+    }
+
+    pub fn have_no_task_execution_logs(self) -> Self {
+        self.without_task_execution_log_list_matching(crate::Q::task_execution_logs())
+    }
+
+    pub fn with_task_execution_log_list_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "id",
+            <crate::TaskExecutionLog as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("task_execution_logs", selection));
+        self
+    }
+
+    pub fn without_task_execution_log_list_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "id",
+            <crate::TaskExecutionLog as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("task_execution_logs", selection));
         self
     }
     pub fn count_task_execution_logs(self) -> Self {
@@ -3920,23 +4273,141 @@ impl<R> TaskRequest<R> {
         ));
         self
     }
-    pub fn facet_by_task_execution_logs_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
-        self.facet_by_task_execution_logs_as_with_options(facet_name, request, true)
+
+    pub fn filter_by_json(self, json_expr: impl Into<String>) -> Self {
+        self.merge_dynamic_json_expr(json_expr.into())
     }
 
-    pub fn facet_by_task_execution_logs_as_with_options(
-        mut self,
-        facet_name: impl Into<String>,
-        request: impl Into<QuerySelection>,
-        include_all_facets: bool,
-    ) -> Self {
-        self.query_options.facets.push(FacetRequest::new(
-            facet_name,
-            "task_execution_log_list",
-            request,
-            include_all_facets,
-        ));
+    fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
+        let json = serde_json::from_str::<JsonValue>(&json_expr)
+            .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
+        self.merge_dynamic_json(&json)
+    }
+
+    fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
+        let Some(object) = json.as_object() else {
+            return self;
+        };
+
+        for (field, value) in object {
+            if field.starts_with('_') {
+                continue;
+            }
+            self = self.apply_dynamic_json_filter(field, value);
+        }
+
+        self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
+
+        if let Some(offset) = request_support::dynamic_json_u64_field(object, "_start") {
+            self = self.skip(offset);
+        }
+        if let Some(size) = request_support::dynamic_json_u64_field(object, "_size") {
+            self = self.limit(size);
+        }
+
+        if let Some(page_size) = request_support::dynamic_json_u64_field(object, "_pageSize") {
+            self = self.limit(page_size);
+        }
+        if let Some(page_number) = request_support::dynamic_json_u64_field(object, "_page") {
+            if page_number > 0 {
+                let size = request_support::dynamic_json_u64_field(object, "_pageSize")
+                    .or_else(|| self.query.slice.as_ref().and_then(|slice| slice.limit))
+                    .unwrap_or(10);
+                let offset = page_number.saturating_sub(1).saturating_mul(size);
+                self = self.page_offset(offset, size);
+            }
+        }
+
         self
+    }
+
+    pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
+        if let Some((head, tail)) = field.split_once('.') {
+            self.apply_dynamic_json_chain_filter(head, tail, value)
+        } else if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+            self.and_filter(request_support::dynamic_json_filter_expr(storage_field, value))
+        } else {
+            self
+        }
+    }
+
+    fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
+        match order_by {
+            Some(JsonValue::String(field)) => {
+                if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+                    self.query = self.query.order_desc(storage_field);
+                }
+            }
+            Some(JsonValue::Object(order_by)) => {
+                self = self.apply_dynamic_json_single_order_by(order_by);
+            }
+            Some(JsonValue::Array(order_bys)) => {
+                for order_by in order_bys {
+                    if let Some(order_by) = order_by.as_object() {
+                        self = self.apply_dynamic_json_single_order_by(order_by);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    fn apply_dynamic_json_single_order_by(
+        mut self,
+        order_by: &serde_json::Map<String, JsonValue>,
+    ) -> Self {
+        let Some(field) = order_by.get("field").and_then(JsonValue::as_str) else {
+            return self;
+        };
+        let Some(storage_field) = Self::dynamic_json_self_field(field) else {
+            return self;
+        };
+        if order_by
+            .get("useAsc")
+            .and_then(JsonValue::as_bool)
+            .unwrap_or(false)
+        {
+            self.query = self.query.order_asc(storage_field);
+        } else {
+            self.query = self.query.order_desc(storage_field);
+        }
+        self
+    }
+
+    fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
+        match field {
+            "id" => Some("id"),
+            "name" => Some("name"),
+            "status" => Some("status_id"),
+            "platform" => Some("platform_id"),
+            _ => None,
+        }
+    }
+
+    fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
+        let _ = (tail, value);
+        match head {
+            "status" | "status" => {
+                self.with_status_matching(
+                    crate::Q::task_status()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+            "platform" | "platform" => {
+                self.with_platform_matching(
+                    crate::Q::platforms()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+            "task_execution_logs" | "task_execution_log_list" => {
+                self.with_task_execution_log_list_matching(
+                    crate::Q::task_execution_logs()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+            _ => self,
+        }
     }
 }
 pub struct TaskExecutionLogRequest<R = crate::TaskExecutionLog> {
@@ -4801,8 +5272,37 @@ impl<R> TaskExecutionLogRequest<R> {
     pub fn max_detail_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("detail", alias)
     }
-    pub fn with_task_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
-        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+    pub fn have_task(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("task_id"));
+        self
+    }
+
+    pub fn have_no_task(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("task_id"));
+        self
+    }
+
+    pub fn with_task_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "task_id",
+            <crate::Task as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("task", selection));
+        self
+    }
+
+    pub fn without_task_matching(mut self, request: impl Into<request_support::QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "task_id",
+            <crate::Task as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(request_support::RelationFilter::new("task", selection));
         self
     }
     pub fn count_task(self) -> Self {
@@ -4829,5 +5329,129 @@ impl<R> TaskExecutionLogRequest<R> {
             include_all_facets,
         ));
         self
+    }
+
+    pub fn filter_by_json(self, json_expr: impl Into<String>) -> Self {
+        self.merge_dynamic_json_expr(json_expr.into())
+    }
+
+    fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
+        let json = serde_json::from_str::<JsonValue>(&json_expr)
+            .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
+        self.merge_dynamic_json(&json)
+    }
+
+    fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
+        let Some(object) = json.as_object() else {
+            return self;
+        };
+
+        for (field, value) in object {
+            if field.starts_with('_') {
+                continue;
+            }
+            self = self.apply_dynamic_json_filter(field, value);
+        }
+
+        self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
+
+        if let Some(offset) = request_support::dynamic_json_u64_field(object, "_start") {
+            self = self.skip(offset);
+        }
+        if let Some(size) = request_support::dynamic_json_u64_field(object, "_size") {
+            self = self.limit(size);
+        }
+
+        if let Some(page_size) = request_support::dynamic_json_u64_field(object, "_pageSize") {
+            self = self.limit(page_size);
+        }
+        if let Some(page_number) = request_support::dynamic_json_u64_field(object, "_page") {
+            if page_number > 0 {
+                let size = request_support::dynamic_json_u64_field(object, "_pageSize")
+                    .or_else(|| self.query.slice.as_ref().and_then(|slice| slice.limit))
+                    .unwrap_or(10);
+                let offset = page_number.saturating_sub(1).saturating_mul(size);
+                self = self.page_offset(offset, size);
+            }
+        }
+
+        self
+    }
+
+    pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
+        if let Some((head, tail)) = field.split_once('.') {
+            self.apply_dynamic_json_chain_filter(head, tail, value)
+        } else if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+            self.and_filter(request_support::dynamic_json_filter_expr(storage_field, value))
+        } else {
+            self
+        }
+    }
+
+    fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
+        match order_by {
+            Some(JsonValue::String(field)) => {
+                if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+                    self.query = self.query.order_desc(storage_field);
+                }
+            }
+            Some(JsonValue::Object(order_by)) => {
+                self = self.apply_dynamic_json_single_order_by(order_by);
+            }
+            Some(JsonValue::Array(order_bys)) => {
+                for order_by in order_bys {
+                    if let Some(order_by) = order_by.as_object() {
+                        self = self.apply_dynamic_json_single_order_by(order_by);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    fn apply_dynamic_json_single_order_by(
+        mut self,
+        order_by: &serde_json::Map<String, JsonValue>,
+    ) -> Self {
+        let Some(field) = order_by.get("field").and_then(JsonValue::as_str) else {
+            return self;
+        };
+        let Some(storage_field) = Self::dynamic_json_self_field(field) else {
+            return self;
+        };
+        if order_by
+            .get("useAsc")
+            .and_then(JsonValue::as_bool)
+            .unwrap_or(false)
+        {
+            self.query = self.query.order_asc(storage_field);
+        } else {
+            self.query = self.query.order_desc(storage_field);
+        }
+        self
+    }
+
+    fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
+        match field {
+            "id" => Some("id"),
+            "action" => Some("action"),
+            "detail" => Some("detail"),
+            "task" => Some("task_id"),
+            _ => None,
+        }
+    }
+
+    fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
+        let _ = (tail, value);
+        match head {
+            "task" | "task" => {
+                self.with_task_matching(
+                    crate::Q::tasks()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+            _ => self,
+        }
     }
 }
