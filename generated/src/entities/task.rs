@@ -106,10 +106,44 @@ impl Task {
         Ok(())
     }
 
-    pub fn save<'a, C>(&'a self, ctx: &'a C) -> Pin<Box<dyn Future<Output = Result<Self, std::io::Error>> + 'a>> {
-        let self_clone = self.clone();
+    pub fn save(mut self, ctx: &teaql_runtime::UserContext) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
         Box::pin(async move {
-            Ok(self_clone)
+            let repo = ctx.resolve_repository::<teaql_provider_rusqlite::RusqliteDialect, crate::ServiceRuntimeExecutor>("task")
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+            let mut node = teaql_runtime::GraphNode::new("task");
+            if self.deleted {
+                node.operation = teaql_runtime::GraphOperation::Remove;
+            } else if self.id == 0 {
+                node.operation = teaql_runtime::GraphOperation::Create;
+            } else {
+                node.operation = teaql_runtime::GraphOperation::Upsert;
+            }
+            if !self.comment.is_empty() {
+                node.comment = Some(self.comment.clone());
+            }
+            let mut logs = Vec::new();
+            let log_list = std::mem::take(&mut self.task_execution_log_list);
+            for log in log_list {
+                let mut log_node = teaql_runtime::GraphNode::new("task_execution_log");
+                if log.deleted {
+                    log_node.operation = teaql_runtime::GraphOperation::Remove;
+                } else if log.id == 0 {
+                    log_node.operation = teaql_runtime::GraphOperation::Create;
+                } else {
+                    log_node.operation = teaql_runtime::GraphOperation::Upsert;
+                }
+                if !log.comment.is_empty() {
+                    log_node.comment = Some(log.comment.clone());
+                }
+                log_node.values = teaql_core::Entity::into_record(log);
+                logs.push(log_node);
+            }
+            if !logs.is_empty() {
+                node.relations.insert("task_execution_log_list".to_string(), logs);
+            }
+            let mut values = teaql_core::Entity::into_record(self);
+            node.values = values;
+            repo.save_graph(node).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
         })
     }
 }
@@ -119,18 +153,110 @@ impl teaql_core::TeaqlEntity for Task {
         teaql_core::EntityDescriptor { 
             name: "task".to_string(),
             table_name: "task".to_string(),
-            properties: vec![],
-            relations: vec![],
+            properties: vec![
+                teaql_core::PropertyDescriptor {
+                    name: "id".to_string(),
+                    column_name: "id".to_string(),
+                    data_type: teaql_core::DataType::U64,
+                    nullable: false,
+                    is_id: true,
+                    is_version: false,
+                },
+                teaql_core::PropertyDescriptor {
+                    name: "version".to_string(),
+                    column_name: "version".to_string(),
+                    data_type: teaql_core::DataType::I64,
+                    nullable: false,
+                    is_id: false,
+                    is_version: true,
+                },
+                teaql_core::PropertyDescriptor {
+                    name: "deleted".to_string(),
+                    column_name: "deleted".to_string(),
+                    data_type: teaql_core::DataType::Bool,
+                    nullable: false,
+                    is_id: false,
+                    is_version: false,
+                },
+                teaql_core::PropertyDescriptor {
+                    name: "name".to_string(),
+                    column_name: "name".to_string(),
+                    data_type: teaql_core::DataType::Text, // Fallback for MVP
+                    nullable: true,
+                    is_id: false,
+                    is_version: false,
+                },
+                teaql_core::PropertyDescriptor {
+                    name: "status_id".to_string(),
+                    column_name: "status_id".to_string(),
+                    data_type: teaql_core::DataType::U64,
+                    nullable: true,
+                    is_id: false,
+                    is_version: false,
+                },
+                teaql_core::PropertyDescriptor {
+                    name: "platform_id".to_string(),
+                    column_name: "platform_id".to_string(),
+                    data_type: teaql_core::DataType::U64,
+                    nullable: true,
+                    is_id: false,
+                    is_version: false,
+                },
+            ],
+            relations: vec![
+                teaql_core::RelationDescriptor {
+                    name: "task_execution_log_list".to_string(),
+                    target_entity: "task_execution_log".to_string(),
+                    local_key: "id".to_string(),
+                    foreign_key: "task_id".to_string(),
+                    many: true,
+                    attach: true,
+                    delete_missing: true,
+                },
+            ],
         }
     }
 }
 
 impl teaql_core::Entity for Task {
-    fn from_record(_: std::collections::BTreeMap<String, teaql_core::Value>) -> Result<Self, teaql_core::EntityError> {
-        Ok(Self::new())
+    fn from_record(mut record: std::collections::BTreeMap<String, teaql_core::Value>) -> Result<Self, teaql_core::EntityError> {
+        let mut entity = Self::new();
+        if let Some(val) = record.remove("id") {
+            if let teaql_core::Value::U64(v) = val { entity.id = v; }
+            else if let teaql_core::Value::I64(v) = val { entity.id = v as u64; }
+        }
+        if let Some(val) = record.remove("version") {
+            if let teaql_core::Value::I64(v) = val { entity.version = v; }
+        }
+        if let Some(val) = record.remove("deleted") {
+            if let teaql_core::Value::Bool(v) = val { entity.deleted = v; }
+        }
+        if let Some(val) = record.remove("status_id") {
+            if let teaql_core::Value::U64(v) = val { entity.status_id = Some(v); }
+            else if let teaql_core::Value::I64(v) = val { entity.status_id = Some(v as u64); }
+        }
+        if let Some(val) = record.remove("platform_id") {
+            if let teaql_core::Value::U64(v) = val { entity.platform_id = Some(v); }
+            else if let teaql_core::Value::I64(v) = val { entity.platform_id = Some(v as u64); }
+        }
+        if let Some(val) = record.remove("name") {
+            if let teaql_core::Value::Text(v) = val { entity.name = Some(v); }
+        }
+        Ok(entity)
     }
 
     fn into_record(self) -> std::collections::BTreeMap<String, teaql_core::Value> {
-        std::collections::BTreeMap::new()
+        let mut record = std::collections::BTreeMap::new();
+        record.insert("id".to_string(), teaql_core::Value::U64(self.id));
+        record.insert("version".to_string(), teaql_core::Value::I64(self.version));
+        record.insert("deleted".to_string(), teaql_core::Value::Bool(self.deleted));
+        if let Some(v) = self.status_id {
+            record.insert("status_id".to_string(), teaql_core::Value::U64(v));
+        }
+        if let Some(v) = self.platform_id {
+            record.insert("platform_id".to_string(), teaql_core::Value::U64(v));
+        }
+        if let Some(v) = self.name { record.insert("name".to_string(), teaql_core::Value::Text(v)); }
+        record
     }
 }
