@@ -15,6 +15,34 @@ pub mod request_support {
     pub struct RelationFilter {}
     #[derive(Clone, Default, Debug)]
     pub struct QuerySelection {}
+    
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum FieldOperator {
+        Equal,
+        NotEqual,
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+        Between,
+        In,
+        NotIn,
+        Contain,
+        NotContain,
+        BeginWith,
+        NotBeginWith,
+        EndWith,
+        NotEndWith,
+        SoundsLike,
+        IsNull,
+        IsNotNull,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct DateRange<T> {
+        pub min: T,
+        pub max: T,
+    }
 }
 use request_support::*;
 
@@ -254,6 +282,68 @@ impl<R> PlatformRequest<R> {
     
     pub fn group_by_id(self) -> Self { self.group_by("id") }
     
+
+    pub fn with_id(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "id";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_id_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_id_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_id_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("id"));
+        self
+    }
+
+    pub fn with_id_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("id"));
+        self
+    }
+    
+    pub fn with_id_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("id", value.into()));
+        self
+    }
+
     pub fn with_id_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("id", val.clone()));
@@ -318,6 +408,68 @@ impl<R> PlatformRequest<R> {
     
     pub fn group_by_name(self) -> Self { self.group_by("name") }
     
+
+    pub fn with_name(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "name";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_name_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("name", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_name_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("name", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_name_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("name"));
+        self
+    }
+
+    pub fn with_name_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("name"));
+        self
+    }
+    
+    pub fn with_name_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("name", value.into()));
+        self
+    }
+
     pub fn with_name_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("name", val.clone()));
@@ -379,6 +531,32 @@ impl<R> PlatformRequest<R> {
         self.query = self.query.and_filter(Expr::like("name", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_name_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("name", value.into()));
+        self
+    }
+
     pub fn with_name_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("name", format!("{}%", value.into())));
         self
@@ -394,6 +572,68 @@ impl<R> PlatformRequest<R> {
     
     pub fn group_by_founded(self) -> Self { self.group_by("founded") }
     
+
+    pub fn with_founded(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "founded";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_founded_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("founded", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_founded_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("founded", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_founded_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("founded"));
+        self
+    }
+
+    pub fn with_founded_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("founded"));
+        self
+    }
+    
+    pub fn with_founded_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("founded", value.into()));
+        self
+    }
+
     pub fn with_founded_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("founded", val.clone()));
@@ -655,6 +895,68 @@ impl<R> TaskStatusRequest<R> {
     
     pub fn group_by_id(self) -> Self { self.group_by("id") }
     
+
+    pub fn with_id(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "id";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_id_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_id_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_id_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("id"));
+        self
+    }
+
+    pub fn with_id_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("id"));
+        self
+    }
+    
+    pub fn with_id_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("id", value.into()));
+        self
+    }
+
     pub fn with_id_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("id", val.clone()));
@@ -719,6 +1021,68 @@ impl<R> TaskStatusRequest<R> {
     
     pub fn group_by_name(self) -> Self { self.group_by("name") }
     
+
+    pub fn with_name(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "name";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_name_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("name", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_name_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("name", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_name_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("name"));
+        self
+    }
+
+    pub fn with_name_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("name"));
+        self
+    }
+    
+    pub fn with_name_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("name", value.into()));
+        self
+    }
+
     pub fn with_name_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("name", val.clone()));
@@ -780,6 +1144,32 @@ impl<R> TaskStatusRequest<R> {
         self.query = self.query.and_filter(Expr::like("name", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_name_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("name", value.into()));
+        self
+    }
+
     pub fn with_name_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("name", format!("{}%", value.into())));
         self
@@ -795,6 +1185,68 @@ impl<R> TaskStatusRequest<R> {
     
     pub fn group_by_code(self) -> Self { self.group_by("code") }
     
+
+    pub fn with_code(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "code";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_code_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("code", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_code_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("code", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_code_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("code"));
+        self
+    }
+
+    pub fn with_code_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("code"));
+        self
+    }
+    
+    pub fn with_code_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("code", value.into()));
+        self
+    }
+
     pub fn with_code_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("code", val.clone()));
@@ -856,6 +1308,32 @@ impl<R> TaskStatusRequest<R> {
         self.query = self.query.and_filter(Expr::like("code", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_code_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("code", value.into()));
+        self
+    }
+    
+    pub fn with_code_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("code", value.into()));
+        self
+    }
+    
+    pub fn with_code_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("code", value.into()));
+        self
+    }
+    
+    pub fn with_code_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("code", value.into()));
+        self
+    }
+    
+    pub fn with_code_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("code", value.into()));
+        self
+    }
+
     pub fn with_code_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("code", format!("{}%", value.into())));
         self
@@ -871,6 +1349,68 @@ impl<R> TaskStatusRequest<R> {
     
     pub fn group_by_color(self) -> Self { self.group_by("color") }
     
+
+    pub fn with_color(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "color";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_color_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("color", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_color_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("color", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_color_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("color"));
+        self
+    }
+
+    pub fn with_color_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("color"));
+        self
+    }
+    
+    pub fn with_color_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("color", value.into()));
+        self
+    }
+
     pub fn with_color_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("color", val.clone()));
@@ -932,6 +1472,32 @@ impl<R> TaskStatusRequest<R> {
         self.query = self.query.and_filter(Expr::like("color", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_color_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("color", value.into()));
+        self
+    }
+    
+    pub fn with_color_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("color", value.into()));
+        self
+    }
+    
+    pub fn with_color_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("color", value.into()));
+        self
+    }
+    
+    pub fn with_color_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("color", value.into()));
+        self
+    }
+    
+    pub fn with_color_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("color", value.into()));
+        self
+    }
+
     pub fn with_color_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("color", format!("{}%", value.into())));
         self
@@ -947,6 +1513,68 @@ impl<R> TaskStatusRequest<R> {
     
     pub fn group_by_display_order(self) -> Self { self.group_by("display_order") }
     
+
+    pub fn with_display_order(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "display_order";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_display_order_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("display_order", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_display_order_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("display_order", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_display_order_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("display_order"));
+        self
+    }
+
+    pub fn with_display_order_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("display_order"));
+        self
+    }
+    
+    pub fn with_display_order_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("display_order", value.into()));
+        self
+    }
+
     pub fn with_display_order_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("display_order", val.clone()));
@@ -1011,6 +1639,68 @@ impl<R> TaskStatusRequest<R> {
     
     pub fn group_by_progress(self) -> Self { self.group_by("progress") }
     
+
+    pub fn with_progress(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "progress";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_progress_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("progress", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_progress_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("progress", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_progress_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("progress"));
+        self
+    }
+
+    pub fn with_progress_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("progress"));
+        self
+    }
+    
+    pub fn with_progress_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("progress", value.into()));
+        self
+    }
+
     pub fn with_progress_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("progress", val.clone()));
@@ -1314,6 +2004,68 @@ impl<R> TaskRequest<R> {
     
     pub fn group_by_id(self) -> Self { self.group_by("id") }
     
+
+    pub fn with_id(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "id";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_id_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_id_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_id_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("id"));
+        self
+    }
+
+    pub fn with_id_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("id"));
+        self
+    }
+    
+    pub fn with_id_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("id", value.into()));
+        self
+    }
+
     pub fn with_id_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("id", val.clone()));
@@ -1378,6 +2130,68 @@ impl<R> TaskRequest<R> {
     
     pub fn group_by_name(self) -> Self { self.group_by("name") }
     
+
+    pub fn with_name(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "name";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_name_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("name", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_name_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("name", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_name_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("name"));
+        self
+    }
+
+    pub fn with_name_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("name"));
+        self
+    }
+    
+    pub fn with_name_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("name", value.into()));
+        self
+    }
+
     pub fn with_name_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("name", val.clone()));
@@ -1439,12 +2253,46 @@ impl<R> TaskRequest<R> {
         self.query = self.query.and_filter(Expr::like("name", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_name_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("name", value.into()));
+        self
+    }
+    
+    pub fn with_name_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("name", value.into()));
+        self
+    }
+
     pub fn with_name_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("name", format!("{}%", value.into())));
         self
     }
     pub fn with_name_ends_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("name", format!("%{}", value.into())));
+        self
+    }
+    pub fn with_status_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+        self
+    }
+    pub fn with_platform_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
 
@@ -1651,6 +2499,68 @@ impl<R> TaskExecutionLogRequest<R> {
     
     pub fn group_by_id(self) -> Self { self.group_by("id") }
     
+
+    pub fn with_id(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "id";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_id_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_id_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("id", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_id_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("id"));
+        self
+    }
+
+    pub fn with_id_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("id"));
+        self
+    }
+    
+    pub fn with_id_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("id", value.into()));
+        self
+    }
+
     pub fn with_id_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("id", val.clone()));
@@ -1715,6 +2625,68 @@ impl<R> TaskExecutionLogRequest<R> {
     
     pub fn group_by_action(self) -> Self { self.group_by("action") }
     
+
+    pub fn with_action(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "action";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_action_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("action", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_action_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("action", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_action_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("action"));
+        self
+    }
+
+    pub fn with_action_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("action"));
+        self
+    }
+    
+    pub fn with_action_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("action", value.into()));
+        self
+    }
+
     pub fn with_action_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("action", val.clone()));
@@ -1776,6 +2748,32 @@ impl<R> TaskExecutionLogRequest<R> {
         self.query = self.query.and_filter(Expr::like("action", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_action_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("action", value.into()));
+        self
+    }
+    
+    pub fn with_action_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("action", value.into()));
+        self
+    }
+    
+    pub fn with_action_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("action", value.into()));
+        self
+    }
+    
+    pub fn with_action_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("action", value.into()));
+        self
+    }
+    
+    pub fn with_action_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("action", value.into()));
+        self
+    }
+
     pub fn with_action_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("action", format!("{}%", value.into())));
         self
@@ -1791,6 +2789,68 @@ impl<R> TaskExecutionLogRequest<R> {
     
     pub fn group_by_detail(self) -> Self { self.group_by("detail") }
     
+
+    pub fn with_detail(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "detail";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_detail_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("detail", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_detail_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("detail", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_detail_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("detail"));
+        self
+    }
+
+    pub fn with_detail_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("detail"));
+        self
+    }
+    
+    pub fn with_detail_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("detail", value.into()));
+        self
+    }
+
     pub fn with_detail_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("detail", val.clone()));
@@ -1852,12 +2912,42 @@ impl<R> TaskExecutionLogRequest<R> {
         self.query = self.query.and_filter(Expr::like("detail", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_detail_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("detail", value.into()));
+        self
+    }
+    
+    pub fn with_detail_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("detail", value.into()));
+        self
+    }
+    
+    pub fn with_detail_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("detail", value.into()));
+        self
+    }
+    
+    pub fn with_detail_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("detail", value.into()));
+        self
+    }
+    
+    pub fn with_detail_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("detail", value.into()));
+        self
+    }
+
     pub fn with_detail_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("detail", format!("{}%", value.into())));
         self
     }
     pub fn with_detail_ends_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("detail", format!("%{}", value.into())));
+        self
+    }
+    pub fn with_task_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
 

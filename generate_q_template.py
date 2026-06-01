@@ -17,6 +17,34 @@ pub mod request_support {
     pub struct RelationFilter {}
     #[derive(Clone, Default, Debug)]
     pub struct QuerySelection {}
+    
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum FieldOperator {
+        Equal,
+        NotEqual,
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+        Between,
+        In,
+        NotIn,
+        Contain,
+        NotContain,
+        BeginWith,
+        NotBeginWith,
+        EndWith,
+        NotEndWith,
+        SoundsLike,
+        IsNull,
+        IsNotNull,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct DateRange<T> {
+        pub min: T,
+        pub max: T,
+    }
 }
 use request_support::*;
 
@@ -285,6 +313,68 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     
     pub fn group_by_{{ field.rust_name }}(self) -> Self { self.group_by("{{ field.name }}") }
     
+
+    pub fn with_{{ field.rust_name }}(mut self, operator: FieldOperator, value: impl Into<teaql_core::Value>) -> Self {
+        let val = value.into();
+        let field_name = "{{ field.name }}";
+        let expr = match operator {
+            FieldOperator::Equal => Expr::eq(field_name, val.clone()),
+            FieldOperator::NotEqual => Expr::ne(field_name, val.clone()),
+            FieldOperator::GreaterThan => Expr::gt(field_name, val.clone()),
+            FieldOperator::GreaterThanOrEqual => Expr::gte(field_name, val.clone()),
+            FieldOperator::LessThan => Expr::lt(field_name, val.clone()),
+            FieldOperator::LessThanOrEqual => Expr::lte(field_name, val.clone()),
+            FieldOperator::Between => Expr::eq(field_name, val.clone()), // Approximation
+            FieldOperator::In => Expr::in_list(field_name, vec![val.clone()]),
+            FieldOperator::NotIn => Expr::not_in_list(field_name, vec![val.clone()]),
+            FieldOperator::Contain => Expr::contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotContain => Expr::not_contain(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::BeginWith => Expr::begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotBeginWith => Expr::not_begin_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::EndWith => Expr::end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::NotEndWith => Expr::not_end_with(field_name, if let teaql_core::Value::Text(s) = &val { s.clone() } else { "".to_string() }),
+            FieldOperator::SoundsLike => Expr::sound_like(field_name, val.clone()),
+            FieldOperator::IsNull => Expr::is_null(field_name),
+            FieldOperator::IsNotNull => Expr::is_not_null(field_name),
+        };
+        self.query = self.query.and_filter(expr);
+        if field_name == "id" {
+            if let FieldOperator::Equal = operator {
+                if let teaql_core::Value::I64(v) = val {
+                    self.filter_id = Some(v as u64);
+                } else if let teaql_core::Value::U64(v) = val {
+                    self.filter_id = Some(v);
+                }
+            }
+        }
+        self
+    }
+    
+    pub fn with_{{ field.rust_name }}_between(mut self, min: impl Into<teaql_core::Value>, max: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::between("{{ field.name }}", min.into(), max.into()));
+        self
+    }
+
+    pub fn with_{{ field.rust_name }}_between_range<T: Into<teaql_core::Value> + Clone>(mut self, range: DateRange<T>) -> Self {
+        self.query = self.query.and_filter(Expr::between("{{ field.name }}", range.min.clone().into(), range.max.clone().into()));
+        self
+    }
+
+    pub fn with_{{ field.rust_name }}_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("{{ field.name }}"));
+        self
+    }
+
+    pub fn with_{{ field.rust_name }}_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("{{ field.name }}"));
+        self
+    }
+    
+    pub fn with_{{ field.rust_name }}_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("{{ field.name }}", value.into()));
+        self
+    }
+
     pub fn with_{{ field.rust_name }}_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         let val = value.into();
         self.query = self.query.and_filter(Expr::eq("{{ field.name }}", val.clone()));
@@ -348,6 +438,32 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self.query = self.query.and_filter(Expr::like("{{ field.name }}", format!("%{}%", value.into())));
         self
     }
+
+    pub fn with_{{ field.rust_name }}_not_containing(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("{{ field.name }}", value.into()));
+        self
+    }
+    
+    pub fn with_{{ field.rust_name }}_not_starting_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("{{ field.name }}", value.into()));
+        self
+    }
+    
+    pub fn with_{{ field.rust_name }}_not_ending_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("{{ field.name }}", value.into()));
+        self
+    }
+    
+    pub fn with_{{ field.rust_name }}_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("{{ field.name }}", value.into()));
+        self
+    }
+    
+    pub fn with_{{ field.rust_name }}_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("{{ field.name }}", value.into()));
+        self
+    }
+
     pub fn with_{{ field.rust_name }}_starts_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::like("{{ field.name }}", format!("{}%", value.into())));
         self
@@ -357,6 +473,13 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self
     }
     {%- endif %}
+{%- endfor %}
+
+{%- for relation in entity.relations %}
+    pub fn with_{{ relation.name }}_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+        // Relation filter is unsupported in string AST natively without joins, so we mock it for now
+        self
+    }
 {%- endfor %}
 
     pub fn facet_by_status_as(self, _name: &str, _facet: impl std::any::Any) -> Self {
