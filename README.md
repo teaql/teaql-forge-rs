@@ -19,7 +19,13 @@ The easiest way to run the local server is via Docker:
 docker run -d --name teaql-forge-server -p 8080:8080 teaql/teaql-forge-server:latest
 ```
 
-Once running, the server will expose the following endpoints:
+Once running, you can quickly test if the server is up:
+
+```bash
+curl http://127.0.0.1:8080/version
+```
+
+The server exposes the following endpoints:
 - `GET /version` - Returns the current server version.
 - `POST /generate` - Accepts `multipart/form-data` with an `xml` file and a `scope` string.
 
