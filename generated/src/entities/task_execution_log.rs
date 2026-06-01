@@ -162,6 +162,15 @@ impl teaql_core::TeaqlEntity for TaskExecutionLog {
                 },
             ],
             relations: vec![
+                teaql_core::RelationDescriptor {
+                    name: "task".to_string(),
+                    target_entity: "task".to_string(),
+                    local_key: "task_id".to_string(),
+                    foreign_key: "id".to_string(),
+                    many: false,
+                    attach: false,
+                    delete_missing: false,
+                },
             ],
         }
     }

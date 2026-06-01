@@ -206,13 +206,31 @@ impl teaql_core::TeaqlEntity for Task {
             ],
             relations: vec![
                 teaql_core::RelationDescriptor {
+                    name: "status".to_string(),
+                    target_entity: "task_status".to_string(),
+                    local_key: "status_id".to_string(),
+                    foreign_key: "id".to_string(),
+                    many: false,
+                    attach: false,
+                    delete_missing: false,
+                },
+                teaql_core::RelationDescriptor {
+                    name: "platform".to_string(),
+                    target_entity: "platform".to_string(),
+                    local_key: "platform_id".to_string(),
+                    foreign_key: "id".to_string(),
+                    many: false,
+                    attach: false,
+                    delete_missing: false,
+                },
+                teaql_core::RelationDescriptor {
                     name: "task_execution_log_list".to_string(),
                     target_entity: "task_execution_log".to_string(),
                     local_key: "id".to_string(),
                     foreign_key: "task_id".to_string(),
                     many: true,
-                    attach: true,
-                    delete_missing: true,
+                    attach: false,
+                    delete_missing: false,
                 },
             ],
         }

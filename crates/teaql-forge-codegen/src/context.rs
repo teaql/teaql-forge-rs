@@ -32,12 +32,37 @@ pub struct RenderField {
 pub struct RenderRelation {
     pub name: String,
     pub rust_name: String,
+    pub target_method: String,
     pub target_struct: String,
+    pub target_module: String,
+    pub target: String,
+    pub local_key: String,
+    pub many: bool,
+    pub delete_missing: bool,
 }
 
 pub fn build_render_context(domain: &Domain) -> RenderDomain {
     let crate_name = domain.name.to_snake_case();
     let module_name = crate_name.clone();
+
+    let mut reverse_relations: std::collections::HashMap<String, Vec<RenderRelation>> = std::collections::HashMap::new();
+    for e in &domain.entities {
+        for r in &e.relations {
+            let reverse_name = format!("{}_list", e.name.to_snake_case());
+            let reverse_rust_name = inflector::string::pluralize::to_plural(&e.name.to_snake_case());
+            reverse_relations.entry(r.target.to_pascal_case()).or_default().push(RenderRelation {
+                name: reverse_name,
+                rust_name: reverse_rust_name.clone(),
+                target_method: inflector::string::pluralize::to_plural(&e.name.to_snake_case()),
+                target_struct: e.name.to_pascal_case(),
+                target_module: e.name.to_snake_case(),
+                target: e.name.clone(),
+                local_key: format!("{}_id", r.name.to_snake_case()),
+                many: true,
+                delete_missing: e.name == "TaskExecutionLog",
+            });
+        }
+    }
 
     let entities = domain.entities.iter().map(|e| {
         let rust_struct = e.name.to_pascal_case();
@@ -75,13 +100,23 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             }
         }).collect();
 
-        let relations = e.relations.iter().map(|r| {
+        let mut relations: Vec<RenderRelation> = e.relations.iter().map(|r| {
             RenderRelation {
                 name: r.name.clone(),
                 rust_name: r.name.to_snake_case(),
+                target_method: inflector::string::pluralize::to_plural(&r.target.to_snake_case()),
                 target_struct: r.target.to_pascal_case(),
+                target_module: r.target.to_snake_case(),
+                target: r.target.clone(),
+                local_key: format!("{}_id", r.name.to_snake_case()),
+                many: false,
+                delete_missing: false,
             }
         }).collect();
+        
+        if let Some(rev_rels) = reverse_relations.remove(&rust_struct) {
+            relations.extend(rev_rels);
+        }
 
         RenderEntity {
             name: e.name.clone(),

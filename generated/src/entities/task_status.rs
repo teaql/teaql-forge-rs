@@ -222,6 +222,15 @@ impl teaql_core::TeaqlEntity for TaskStatus {
                 },
             ],
             relations: vec![
+                teaql_core::RelationDescriptor {
+                    name: "task_list".to_string(),
+                    target_entity: "task".to_string(),
+                    local_key: "id".to_string(),
+                    foreign_key: "status_id".to_string(),
+                    many: true,
+                    attach: false,
+                    delete_missing: false,
+                },
             ],
         }
     }

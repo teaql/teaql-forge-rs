@@ -8,7 +8,9 @@ pub struct {{ entity.rust_struct }} {
     pub {{ field.rust_name }}: {{ field.rust_type }},
 {%- endfor %}
 {%- for rel in entity.relations %}
+{%- if not rel.many %}
     pub {{ rel.rust_name }}_id: Option<u64>,
+{%- endif %}
 {%- endfor %}
 {%- if entity.name == "task" %}
     pub task_execution_log_list: Vec<crate::entities::task_execution_log::TaskExecutionLog>,
@@ -35,7 +37,9 @@ impl {{ entity.rust_struct }} {
             {%- endif %}
         {%- endfor %}
         {%- for rel in entity.relations %}
+        {%- if not rel.many %}
             {{ rel.rust_name }}_id: None,
+        {%- endif %}
         {%- endfor %}
         {%- if entity.name == "task" %}
             task_execution_log_list: vec![],
@@ -101,6 +105,7 @@ impl {{ entity.rust_struct }} {
 {%- endfor %}
 
 {%- for rel in entity.relations %}
+{%- if not rel.many %}
     pub fn {{ rel.rust_name }}_id(&self) -> u64 {
         self.{{ rel.rust_name }}_id.unwrap_or_default()
     }
@@ -109,6 +114,7 @@ impl {{ entity.rust_struct }} {
         self.{{ rel.rust_name }}_id = Some(value.into());
         self
     }
+{%- endif %}
 {%- endfor %}
 
 {%- if entity.name == "task" %}
@@ -229,6 +235,7 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
                 {%- endif %}
                 {%- endfor %}
                 {%- for rel in entity.relations %}
+                {%- if not rel.many %}
                 teaql_core::PropertyDescriptor {
                     name: "{{ rel.rust_name }}_id".to_string(),
                     column_name: "{{ rel.name }}".to_string(),
@@ -237,20 +244,21 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
                     is_id: false,
                     is_version: false,
                 },
+                {%- endif %}
                 {%- endfor %}
             ],
             relations: vec![
-                {%- if entity.name == "task" %}
+                {%- for rel in entity.relations %}
                 teaql_core::RelationDescriptor {
-                    name: "task_execution_log_list".to_string(),
-                    target_entity: "task_execution_log".to_string(),
-                    local_key: "id".to_string(),
-                    foreign_key: "task_id".to_string(),
-                    many: true,
-                    attach: true,
-                    delete_missing: true,
+                    name: "{{ rel.name }}".to_string(),
+                    target_entity: "{{ rel.target_module }}".to_string(),
+                    local_key: "{{ 'id' if rel.many else rel.local_key }}".to_string(),
+                    foreign_key: "{{ rel.local_key if rel.many else 'id' }}".to_string(),
+                    many: {{ "true" if rel.many else "false" }},
+                    attach: false,
+                    delete_missing: {{ "true" if rel.delete_missing else "false" }},
                 },
-                {%- endif %}
+                {%- endfor %}
             ],
         }
     }
@@ -267,10 +275,12 @@ impl teaql_core::Entity for {{ entity.rust_struct }} {
             if let teaql_core::Value::I64(v) = val { entity.version = v; }
         }
         {%- for rel in entity.relations %}
+        {%- if not rel.many %}
         if let Some(val) = record.remove("{{ rel.rust_name }}_id").or_else(|| record.remove("{{ rel.name }}")) {
             if let teaql_core::Value::U64(v) = val { entity.{{ rel.rust_name }}_id = Some(v); }
             else if let teaql_core::Value::I64(v) = val { entity.{{ rel.rust_name }}_id = Some(v as u64); }
         }
+        {%- endif %}
         {%- endfor %}
         {%- for field in entity.fields %}
         {%- if field.rust_name != "id" and field.rust_name != "version" and field.rust_name != "deleted" %}
@@ -297,9 +307,11 @@ impl teaql_core::Entity for {{ entity.rust_struct }} {
         record.insert("id".to_string(), teaql_core::Value::U64(self.id));
         record.insert("version".to_string(), teaql_core::Value::I64(self.version));
         {%- for rel in entity.relations %}
+        {%- if not rel.many %}
         if let Some(v) = self.{{ rel.rust_name }}_id {
             record.insert("{{ rel.rust_name }}_id".to_string(), teaql_core::Value::U64(v));
         }
+        {%- endif %}
         {%- endfor %}
         {%- for field in entity.fields %}
         {%- if field.rust_name != "id" and field.rust_name != "version" and field.rust_name != "deleted" %}
