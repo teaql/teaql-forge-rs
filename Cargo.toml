@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "crates/teaql-forge-model",
-    "crates/teaql-forge-codegen",
-    "crates/teaql-forge-cli", "crates/teaql-forge-server", "crates/teaql-forge-server",
+    "teaql-forge-model",
+    "teaql-forge-codegen",
+    "teaql-forge-cli",
+    "teaql-forge-server",
 ]
 resolver = "2"
 
