@@ -1,7 +1,10 @@
 # TeaQL Forge Server
 
-TeaQL Forge Server is a local-first code generation engine for TeaQL, written entirely in Rust. It provides lightning-fast generation of Rust libraries and fully configured workspace scaffolds based on your TeaQL `.xml` domain models.
+TeaQL Forge Server is a local-first code generation service for TeaQL, written entirely in Rust.
 
+It turns TeaQL `.xml` domain models into Rust libraries and fully configured workspace scaffolds, while keeping the same service API used by TeaQL clients, plugins, and agent workflows.
+
+The generated workspace is designed around context-bound execution and audit-ready runtime patterns, making it suitable for AI-assisted business software development.
 ## Features
 - **In-Memory Generation:** Renders Rust files directly in memory and packages them as a streamable `.zip` file for speed.
 - **Multiple Scopes:** Supports generating simple library crates (`rust-lib`) and full application workspaces (`rust-workspace`).
