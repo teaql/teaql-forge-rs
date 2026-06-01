@@ -1,0 +1,10 @@
+[package]
+name = "{{ workspace_crate_name }}"
+version = "0.1.0"
+edition = "2021"
+description = "Application workspace for the TeaQL domain crate {{ crate_name }}"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+{{ module_name }} = { path = "lib" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

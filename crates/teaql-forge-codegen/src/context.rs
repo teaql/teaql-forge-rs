@@ -6,6 +6,8 @@ use teaql_forge_model::ir::{Domain, Entity, FieldType};
 pub struct RenderDomain {
     pub crate_name: String,
     pub module_name: String,
+    pub workspace_crate_name: String,
+    pub has_sql_provider: bool,
     pub entities: Vec<RenderEntity>,
 }
 
@@ -197,9 +199,14 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         }
     }).collect();
 
+    let workspace_crate_name = format!("{}-workspace", crate_name);
+    let has_sql_provider = true; // Hardcoded for now, assuming SQL is supported
+
     RenderDomain {
         crate_name,
         module_name,
+        workspace_crate_name,
+        has_sql_provider,
         entities,
     }
 }

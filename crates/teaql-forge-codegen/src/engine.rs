@@ -65,3 +65,46 @@ pub fn generate_crate(domain: &RenderDomain, output_dir: &Path) -> std::io::Resu
 
     Ok(())
 }
+
+pub fn generate_virtual_workspace(domain: &RenderDomain) -> Result<Vec<GeneratedFile>, minijinja::Error> {
+    let mut env = Environment::new();
+    env.add_template("Cargo.toml", include_str!("../templates/workspace/Cargo.toml.j2"))?;
+    env.add_template("lib.rs", include_str!("../templates/workspace/lib.rs.j2"))?;
+    env.add_template("main.rs", include_str!("../templates/workspace/main.rs.j2"))?;
+    env.add_template(".gitignore", include_str!("../templates/workspace/gitignore.j2"))?;
+    env.add_template("AGENTS.md", include_str!("../templates/workspace/AGENTS.md.j2"))?;
+
+    let mut files = Vec::new();
+
+    files.push(GeneratedFile {
+        path: "Cargo.toml".to_string(),
+        content: env.get_template("Cargo.toml")?.render(domain)?,
+    });
+    files.push(GeneratedFile {
+        path: "src/lib.rs".to_string(),
+        content: env.get_template("lib.rs")?.render(domain)?,
+    });
+    files.push(GeneratedFile {
+        path: "src/main.rs".to_string(),
+        content: env.get_template("main.rs")?.render(domain)?,
+    });
+    files.push(GeneratedFile {
+        path: ".gitignore".to_string(),
+        content: env.get_template(".gitignore")?.render(domain)?,
+    });
+    files.push(GeneratedFile {
+        path: "AGENTS.md".to_string(),
+        content: env.get_template("AGENTS.md")?.render(domain)?,
+    });
+    
+    // Also generate the lib crates into the "lib" directory
+    let lib_files = generate_virtual_crate(domain)?;
+    for lib_file in lib_files {
+        files.push(GeneratedFile {
+            path: format!("lib/{}", lib_file.path),
+            content: lib_file.content,
+        });
+    }
+
+    Ok(files)
+}

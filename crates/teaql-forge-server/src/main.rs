@@ -19,7 +19,7 @@ async fn main() {
         .route("/version", get(version_handler))
         .route("/generate", post(generate_handler));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8081));
     println!("Listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -58,7 +58,7 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
         None => return (StatusCode::BAD_REQUEST, "Missing file part").into_response(),
     };
 
-    if scope != "rust-lib" && scope != "rust_lib" {
+    if scope != "rust-lib" && scope != "rust_lib" && scope != "rust-workspace" {
         println!("Warning: unsupported scope {}, assuming rust-lib", scope);
     }
 
@@ -68,9 +68,16 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
     };
 
     let render_domain = build_render_context(&domain);
-    let files = match generate_virtual_crate(&render_domain) {
-        Ok(f) => f,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("CodeGen error: {}", e)).into_response(),
+    let files = if scope == "rust-workspace" {
+        match teaql_forge_codegen::engine::generate_virtual_workspace(&render_domain) {
+            Ok(f) => f,
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("CodeGen error: {}", e)).into_response(),
+        }
+    } else {
+        match generate_virtual_crate(&render_domain) {
+            Ok(f) => f,
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("CodeGen error: {}", e)).into_response(),
+        }
     };
 
     let mut zip_buffer = Vec::new();
