@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_variables, unused_mut)]
 use crate::runtime::*;
 use crate::entities::*;
 use teaql_core::Entity;
@@ -1706,7 +1707,7 @@ impl<R> PlatformRequest<R> {
     pub fn max_founded_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("founded", alias)
     }
-    pub fn with_task_list_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_task_list_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
@@ -1724,6 +1725,24 @@ impl<R> PlatformRequest<R> {
             alias,
             selection,
             true,
+        ));
+        self
+    }
+    pub fn facet_by_tasks_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        self.facet_by_tasks_as_with_options(facet_name, request, true)
+    }
+
+    pub fn facet_by_tasks_as_with_options(
+        mut self,
+        facet_name: impl Into<String>,
+        request: impl Into<QuerySelection>,
+        include_all_facets: bool,
+    ) -> Self {
+        self.query_options.facets.push(FacetRequest::new(
+            facet_name,
+            "task_list",
+            request,
+            include_all_facets,
         ));
         self
     }
@@ -3123,7 +3142,7 @@ impl<R> TaskStatusRequest<R> {
     pub fn max_progress_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("progress", alias)
     }
-    pub fn with_task_list_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_task_list_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
@@ -3141,6 +3160,24 @@ impl<R> TaskStatusRequest<R> {
             alias,
             selection,
             true,
+        ));
+        self
+    }
+    pub fn facet_by_tasks_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        self.facet_by_tasks_as_with_options(facet_name, request, true)
+    }
+
+    pub fn facet_by_tasks_as_with_options(
+        mut self,
+        facet_name: impl Into<String>,
+        request: impl Into<QuerySelection>,
+        include_all_facets: bool,
+    ) -> Self {
+        self.query_options.facets.push(FacetRequest::new(
+            facet_name,
+            "task_list",
+            request,
+            include_all_facets,
         ));
         self
     }
@@ -3804,7 +3841,7 @@ impl<R> TaskRequest<R> {
     pub fn max_name_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("name", alias)
     }
-    pub fn with_status_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_status_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
@@ -3833,7 +3870,7 @@ impl<R> TaskRequest<R> {
         ));
         self
     }
-    pub fn with_platform_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_platform_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
@@ -3862,7 +3899,7 @@ impl<R> TaskRequest<R> {
         ));
         self
     }
-    pub fn with_task_execution_log_list_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_task_execution_log_list_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
@@ -3880,6 +3917,24 @@ impl<R> TaskRequest<R> {
             alias,
             selection,
             true,
+        ));
+        self
+    }
+    pub fn facet_by_task_execution_logs_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        self.facet_by_task_execution_logs_as_with_options(facet_name, request, true)
+    }
+
+    pub fn facet_by_task_execution_logs_as_with_options(
+        mut self,
+        facet_name: impl Into<String>,
+        request: impl Into<QuerySelection>,
+        include_all_facets: bool,
+    ) -> Self {
+        self.query_options.facets.push(FacetRequest::new(
+            facet_name,
+            "task_execution_log_list",
+            request,
+            include_all_facets,
         ));
         self
     }
@@ -4746,7 +4801,7 @@ impl<R> TaskExecutionLogRequest<R> {
     pub fn max_detail_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("detail", alias)
     }
-    pub fn with_task_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_task_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }

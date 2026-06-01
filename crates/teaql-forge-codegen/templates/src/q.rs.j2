@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_variables, unused_mut)]
 use crate::runtime::*;
 use crate::entities::*;
 use teaql_core::Entity;
@@ -1338,7 +1339,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
 {%- endfor %}
 
 {%- for relation in entity.relations %}
-    pub fn with_{{ relation.name }}_matching(mut self, filter: impl Into<teaql_core::Expr>) -> Self {
+    pub fn with_{{ relation.name }}_matching(self, _filter: impl Into<teaql_core::Expr>) -> Self {
         // Relation filter is unsupported in string AST natively without joins, so we mock it for now
         self
     }
@@ -1368,7 +1369,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         ));
         self
     }
-{%- else %}
+{%- endif %}
     pub fn facet_by_{{ relation.rust_name }}_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         self.facet_by_{{ relation.rust_name }}_as_with_options(facet_name, request, true)
     }
@@ -1387,7 +1388,6 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         ));
         self
     }
-{%- endif %}
 {%- endfor %}
 }
 
