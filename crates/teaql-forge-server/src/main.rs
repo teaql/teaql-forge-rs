@@ -13,15 +13,34 @@ use teaql_forge_codegen::engine::generate_virtual_crate;
 use teaql_forge_model::parser::parse_model;
 use zip::write::SimpleFileOptions;
 
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(long, default_value = "127.0.0.1")]
+    host: String,
+
+    #[arg(short, long, default_value_t = 8080)]
+    port: u16,
+}
+
 #[tokio::main]
 async fn main() {
+    let args = Args::parse();
+
     let app = Router::new()
         .route("/version", get(version_handler))
         .route("/generate", post(generate_handler));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8081));
+    if args.host == "0.0.0.0" {
+        println!("Warning: You are exposing TeaQL Local Server to the network.");
+        println!("Use Enterprise Mode or configure TLS/auth for production.");
+    }
+
+    let addr = format!("{}:{}", args.host, args.port);
     println!("Listening on {}", addr);
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
 
