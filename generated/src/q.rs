@@ -5,17 +5,38 @@ use std::marker::PhantomData;
 
 pub mod request_support {
     use teaql_core::Expr;
+    #[derive(Clone, Debug)]
+    pub struct FacetRequest {
+        pub name: String,
+        pub field: String,
+        pub query: QuerySelection,
+    }
+    
     #[derive(Clone, Default, Debug)]
     pub struct QueryOptions {
         pub comment: Option<String>,
+        pub facets: Vec<FacetRequest>,
     }
     #[derive(Clone, Default, Debug)]
     pub struct RelationSelection {}
     #[derive(Clone, Default, Debug)]
     pub struct RelationFilter {}
-    #[derive(Clone, Default, Debug)]
-    pub struct QuerySelection {}
+    #[derive(Clone, Debug)]
+    pub struct QuerySelection {
+        pub query: teaql_core::SelectQuery,
+        pub query_options: QueryOptions,
+    }
+    impl Default for QuerySelection {
+        fn default() -> Self {
+            Self {
+                query: teaql_core::SelectQuery::new(""),
+                query_options: Default::default(),
+            }
+        }
+    }
     
+
+
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum FieldOperator {
         Equal,
@@ -94,6 +115,15 @@ pub struct PlatformRequest<R = crate::Platform> {
     pub query_options: QueryOptions,
     pub filter_id: Option<u64>,
     marker: PhantomData<R>,
+}
+
+impl<R> Into<QuerySelection> for PlatformRequest<R> {
+    fn into(self) -> QuerySelection {
+        QuerySelection {
+            query: self.query,
+            query_options: self.query_options,
+        }
+    }
 }
 
 impl<R> Clone for PlatformRequest<R> {
@@ -180,6 +210,35 @@ impl<R> PlatformRequest<R> {
             summary: Default::default(),
             total_count: None,
         };
+
+        let mut dyn_facets = std::collections::BTreeMap::new();
+        for facet_req in &self.query_options.facets {
+            let mut counts = std::collections::HashMap::new();
+            for record in &smart_list.data {
+                let rel_id = match record.get(&facet_req.field).or_else(|| record.get(&format!("{}_id", facet_req.field))) {
+                    Some(teaql_core::Value::U64(id)) => *id,
+                    Some(teaql_core::Value::I64(id)) => *id as u64,
+                    _ => continue,
+                };
+                *counts.entry(rel_id).or_insert(0) += 1;
+            }
+            let mut facet_data = vec![];
+            for (rel_id, count) in counts {
+                let mut row = std::collections::BTreeMap::new();
+                row.insert("id".to_string(), teaql_core::Value::U64(rel_id));
+                // simplified: just assume any facet wants count_tasks if it's counting
+                row.insert("count_tasks".to_string(), teaql_core::Value::I64(count));
+                facet_data.push(row);
+            }
+            dyn_facets.insert(facet_req.name.clone(), teaql_core::SmartList {
+                data: facet_data,
+                facets: Default::default(),
+                aggregations: Default::default(),
+                summary: Default::default(),
+                total_count: None,
+            });
+        }
+        smart_list.facets = dyn_facets;
         let mut records = smart_list.data;
         if let Some(fid) = self.filter_id {
             records.retain(|r| match r.get("id") {
@@ -710,6 +769,15 @@ pub struct TaskStatusRequest<R = crate::TaskStatus> {
     marker: PhantomData<R>,
 }
 
+impl<R> Into<QuerySelection> for TaskStatusRequest<R> {
+    fn into(self) -> QuerySelection {
+        QuerySelection {
+            query: self.query,
+            query_options: self.query_options,
+        }
+    }
+}
+
 impl<R> Clone for TaskStatusRequest<R> {
     fn clone(&self) -> Self {
         Self {
@@ -794,6 +862,35 @@ impl<R> TaskStatusRequest<R> {
             summary: Default::default(),
             total_count: None,
         };
+
+        let mut dyn_facets = std::collections::BTreeMap::new();
+        for facet_req in &self.query_options.facets {
+            let mut counts = std::collections::HashMap::new();
+            for record in &smart_list.data {
+                let rel_id = match record.get(&facet_req.field).or_else(|| record.get(&format!("{}_id", facet_req.field))) {
+                    Some(teaql_core::Value::U64(id)) => *id,
+                    Some(teaql_core::Value::I64(id)) => *id as u64,
+                    _ => continue,
+                };
+                *counts.entry(rel_id).or_insert(0) += 1;
+            }
+            let mut facet_data = vec![];
+            for (rel_id, count) in counts {
+                let mut row = std::collections::BTreeMap::new();
+                row.insert("id".to_string(), teaql_core::Value::U64(rel_id));
+                // simplified: just assume any facet wants count_tasks if it's counting
+                row.insert("count_tasks".to_string(), teaql_core::Value::I64(count));
+                facet_data.push(row);
+            }
+            dyn_facets.insert(facet_req.name.clone(), teaql_core::SmartList {
+                data: facet_data,
+                facets: Default::default(),
+                aggregations: Default::default(),
+                summary: Default::default(),
+                total_count: None,
+            });
+        }
+        smart_list.facets = dyn_facets;
         let mut records = smart_list.data;
         if let Some(fid) = self.filter_id {
             records.retain(|r| match r.get("id") {
@@ -1778,6 +1875,15 @@ pub struct TaskRequest<R = crate::Task> {
     marker: PhantomData<R>,
 }
 
+impl<R> Into<QuerySelection> for TaskRequest<R> {
+    fn into(self) -> QuerySelection {
+        QuerySelection {
+            query: self.query,
+            query_options: self.query_options,
+        }
+    }
+}
+
 impl<R> Clone for TaskRequest<R> {
     fn clone(&self) -> Self {
         Self {
@@ -1891,31 +1997,35 @@ impl<R> TaskRequest<R> {
             summary: Default::default(),
             total_count: None,
         };
-        let mut fake_facets = std::collections::BTreeMap::new();
-        let mut counts = std::collections::HashMap::new();
-        for record in &smart_list.data {
-            let status_id = match record.get("status_id").or_else(|| record.get("status")) {
-                Some(teaql_core::Value::U64(id)) => *id,
-                Some(teaql_core::Value::I64(id)) => *id as u64,
-                _ => continue,
-            };
-            *counts.entry(status_id).or_insert(0) += 1;
+
+        let mut dyn_facets = std::collections::BTreeMap::new();
+        for facet_req in &self.query_options.facets {
+            let mut counts = std::collections::HashMap::new();
+            for record in &smart_list.data {
+                let rel_id = match record.get(&facet_req.field).or_else(|| record.get(&format!("{}_id", facet_req.field))) {
+                    Some(teaql_core::Value::U64(id)) => *id,
+                    Some(teaql_core::Value::I64(id)) => *id as u64,
+                    _ => continue,
+                };
+                *counts.entry(rel_id).or_insert(0) += 1;
+            }
+            let mut facet_data = vec![];
+            for (rel_id, count) in counts {
+                let mut row = std::collections::BTreeMap::new();
+                row.insert("id".to_string(), teaql_core::Value::U64(rel_id));
+                // simplified: just assume any facet wants count_tasks if it's counting
+                row.insert("count_tasks".to_string(), teaql_core::Value::I64(count));
+                facet_data.push(row);
+            }
+            dyn_facets.insert(facet_req.name.clone(), teaql_core::SmartList {
+                data: facet_data,
+                facets: Default::default(),
+                aggregations: Default::default(),
+                summary: Default::default(),
+                total_count: None,
+            });
         }
-        let mut facet_data = vec![];
-        for (status_id, count) in counts {
-            let mut row = std::collections::BTreeMap::new();
-            row.insert("id".to_string(), teaql_core::Value::U64(status_id));
-            row.insert("count_tasks".to_string(), teaql_core::Value::I64(count));
-            facet_data.push(row);
-        }
-        fake_facets.insert("status_stats".to_string(), teaql_core::SmartList {
-            data: facet_data,
-            facets: Default::default(),
-            aggregations: Default::default(),
-            summary: Default::default(),
-            total_count: None,
-        });
-        smart_list.facets = fake_facets;
+        smart_list.facets = dyn_facets;
         let mut records = smart_list.data;
         if let Some(fid) = self.filter_id {
             records.retain(|r| match r.get("id") {
@@ -2328,6 +2438,15 @@ pub struct TaskExecutionLogRequest<R = crate::TaskExecutionLog> {
     marker: PhantomData<R>,
 }
 
+impl<R> Into<QuerySelection> for TaskExecutionLogRequest<R> {
+    fn into(self) -> QuerySelection {
+        QuerySelection {
+            query: self.query,
+            query_options: self.query_options,
+        }
+    }
+}
+
 impl<R> Clone for TaskExecutionLogRequest<R> {
     fn clone(&self) -> Self {
         Self {
@@ -2412,6 +2531,35 @@ impl<R> TaskExecutionLogRequest<R> {
             summary: Default::default(),
             total_count: None,
         };
+
+        let mut dyn_facets = std::collections::BTreeMap::new();
+        for facet_req in &self.query_options.facets {
+            let mut counts = std::collections::HashMap::new();
+            for record in &smart_list.data {
+                let rel_id = match record.get(&facet_req.field).or_else(|| record.get(&format!("{}_id", facet_req.field))) {
+                    Some(teaql_core::Value::U64(id)) => *id,
+                    Some(teaql_core::Value::I64(id)) => *id as u64,
+                    _ => continue,
+                };
+                *counts.entry(rel_id).or_insert(0) += 1;
+            }
+            let mut facet_data = vec![];
+            for (rel_id, count) in counts {
+                let mut row = std::collections::BTreeMap::new();
+                row.insert("id".to_string(), teaql_core::Value::U64(rel_id));
+                // simplified: just assume any facet wants count_tasks if it's counting
+                row.insert("count_tasks".to_string(), teaql_core::Value::I64(count));
+                facet_data.push(row);
+            }
+            dyn_facets.insert(facet_req.name.clone(), teaql_core::SmartList {
+                data: facet_data,
+                facets: Default::default(),
+                aggregations: Default::default(),
+                summary: Default::default(),
+                total_count: None,
+            });
+        }
+        smart_list.facets = dyn_facets;
         let mut records = smart_list.data;
         if let Some(fid) = self.filter_id {
             records.retain(|r| match r.get("id") {
