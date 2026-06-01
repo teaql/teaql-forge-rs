@@ -152,7 +152,7 @@ impl teaql_core::TeaqlEntity for Task {
     fn entity_descriptor() -> teaql_core::EntityDescriptor {
         teaql_core::EntityDescriptor { 
             name: "task".to_string(),
-            table_name: "task".to_string(),
+            table_name: "task_data".to_string(),
             properties: vec![
                 teaql_core::PropertyDescriptor {
                     name: "id".to_string(),
@@ -171,34 +171,35 @@ impl teaql_core::TeaqlEntity for Task {
                     is_version: true,
                 },
                 teaql_core::PropertyDescriptor {
-                    name: "deleted".to_string(),
-                    column_name: "deleted".to_string(),
-                    data_type: teaql_core::DataType::Bool,
-                    nullable: false,
-                    is_id: false,
-                    is_version: false,
-                },
-                teaql_core::PropertyDescriptor {
                     name: "name".to_string(),
                     column_name: "name".to_string(),
-                    data_type: teaql_core::DataType::Text, // Fallback for MVP
+                    data_type: match "Option<String>" {
+                        "String" | "Option<String>" => teaql_core::DataType::Text,
+                        "u64" | "Option<u64>" => teaql_core::DataType::U64,
+                        "i64" | "Option<i64>" => teaql_core::DataType::I64,
+                        "i32" | "Option<i32>" => teaql_core::DataType::I64,
+                        "bool" | "Option<bool>" => teaql_core::DataType::Bool,
+                        "chrono::NaiveDate" | "Option<chrono::NaiveDate>" => teaql_core::DataType::Date,
+                        "chrono::DateTime<chrono::Utc>" | "Option<chrono::DateTime<chrono::Utc>>" => teaql_core::DataType::Timestamp,
+                        _ => teaql_core::DataType::Text,
+                    },
                     nullable: true,
                     is_id: false,
                     is_version: false,
                 },
                 teaql_core::PropertyDescriptor {
                     name: "status_id".to_string(),
-                    column_name: "status_id".to_string(),
+                    column_name: "status".to_string(),
                     data_type: teaql_core::DataType::U64,
-                    nullable: true,
+                    nullable: false, // relations usually not null in robot-kanban
                     is_id: false,
                     is_version: false,
                 },
                 teaql_core::PropertyDescriptor {
                     name: "platform_id".to_string(),
-                    column_name: "platform_id".to_string(),
+                    column_name: "platform".to_string(),
                     data_type: teaql_core::DataType::U64,
-                    nullable: true,
+                    nullable: false, // relations usually not null in robot-kanban
                     is_id: false,
                     is_version: false,
                 },
@@ -228,9 +229,6 @@ impl teaql_core::Entity for Task {
         if let Some(val) = record.remove("version") {
             if let teaql_core::Value::I64(v) = val { entity.version = v; }
         }
-        if let Some(val) = record.remove("deleted") {
-            if let teaql_core::Value::Bool(v) = val { entity.deleted = v; }
-        }
         if let Some(val) = record.remove("status_id") {
             if let teaql_core::Value::U64(v) = val { entity.status_id = Some(v); }
             else if let teaql_core::Value::I64(v) = val { entity.status_id = Some(v as u64); }
@@ -249,7 +247,6 @@ impl teaql_core::Entity for Task {
         let mut record = std::collections::BTreeMap::new();
         record.insert("id".to_string(), teaql_core::Value::U64(self.id));
         record.insert("version".to_string(), teaql_core::Value::I64(self.version));
-        record.insert("deleted".to_string(), teaql_core::Value::Bool(self.deleted));
         if let Some(v) = self.status_id {
             record.insert("status_id".to_string(), teaql_core::Value::U64(v));
         }

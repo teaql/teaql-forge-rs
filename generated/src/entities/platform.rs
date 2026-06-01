@@ -90,7 +90,7 @@ impl teaql_core::TeaqlEntity for Platform {
     fn entity_descriptor() -> teaql_core::EntityDescriptor {
         teaql_core::EntityDescriptor { 
             name: "platform".to_string(),
-            table_name: "platform".to_string(),
+            table_name: "platform_data".to_string(),
             properties: vec![
                 teaql_core::PropertyDescriptor {
                     name: "id".to_string(),
@@ -109,17 +109,18 @@ impl teaql_core::TeaqlEntity for Platform {
                     is_version: true,
                 },
                 teaql_core::PropertyDescriptor {
-                    name: "deleted".to_string(),
-                    column_name: "deleted".to_string(),
-                    data_type: teaql_core::DataType::Bool,
-                    nullable: false,
-                    is_id: false,
-                    is_version: false,
-                },
-                teaql_core::PropertyDescriptor {
                     name: "name".to_string(),
                     column_name: "name".to_string(),
-                    data_type: teaql_core::DataType::Text, // Fallback for MVP
+                    data_type: match "Option<String>" {
+                        "String" | "Option<String>" => teaql_core::DataType::Text,
+                        "u64" | "Option<u64>" => teaql_core::DataType::U64,
+                        "i64" | "Option<i64>" => teaql_core::DataType::I64,
+                        "i32" | "Option<i32>" => teaql_core::DataType::I64,
+                        "bool" | "Option<bool>" => teaql_core::DataType::Bool,
+                        "chrono::NaiveDate" | "Option<chrono::NaiveDate>" => teaql_core::DataType::Date,
+                        "chrono::DateTime<chrono::Utc>" | "Option<chrono::DateTime<chrono::Utc>>" => teaql_core::DataType::Timestamp,
+                        _ => teaql_core::DataType::Text,
+                    },
                     nullable: true,
                     is_id: false,
                     is_version: false,
@@ -127,7 +128,16 @@ impl teaql_core::TeaqlEntity for Platform {
                 teaql_core::PropertyDescriptor {
                     name: "founded".to_string(),
                     column_name: "founded".to_string(),
-                    data_type: teaql_core::DataType::Text, // Fallback for MVP
+                    data_type: match "Option<chrono::DateTime<chrono::Utc>>" {
+                        "String" | "Option<String>" => teaql_core::DataType::Text,
+                        "u64" | "Option<u64>" => teaql_core::DataType::U64,
+                        "i64" | "Option<i64>" => teaql_core::DataType::I64,
+                        "i32" | "Option<i32>" => teaql_core::DataType::I64,
+                        "bool" | "Option<bool>" => teaql_core::DataType::Bool,
+                        "chrono::NaiveDate" | "Option<chrono::NaiveDate>" => teaql_core::DataType::Date,
+                        "chrono::DateTime<chrono::Utc>" | "Option<chrono::DateTime<chrono::Utc>>" => teaql_core::DataType::Timestamp,
+                        _ => teaql_core::DataType::Text,
+                    },
                     nullable: true,
                     is_id: false,
                     is_version: false,
@@ -149,9 +159,6 @@ impl teaql_core::Entity for Platform {
         if let Some(val) = record.remove("version") {
             if let teaql_core::Value::I64(v) = val { entity.version = v; }
         }
-        if let Some(val) = record.remove("deleted") {
-            if let teaql_core::Value::Bool(v) = val { entity.deleted = v; }
-        }
         if let Some(val) = record.remove("name") {
             if let teaql_core::Value::Text(v) = val { entity.name = Some(v); }
         }
@@ -164,7 +171,6 @@ impl teaql_core::Entity for Platform {
         let mut record = std::collections::BTreeMap::new();
         record.insert("id".to_string(), teaql_core::Value::U64(self.id));
         record.insert("version".to_string(), teaql_core::Value::I64(self.version));
-        record.insert("deleted".to_string(), teaql_core::Value::Bool(self.deleted));
         if let Some(v) = self.name { record.insert("name".to_string(), teaql_core::Value::Text(v)); }
         record
     }
