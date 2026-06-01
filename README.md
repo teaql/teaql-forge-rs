@@ -53,4 +53,4 @@ cargo run --bin teaql-forge-server -- --host 0.0.0.0 --port 8080
 > **Warning:** Binding to `0.0.0.0` will expose the TeaQL local server to the network. Use Enterprise Mode or configure TLS/auth for production environments.
 
 ## License
-MIT License
+Apache-2.0 License
