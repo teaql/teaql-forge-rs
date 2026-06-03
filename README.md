@@ -9,14 +9,14 @@ The generated workspace is designed around context-bound execution and audit-rea
 - **In-Memory Generation:** Renders Rust files directly in memory and packages them as a streamable `.zip` file for speed.
 - **Multiple Scopes:** Supports generating simple library crates (`rust-lib`) and full application workspaces (`rust-workspace`).
 - **Axum Web Server:** Highly concurrent and memory-safe web server backend listening on configurable ports.
-- **Lightweight Docker Image:** Built on top of `debian-slim` via a multi-stage Docker build, resulting in a minimal footprint.
+- **Lightweight Docker Image:** Built as a statically-linked binary from `scratch` for ARM64 using musl, resulting in a tiny (~3MB) footprint.
 
 ## Quick Start via Docker
 
 The easiest way to run the local server is via Docker:
 
 ```bash
-docker run -d --name teaql-forge-server -p 8080:8080 teaql/teaql-forge-server:latest
+docker run -d --name teaql-forge-server -p 8080:8080 teaql/teaql-forge-rs:latest
 ```
 
 Once running, you can quickly test if the server is up:
