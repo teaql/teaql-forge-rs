@@ -13,6 +13,31 @@ This workspace is the editable Rust application layer for the generated TeaQL do
 - Do not use other database access technologies from workspace business code. This includes direct SQLx queries, SeaORM, Diesel, rbatis, rusqlite, tokio-postgres, mysql_async, raw database clients, and hand-written repository/DAO layers.
 - Do not add dependencies or helper wrappers that bypass TeaQL for persistence, querying, transactions, relation loading, or DTO mapping.
 
+## Application Layer Safety Guardrails
+
+### 1. Use the Entity API Exclusively
+- Always perform state transitions or updates directly on the domain entity object itself, and call `.save(&ctx).await`.
+- Never use repository-level methods (`save_entity_graph_from()`, etc.) directly. They execute full graph replacements and may implicitly delete child records.
+- Data MUST NOT be deleted implicitly. Unless `.mark_as_delete()` is explicitly called, no command should delete any data.
+
+### 2. ABSOLUTE BAN ON `T::` TOOLS
+- Inside the application layer, you are strictly forbidden from calling any stateless utility from `teaql_tool::T` directly.
+- All side effects (network, file) and all stateful computations (time, formatting, ID generation) MUST go through the user context (`ctx`).
+- Do not use `chrono::Utc`, `chrono::Local`, `std::fs`, `reqwest`, or `std::process::Command` directly.
+
+### 3. MANDATORY BUSINESS INTENT (`.comment()`)
+- Every tool call MUST end with `.comment("English intent description")`.
+- Pure computation tools return `MustComment<T>` — a zero-cost wrapper that cannot be used without calling `.comment()`. The compiler will reject code that skips this step.
+
+```rust
+// Correct
+let deadline = ctx.time().today().add_days(7).comment("Calculate grace period deadline");
+let data = ctx.http().get("https://...").comment("Sync external tasks").await?;
+
+// WRONG: compiler error
+let now = T::time().today();
+```
+
 If the domain needs new entities, fields, relations, constants, or generated API names, update the model and regenerate the library before changing workspace code.
 
 ## Generated Crate
