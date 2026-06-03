@@ -164,7 +164,7 @@ impl {{ entity.rust_struct }} {
 
     pub fn save(mut self, ctx: &teaql_runtime::UserContext) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
         Box::pin(async move {
-            let repo = ctx.resolve_repository::<teaql_provider_rusqlite::RusqliteDialect, crate::ServiceRuntimeExecutor>("{{ entity.name }}")
+            let repo = ctx.resolve_repository::<crate::ServiceRuntimeExecutor>("{{ entity.name }}")
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
             let mut node = teaql_runtime::GraphNode::new("{{ entity.name }}");
             if self.deleted {

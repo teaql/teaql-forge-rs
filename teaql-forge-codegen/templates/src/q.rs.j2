@@ -15,7 +15,8 @@ pub mod request_support {
         BinaryOp, Expr, Record,
         RelationAggregate as RuntimeRelationAggregate, SelectQuery, SmartList,
     };
-    use teaql_runtime::{ContextError, GraphNode, QueryExecutor, RepositoryError, RuntimeError, UserContext};
+    use teaql_runtime::{ContextError, GraphNode, RepositoryError, RuntimeError, UserContext};
+    use teaql_data_service::QueryExecutor;
 
     pub(crate) const COUNT_ALIAS: &str = "count";
     pub(crate) const TYPE_FIELD: &str = "internal_type";
@@ -62,11 +63,11 @@ pub mod request_support {
     pub trait TeaqlRecordRepository {
         type Error: std::error::Error + Send + Sync + 'static;
 
-        fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>>;
+        async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>>;
 
-        fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>>;
+        async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>>;
 
-        fn fetch_smart_list_with_relation_aggregates(
+        async fn fetch_smart_list_with_relation_aggregates(
             &self,
             query: &SelectQuery,
             relation_aggregates: &[RuntimeRelationAggregate],
@@ -74,11 +75,11 @@ pub mod request_support {
     }
 
     pub trait TeaqlEntityRepository: TeaqlRecordRepository {
-        fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+        async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
         where
             T: teaql_core::Entity;
 
-        fn fetch_enhanced_entities_with_relation_aggregates<T>(
+        async fn fetch_enhanced_entities_with_relation_aggregates<T>(
             &self,
             query: &SelectQuery,
             relation_aggregates: &[RuntimeRelationAggregate],
@@ -86,27 +87,26 @@ pub mod request_support {
         where
             T: teaql_core::Entity;
 
-        fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
+        async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
         where
             T: teaql_core::Entity;
     }
 
-    impl<'a, D, E> TeaqlRecordRepository for teaql_runtime::ResolvedRepository<'a, D, E>
+    impl<'a, E> TeaqlRecordRepository for teaql_runtime::ResolvedRepository<'a, E>
     where
-        D: teaql_sql::SqlDialect,
-        E: QueryExecutor,
+        E: teaql_data_service::QueryExecutor + teaql_data_service::MutationExecutor + Send + Sync + 'static,
     {
         type Error = E::Error;
 
-        fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>> {
-            teaql_runtime::ResolvedRepository::fetch_all(self, query)
+        async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>> {
+            teaql_runtime::ResolvedRepository::fetch_all(self, query).await
         }
 
-        fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>> {
-            teaql_runtime::ResolvedRepository::fetch_smart_list(self, query)
+        async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>> {
+            teaql_runtime::ResolvedRepository::fetch_smart_list(self, query).await
         }
 
-        fn fetch_smart_list_with_relation_aggregates(
+        async fn fetch_smart_list_with_relation_aggregates(
             &self,
             query: &SelectQuery,
             relation_aggregates: &[RuntimeRelationAggregate],
@@ -115,23 +115,22 @@ pub mod request_support {
                 self,
                 query,
                 relation_aggregates,
-            )
+            ).await
         }
     }
 
-    impl<'a, D, E> TeaqlEntityRepository for teaql_runtime::ResolvedRepository<'a, D, E>
+    impl<'a, E> TeaqlEntityRepository for teaql_runtime::ResolvedRepository<'a, E>
     where
-        D: teaql_sql::SqlDialect,
-        E: QueryExecutor,
+        E: teaql_data_service::QueryExecutor + teaql_data_service::MutationExecutor + Send + Sync + 'static,
     {
-        fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+        async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
         where
             T: teaql_core::Entity,
         {
-            teaql_runtime::ResolvedRepository::fetch_enhanced_entities(self, query)
+            teaql_runtime::ResolvedRepository::fetch_enhanced_entities(self, query).await
         }
 
-        fn fetch_enhanced_entities_with_relation_aggregates<T>(
+        async fn fetch_enhanced_entities_with_relation_aggregates<T>(
             &self,
             query: &SelectQuery,
             relation_aggregates: &[RuntimeRelationAggregate],
@@ -143,14 +142,14 @@ pub mod request_support {
                 self,
                 query,
                 relation_aggregates,
-            )
+            ).await
         }
 
-        fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
+        async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
         where
             T: teaql_core::Entity,
         {
-            teaql_runtime::ResolvedRepository::save_entity_graph(self, entity)
+            teaql_runtime::ResolvedRepository::save_entity_graph(self, entity).await
         }
     }
 
@@ -159,7 +158,7 @@ pub mod request_support {
     pub trait TeaqlRuntime {
         fn user_context(&self) -> &UserContext;
 
-        fn fetch_facet_smart_list(
+        async fn fetch_facet_smart_list(
             &self,
             entity: &str,
             query: &SelectQuery,
@@ -182,25 +181,25 @@ pub mod request_support {
 
     #[allow(async_fn_in_trait)]
     pub trait TeaqlUserContextExt {
-        async fn commit_data(&self) -> Result<(), RepositoryError<teaql_provider_rusqlite::MutationExecutorError>>;
+        async fn commit_data(&self) -> Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>>;
 
-        async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<teaql_provider_rusqlite::MutationExecutorError>>
+        async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>>
         where
             F: FnOnce() -> Fut,
-            Fut: Future<Output = Result<(), RepositoryError<teaql_provider_rusqlite::MutationExecutorError>>>;
+            Fut: Future<Output = Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>>>;
     }
 
     impl TeaqlUserContextExt for teaql_runtime::UserContext {
-        async fn commit_data(&self) -> Result<(), RepositoryError<teaql_provider_rusqlite::MutationExecutorError>> {
-            self.commit_changes::<teaql_provider_rusqlite::RusqliteDialect, teaql_provider_rusqlite::RusqliteMutationExecutor>()
+        async fn commit_data(&self) -> Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>> {
+            self.commit_changes::<crate::ServiceRuntimeExecutor>()
         }
 
-        async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<teaql_provider_rusqlite::MutationExecutorError>>
+        async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>>
         where
             F: FnOnce() -> Fut,
-            Fut: Future<Output = Result<(), RepositoryError<teaql_provider_rusqlite::MutationExecutorError>>>,
+            Fut: Future<Output = Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>>>,
         {
-            let executor = self.require_resource::<teaql_provider_rusqlite::RusqliteMutationExecutor>().map_err(|err| {
+            let executor = self.require_resource::<crate::ServiceRuntimeExecutor>().map_err(|err| {
                 RepositoryError::Runtime(RuntimeError::Graph(format!(
                     "cannot start transaction without executor: {err}"
                 )))
@@ -231,27 +230,27 @@ pub mod request_support {
             self
         }
 
-        fn fetch_facet_smart_list(
+        async fn fetch_facet_smart_list(
             &self,
             entity: &str,
             query: &SelectQuery,
             relation_aggregates: &[RuntimeRelationAggregate],
             trace_context: Vec<teaql_core::TraceNode>,
         ) -> Result<SmartList<Record>, RuntimeError> {
-            self.resolve_repository::<teaql_provider_rusqlite::RusqliteDialect, teaql_provider_rusqlite::RusqliteMutationExecutor>(entity.to_owned())
+            self.resolve_repository::<crate::ServiceRuntimeExecutor>(entity.to_owned())
                 .map_err(|err| RuntimeError::Graph(err.to_string()))?
                 .with_trace_context(trace_context)
-                .fetch_smart_list_with_relation_aggregates(query, relation_aggregates)
+                .fetch_smart_list_with_relation_aggregates(query, relation_aggregates).await
                 .map_err(|err| RuntimeError::Graph(err.to_string()))
         }
     }
 
     impl TeaqlRepositoryProvider for teaql_runtime::UserContext {
 {%- for entity in entities %}
-    type {{ entity.rust_struct }}Repository<'a> = teaql_runtime::ResolvedRepository<'a, teaql_provider_rusqlite::RusqliteDialect, teaql_provider_rusqlite::RusqliteMutationExecutor> where Self: 'a;
+    type {{ entity.rust_struct }}Repository<'a> = teaql_runtime::ResolvedRepository<'a, crate::ServiceRuntimeExecutor> where Self: 'a;
 
     fn {{ entity.rust_module }}_repository(&self) -> Result<Self::{{ entity.rust_struct }}Repository<'_>, teaql_runtime::ContextError> {
-        self.resolve_repository::<teaql_provider_rusqlite::RusqliteDialect, teaql_provider_rusqlite::RusqliteMutationExecutor>("{{ entity.name }}")
+        self.resolve_repository::<crate::ServiceRuntimeExecutor>("{{ entity.name }}")
     }
 {%- endfor %}
 }
@@ -492,7 +491,7 @@ pub mod request_support {
             .collect()
     }
 
-    pub(crate) fn execute_facets<C>(
+    pub(crate) async fn execute_facets<C>(
         ctx: &C,
         outer_query: &SelectQuery,
         options: &QueryOptions,
@@ -520,7 +519,7 @@ pub mod request_support {
                 comment: facet.facet_name.clone(),
             });
 
-            let facet_rows = ctx.fetch_facet_smart_list(&query.entity, &query, &relation_aggregates, chain)?;
+            let facet_rows = ctx.fetch_facet_smart_list(&query.entity, &query, &relation_aggregates, chain).await?;
             facets.insert(facet.facet_name.clone(), facet_rows);
         }
         Ok(facets)
@@ -974,8 +973,8 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         let mut rows = repository.fetch_enhanced_entities_with_relation_aggregates::<R>(
             &query,
             &relation_aggregates,
-        )?;
-        let facets = request_support::execute_facets(ctx, &query, &query_options)
+        ).await?;
+        let facets = request_support::execute_facets(ctx, &query, &query_options).await
             .map_err(teaql_runtime::RepositoryError::Runtime)?;
         request_support::attach_facets(&mut rows, facets);
         Ok(rows)
@@ -1030,8 +1029,8 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         let outer_query = self.query.clone();
         let relation_aggregates = request_support::runtime_relation_aggregates(&query_options);
         let query = request_support::apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
-        let mut rows = repository.fetch_smart_list_with_relation_aggregates(&query, &relation_aggregates)?;
-        let facets = request_support::execute_facets(ctx, &outer_query, &query_options)
+        let mut rows = repository.fetch_smart_list_with_relation_aggregates(&query, &relation_aggregates).await?;
+        let facets = request_support::execute_facets(ctx, &outer_query, &query_options).await
             .map_err(teaql_runtime::RepositoryError::Runtime)?;
         request_support::attach_facets(&mut rows, facets);
         Ok(rows)
