@@ -191,7 +191,7 @@ pub mod request_support {
 
     impl TeaqlUserContextExt for teaql_runtime::UserContext {
         async fn commit_data(&self) -> Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>> {
-            self.commit_changes::<crate::ServiceRuntimeExecutor>()
+            self.commit_changes::<crate::ServiceRuntimeExecutor>().await
         }
 
         async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<teaql_sql::SqlExecutorError<teaql_provider_rusqlite::MutationExecutorError>>>
@@ -1064,7 +1064,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         query.slice = None;
         query.relations.clear();
         query = query.count("COUNT_ALIAS");
-        let rows = repository.fetch_all(&query)?;
+        let rows = repository.fetch_all(&query).await?;
         rows.into_iter().next().and_then(|row| row.get("COUNT_ALIAS").cloned()).and_then(|v| v.try_u64()).ok_or_else(|| teaql_runtime::RepositoryError::Runtime(teaql_runtime::RuntimeError::Graph("count result is missing or not numeric".to_string())))
     }
 
