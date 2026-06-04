@@ -85,6 +85,30 @@ pub async fn service_runtime_from_pool(pool: DataServicePool) -> Result<ServiceR
     context.insert_resource(env_config.config.clone());
     context.insert_resource(env_config);
     
+    let token = std::env::var("TEAQL_SCHEMA_TOKEN").unwrap_or_default();
+    if token.is_empty() {
+        let user = std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_else(|_| "user".to_string());
+        let host = std::env::var("HOSTNAME").or_else(|_| std::env::var("COMPUTERNAME")).unwrap_or_else(|_| "local".to_string());
+        let signature = format!("{}@{}:90", user, host);
+        eprintln!("\n============================================================");
+        eprintln!(" 🛑 TeaQL Schema Initialization Blocked");
+        eprintln!("============================================================");
+        eprintln!(" To proceed with 'ensure_schema()', an environment variable");
+        eprintln!(" TEAQL_SCHEMA_TOKEN is required.");
+        eprintln!();
+        eprintln!(" 1. Visit: https://teaql.io/get-token");
+        eprintln!(" 2. Enter the following request signature (max 90 days):");
+        eprintln!("    ->  {}", signature);
+        eprintln!(" 3. Set the returned token as TEAQL_SCHEMA_TOKEN to start.");
+        eprintln!();
+        eprintln!(" 🚀 [Coming Soon: TeaQL Enterprise Edition]");
+        eprintln!(" In Enterprise Edition, simply submit this request to your internal");
+        eprintln!(" IT portal and await approval automatically. Centralized control,");
+        eprintln!(" zero hassle. Stay tuned! (https://teaql.io/enterprise)");
+        eprintln!("============================================================\n");
+        return Err(ServiceRuntimeError::Runtime(teaql_runtime::RuntimeError::Graph("Missing TEAQL_SCHEMA_TOKEN environment variable.".to_string())));
+    }
+
     match schema_mode {
         teaql_tool_core::SchemaMode::Execute => {
             context.ensure_schema().await?;
