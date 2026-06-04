@@ -1670,7 +1670,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
 
 {%- endfor %}
 
-{%- for entity in module.entities %}
+{%- for entity in entities %}
 impl<R: teaql_core::Entity> crate::q::PurposedQuery<{{ entity.rust_struct }}Request<R>> {
     pub async fn execute_for_list<C>(self, ctx: &C) -> Result<teaql_core::SmartList<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
     where

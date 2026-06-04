@@ -21,7 +21,7 @@ struct Args {
     #[arg(long, default_value = "127.0.0.1")]
     host: String,
 
-    #[arg(short, long, default_value_t = 8080)]
+    #[arg(short, long, default_value_t = 8081)]
     port: u16,
 }
 
