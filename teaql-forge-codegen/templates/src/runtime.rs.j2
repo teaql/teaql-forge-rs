@@ -1,3 +1,137 @@
+{% if has_sql_provider %}
+use crate::*;
+use teaql_core::TeaqlEntity;
+use teaql_provider_rusqlite::RusqliteProviderExt as _;
+
+pub type DataServiceDialect = teaql_provider_rusqlite::RusqliteDialect;
+pub type DataServiceMutationExecutor = teaql_provider_rusqlite::RusqliteMutationExecutor;
+pub type DataServiceMutationError = teaql_provider_rusqlite::MutationExecutorError;
+pub type DataServiceIdGenerator = teaql_provider_rusqlite::RusqliteIdSpaceGenerator;
+pub type DataServicePool = rusqlite::Connection;
+pub type DataServiceExecutor = ServiceRuntimeExecutor;
+pub type ServiceRuntime = teaql_runtime::UserContext;
+
+pub const DATABASE_URL_ENV: &str = "{{ crate_name | upper }}_DATABASE_URL";
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ServiceRuntimeConfig {
+    pub database_url: String,
+}
+
+impl ServiceRuntimeConfig {
+    pub fn from_env() -> Result<Self, ServiceRuntimeError> {
+        Ok(Self {
+            database_url: std::env::var(DATABASE_URL_ENV).map_err(|source| ServiceRuntimeError::MissingEnv { name: DATABASE_URL_ENV, source })?,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub enum ServiceRuntimeError {
+    MissingEnv {
+        name: &'static str,
+        source: std::env::VarError,
+    },
+    Rusqlite(rusqlite::Error),
+    Runtime(teaql_runtime::RuntimeError),
+}
+
+impl std::fmt::Display for ServiceRuntimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ServiceRuntimeError::MissingEnv { name, source } => write!(f, "missing environment variable {name}: {source}"),
+            ServiceRuntimeError::Rusqlite(err) => write!(f, "rusqlite error: {err}"),
+            ServiceRuntimeError::Runtime(err) => write!(f, "runtime error: {err}"),
+        }
+    }
+}
+
+impl std::error::Error for ServiceRuntimeError {}
+
+impl From<rusqlite::Error> for ServiceRuntimeError {
+    fn from(err: rusqlite::Error) -> Self {
+        ServiceRuntimeError::Rusqlite(err)
+    }
+}
+
+impl From<teaql_runtime::RuntimeError> for ServiceRuntimeError {
+    fn from(err: teaql_runtime::RuntimeError) -> Self {
+        ServiceRuntimeError::Runtime(err)
+    }
+}
+
+pub async fn service_runtime_from_env() -> Result<ServiceRuntime, ServiceRuntimeError> {
+    service_runtime(ServiceRuntimeConfig::from_env()?).await
+}
+
+pub async fn service_runtime(config: ServiceRuntimeConfig) -> Result<ServiceRuntime, ServiceRuntimeError> {
+    let pool = connect_data_service_pool(&config).await?;
+    service_runtime_from_pool(pool).await
+}
+
+pub async fn service_runtime_from_pool(pool: DataServicePool) -> Result<ServiceRuntime, ServiceRuntimeError> {
+    let mutation_executor = DataServiceMutationExecutor::new(pool);
+    let id_generator = DataServiceIdGenerator::from_executor(mutation_executor.clone());
+    let mut context = module_with_behaviors_and_checkers().into_context();
+    context.set_internal_id_generator(id_generator);
+    context.use_rusqlite_provider(mutation_executor.clone());
+    context.insert_resource(ServiceRuntimeExecutor::new(mutation_executor));
+    
+    // 自动加载 Zero-Code 审计配置与 Schema 模式
+    let env_config = teaql_tool_core::audit_config_from_env(&[
+        {% for entity in entities %}"{{ entity.table_name }}"{% if not loop.last %}, {% endif %}{% endfor %}
+    ]);
+    let schema_mode = env_config.schema_mode;
+    context.insert_resource(env_config.config.clone());
+    context.insert_resource(env_config);
+    
+    match schema_mode {
+        teaql_tool_core::SchemaMode::Execute => {
+            context.ensure_schema().await?;
+        }
+        teaql_tool_core::SchemaMode::DryRun => {
+            // DryRun: 目前等效于验证
+            context.ensure_schema().await?;
+        }
+        teaql_tool_core::SchemaMode::Verify => {
+            context.ensure_schema().await?;
+        }
+    }
+    
+    Ok(context)
+}
+
+async fn connect_data_service_pool(config: &ServiceRuntimeConfig) -> Result<DataServicePool, ServiceRuntimeError> {
+    use std::path::Path;
+
+    let url = &config.database_url;
+    let sanitized_url = if url.starts_with("sqlite:") {
+        let raw_path = url.strip_prefix("sqlite:").unwrap();
+        let (is_absolute, file_path_str) = if raw_path.starts_with("///") {
+            (true, &raw_path[2..])
+        } else if raw_path.starts_with("//") {
+            (false, &raw_path[2..])
+        } else if raw_path.starts_with("/") {
+            (true, raw_path)
+        } else {
+            (false, raw_path)
+        };
+        let pure_file_path = file_path_str.split('?').next().unwrap_or(file_path_str);
+        let path = Path::new(pure_file_path);
+        if let Some(parent) = path.parent() {
+            if !parent.as_os_str().is_empty() {
+                std::fs::create_dir_all(parent).map_err(|err| teaql_runtime::RuntimeError::Graph(err.to_string()))?;
+            }
+        }
+        pure_file_path.to_string()
+    } else {
+        url.clone()
+    };
+    
+    let path_str = sanitized_url.strip_prefix("sqlite://").or_else(|| sanitized_url.strip_prefix("sqlite:")).unwrap_or(&sanitized_url);
+    Ok(DataServicePool::open(path_str)?)
+}
+{% else %}
 pub struct Context {
     // Database connection would go here
 }
@@ -15,3 +149,4 @@ impl Context {
         Ok(())
     }
 }
+{% endif %}
