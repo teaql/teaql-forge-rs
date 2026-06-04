@@ -162,7 +162,11 @@ impl {{ entity.rust_struct }} {
     }
 {%- endif %}
 
-    pub fn save(mut self, ctx: &teaql_runtime::UserContext) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
+    pub fn audit_as(self, comment: impl Into<String>) -> teaql_core::entity::Audited<Self> {
+        teaql_core::entity::Audited::new(self, comment)
+    }
+    
+    pub(crate) fn _save(mut self, ctx: &teaql_runtime::UserContext) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
         Box::pin(async move {
             let repo = ctx.resolve_repository::<crate::ServiceRuntimeExecutor>("{{ entity.name }}")
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;

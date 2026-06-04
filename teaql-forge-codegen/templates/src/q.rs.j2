@@ -169,7 +169,19 @@ pub mod request_support {
 
     /// Internal trait for repository access. Application code should not use this trait directly.
     #[doc(hidden)]
-    pub trait TeaqlRepositoryProvider: TeaqlRuntime {
+    pub trait AuditedSave {
+    type Context;
+    fn save(self, ctx: &Self::Context) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>>;
+}
+
+impl<T: teaql_core::Entity> AuditedSave for teaql_core::entity::Audited<T> {
+    type Context = teaql_runtime::UserContext;
+    fn save(self, ctx: &Self::Context) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
+        self.inner._save(ctx)
+    }
+}
+
+pub trait TeaqlRepositoryProvider: TeaqlRuntime {
     {%- for entity in entities %}
         type {{ entity.rust_struct }}Repository<'a>: TeaqlEntityRepository + 'a
         where
@@ -817,6 +829,17 @@ pub mod request_support {
 }
 use request_support::*;
 
+pub struct PurposedQuery<T> {
+    pub inner: T,
+    pub purpose: String,
+}
+
+impl<T> PurposedQuery<T> {
+    pub fn new(inner: T, purpose: impl Into<String>) -> Self {
+        Self { inner, purpose: purpose.into() }
+    }
+}
+
 pub struct Q;
 
 impl Q {
@@ -940,7 +963,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self
     }
 
-    pub async fn execute_for_list<'a, C>(
+    pub(crate) async fn _execute_for_list<'a, C>(
         self,
         ctx: &'a C,
     ) -> Result<teaql_core::SmartList<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'a>>>
@@ -980,7 +1003,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         Ok(rows)
     }
 
-    pub async fn execute_for_first<'a, C>(
+    pub(crate) async fn _execute_for_first<'a, C>(
         self,
         ctx: &'a C,
     ) -> Result<Option<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'a>>>
@@ -992,7 +1015,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         Ok(rows.data.into_iter().next())
     }
 
-    pub async fn execute_for_one<'a, C>(
+    pub(crate) async fn _execute_for_one<'a, C>(
         self,
         ctx: &'a C,
     ) -> Result<Option<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'a>>>
@@ -1000,10 +1023,10 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         C: request_support::TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
     {
-        self.execute_for_first(ctx).await
+        self._execute_for_first(ctx).await
     }
 
-    pub async fn execute_by_id<'a, C>(
+    pub(crate) async fn _execute_by_id<'a, C>(
         self,
         ctx: &'a C,
         id: impl Into<teaql_core::Value>,
@@ -1015,7 +1038,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self.and_filter(teaql_core::Expr::eq("id", id)).execute_for_first(ctx).await
     }
 
-    pub async fn execute_for_records<'a, C>(
+    pub(crate) async fn _execute_for_records<'a, C>(
         self,
         ctx: &'a C,
     ) -> Result<teaql_core::SmartList<teaql_core::Record>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'a>>>
@@ -1036,7 +1059,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         Ok(rows)
     }
 
-    pub async fn execute_for_record<'a, C>(
+    pub(crate) async fn _execute_for_record<'a, C>(
         self,
         ctx: &'a C,
     ) -> Result<Option<teaql_core::Record>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'a>>>
@@ -1047,7 +1070,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         Ok(records.data.into_iter().next())
     }
 
-    pub async fn execute_for_count<'a, C>(
+    pub(crate) async fn _execute_for_count<'a, C>(
         self,
         ctx: &'a C,
     ) -> Result<u64, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'a>>>
@@ -1087,6 +1110,10 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         self.query_options.comment = Some(comment.into());
         self.query.comment = self.query_options.comment.clone();
         self
+    }
+
+    pub fn purpose(self, purpose: impl Into<String>) -> crate::q::PurposedQuery<Self> {
+        crate::q::PurposedQuery::new(self, purpose)
     }
 
     pub fn limit(mut self, limit: u64) -> Self {
@@ -1641,4 +1668,57 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     }
 }
 
+{%- endfor %}
+
+{%- for entity in module.entities %}
+impl<R: teaql_core::Entity> crate::q::PurposedQuery<{{ entity.rust_struct }}Request<R>> {
+    pub async fn execute_for_list<C>(self, ctx: &C) -> Result<teaql_core::SmartList<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_for_list(ctx).await
+    }
+    
+    pub async fn execute_for_first<C>(self, ctx: &C) -> Result<Option<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_for_first(ctx).await
+    }
+    
+    pub async fn execute_for_one<C>(self, ctx: &C) -> Result<Option<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_for_one(ctx).await
+    }
+    
+    pub async fn execute_by_id<C>(self, ctx: &C, id: impl Into<teaql_core::Value>) -> Result<Option<R>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_by_id(ctx, id).await
+    }
+    
+    pub async fn execute_for_records<C>(self, ctx: &C) -> Result<teaql_core::SmartList<teaql_core::Record>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_for_records(ctx).await
+    }
+    
+    pub async fn execute_for_record<C>(self, ctx: &C) -> Result<Option<teaql_core::Record>, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_for_record(ctx).await
+    }
+    
+    pub async fn execute_for_count<C>(self, ctx: &C) -> Result<u64, request_support::TeaqlRepositoryError<C::{{ entity.rust_struct }}Repository<'_>>>
+    where
+        C: request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.inner._execute_for_count(ctx).await
+    }
+}
 {%- endfor %}
