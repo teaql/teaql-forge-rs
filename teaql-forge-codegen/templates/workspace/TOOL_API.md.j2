@@ -1,0 +1,182 @@
+{# This template produces a fixed TOOL_API.md — no model variables needed. #}
+# TeaQL Tool & Runtime API Reference
+
+> Framework-level APIs. These are the same for all TeaQL projects.
+> For domain-specific APIs (entities, queries, mutations), see `API_GUIDE.md`.
+
+---
+
+## 1. UserContext — Application Entry Point
+
+`UserContext` is the runtime context passed to all queries and mutations.
+
+### Setup (in main.rs)
+```rust
+let ctx = UserContext::new()
+    .with_module(module())                          // entity metadata
+    .with_repository_registry(repository_registry()) // generated repositories
+    .with_repository_behavior_registry(behavior_registry()) // generated behaviors
+    .with_checker_registry(checker_registry())       // generated checkers
+    .with_user_identifier("system")                  // who is operating
+    .with_timezone("Asia/Shanghai");                 // timezone for date ops
+ctx.ensure_schema().await?;                          // auto-create/migrate tables
+```
+
+### Key Methods
+| Method | Description |
+|--------|-------------|
+| `.set_user_identifier(id)` | Set who is performing actions |
+| `.user_identifier()` | Get current user ID |
+| `.set_timezone(tz)` | Set timezone for date operations |
+| `.ensure_schema().await?` | Auto-create or migrate database tables |
+| `.entity(name)` | Get entity metadata by name |
+| `.all_entities()` | List all registered entity descriptors |
+| `.next_id(entity_name)` | Generate next ID for an entity |
+| `.commit_changes().await?` | Commit pending transactions |
+| `.put_local(key, value)` | Store request-scoped key-value |
+| `.local(key)` | Retrieve request-scoped value |
+| `.insert_resource(obj)` | Store a typed resource |
+| `.get_resource::<T>()` | Retrieve a typed resource |
+
+---
+
+## 2. SmartList — Collection with Metadata
+
+`SmartList<T>` wraps `Vec<T>` with pagination metadata.
+
+| Method | Description |
+|--------|-------------|
+| `.len()` | Number of items in current page |
+| `.total_count()` | Total matching records (for pagination) |
+| `.is_empty()` | Check if list is empty |
+| `.iter()` / `.iter_mut()` | Iterate items |
+| `.with_total_count(n)` | Set total count |
+| `.with_facet(name, list)` | Attach aggregation facet |
+| `.facet(name)` | Get a named facet |
+| `.facets()` | Get all facets |
+
+---
+
+## 3. WebResponse — HTTP Response Builder
+
+`WebResponse` wraps entities/lists for JSON API responses.
+
+```rust
+// From single entity
+let response = WebResponse::from_entity(&task);
+
+// From list with pagination
+let response = WebResponse::from_smart_list(task_list);
+
+// Error response
+let response = WebResponse::fail("Invalid request");
+```
+
+| Method | Description |
+|--------|-------------|
+| `WebResponse::from_entity(&e)` | Wrap single entity |
+| `WebResponse::from_smart_list(list)` | Wrap paginated list |
+| `WebResponse::fail(msg)` | Create error response |
+| `.to_json_value()` | Serialize to `serde_json::Value` |
+
+---
+
+## 4. AuditConfig — Logging Control
+
+Controls what the runtime logs. Configured via environment variables.
+
+### Environment Variables
+| Variable | Values | Default |
+|----------|--------|---------|
+| `TEAQL_AUDIT` | `verbose`, `production`, `silent` | `production` |
+| `TEAQL_SCHEMA` | `execute`, `dry_run`, `verify` | `execute` |
+| `TEAQL_SQL_LOG` | `all`, `select`, `mutation`, `off` | `off` |
+
+### Programmatic Config
+```rust
+let config = AuditConfig::production();       // normal logging
+let config = AuditConfig::verbose_all();      // maximum detail
+let config = AuditConfig::silent_all();       // no logging
+let config = AuditConfig::focus_on(Module::Mutation); // focus on writes
+```
+
+---
+
+## 5. Schema Management
+
+Database schema is auto-managed. No manual SQL needed.
+
+```rust
+// In startup
+ctx.ensure_schema().await?;
+// This will:
+// - Create tables that don't exist
+// - Add columns for new properties
+// - Never drop columns or tables (safe)
+```
+
+| SchemaMode | Behavior |
+|------------|----------|
+| `Execute` | Apply schema changes automatically |
+| `DryRun` | Log what would change, don't apply |
+| `Verify` | Fail if schema doesn't match |
+
+---
+
+## 6. EntityGraph — Batch Save
+
+Save an entity and all its related children/parents in one operation.
+
+```rust
+// Single entity save
+task.audit_as("Update task name").save(&ctx).await?;
+
+// This automatically:
+// 1. Checks auditAs is set (Triple-Intent)
+// 2. Runs checkers
+// 3. Diffs against DB state
+// 4. Generates INSERT/UPDATE/DELETE SQL
+// 5. Writes audit log
+// 6. Fires entity events
+```
+
+---
+
+## 7. Value Types
+
+| Rust Type | TeaQL Type | DB Mapping |
+|-----------|-----------|------------|
+| `String` | `string()` | VARCHAR |
+| `i64` | `number()` | BIGINT |
+| `f64` | `money()` / `decimal()` | DECIMAL |
+| `bool` | `boolean()` | BOOLEAN |
+| `chrono::NaiveDate` | `date()` | DATE |
+| `chrono::NaiveDateTime` | `dateTime()` / `createTime()` | DATETIME |
+| `serde_json::Value` | `json()` | TEXT (JSON) |
+| `u64` | `id()` | BIGINT (FK) |
+
+---
+
+## 8. XlsWorkbook — Excel Export
+
+Build structured Excel data programmatically.
+
+```rust
+let page = XlsPage::new("orders")
+    .add_block(XlsBlock::new("orders", 0, 0, "Order Report").span(3, 1));
+let workbook = XlsWorkbook::new().add_page(page);
+let json = workbook.to_json_value();
+```
+
+---
+
+## 9. DateRange — Time Period Filtering
+
+```rust
+use teaql_tool_std::DateRange;
+
+// Filter by date range
+request.with_create_time_between_range(DateRange::today());
+request.with_create_time_between_range(DateRange::this_month());
+request.with_create_time_between_range(DateRange::last_n_days(7));
+```
