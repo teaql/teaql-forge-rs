@@ -928,9 +928,6 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     pub fn query_options(&self) -> &QueryOptions { &self.query_options }
     pub fn into_query(self) -> teaql_core::SelectQuery { self.query }
 
-    pub fn new_entity(&self, _ctx: &teaql_runtime::UserContext) -> crate::{{ entity.rust_struct }} {
-        crate::{{ entity.rust_struct }}::new()
-    }
 
 
     pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
@@ -1719,6 +1716,11 @@ impl<R: teaql_core::Entity> crate::q::PurposedQuery<{{ entity.rust_struct }}Requ
         C: request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.inner._execute_for_count(ctx).await
+    }
+}
+impl<R: teaql_core::Entity> teaql_core::PurposedQuery<{{ entity.rust_struct }}Request<R>> {
+    pub fn new_entity(&self, _ctx: &teaql_runtime::UserContext) -> crate::{{ entity.rust_struct }} {
+        crate::{{ entity.rust_struct }}::new()
     }
 }
 {%- endfor %}

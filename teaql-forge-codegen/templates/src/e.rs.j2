@@ -1,0 +1,107 @@
+pub struct E;
+
+impl E {
+{% for entity in entities %}
+    pub fn {{ entity.rust_name }}<'a>(value: &'a crate::{{ entity.rust_struct }}) -> {{ entity.rust_struct }}Expression<'a> {
+        {{ entity.rust_struct }}Expression::new(teaql_core::eval::EvalResult::Value(value))
+    }
+{% endfor %}
+}
+
+#[derive(Clone)]
+pub struct ValueExpression<'a, T> {
+    result: teaql_core::eval::EvalResult<T>,
+    _phantom: std::marker::PhantomData<&'a ()>,
+}
+
+impl<'a, T: Clone> ValueExpression<'a, T> {
+    pub fn new(result: teaql_core::eval::EvalResult<T>) -> Self {
+        Self { result, _phantom: std::marker::PhantomData }
+    }
+
+    fn resolve(self) -> Option<T> {
+        match self.result {
+            teaql_core::eval::EvalResult::Value(v) => Some(v),
+            teaql_core::eval::EvalResult::Null => None,
+            teaql_core::eval::EvalResult::NotLoaded { missing_path } => {
+                panic!("Logic Bug! You forgot to query the '{}' field or relation!", missing_path);
+            }
+        }
+    }
+
+    pub fn eval(self) -> Option<T> {
+        self.resolve()
+    }
+
+    pub fn unwrap(self) -> T {
+        self.resolve().expect("Value was legitimately null in database!")
+    }
+
+    pub fn or_else(self, default_value: T) -> T {
+        self.eval().unwrap_or(default_value)
+    }
+
+    pub fn or_else_with(self, default_fn: impl FnOnce() -> T) -> T {
+        self.eval().unwrap_or_else(default_fn)
+    }
+
+    pub fn or_default(self) -> T where T: Default {
+        self.eval().unwrap_or_default()
+    }
+}
+
+{% for entity in entities %}
+#[derive(Clone)]
+pub struct {{ entity.rust_struct }}Expression<'a> {
+    result: teaql_core::eval::EvalResult<&'a crate::{{ entity.rust_struct }}>,
+}
+
+impl<'a> {{ entity.rust_struct }}Expression<'a> {
+    pub fn new(result: teaql_core::eval::EvalResult<&'a crate::{{ entity.rust_struct }}>) -> Self {
+        Self { result }
+    }
+
+    fn resolve(self) -> Option<&'a crate::{{ entity.rust_struct }}> {
+        match self.result {
+            teaql_core::eval::EvalResult::Value(v) => Some(v),
+            teaql_core::eval::EvalResult::Null => None,
+            teaql_core::eval::EvalResult::NotLoaded { missing_path } => {
+                panic!("Logic Bug! You forgot to query the '{}' field or relation!", missing_path);
+            }
+        }
+    }
+
+    pub fn eval(self) -> Option<&'a crate::{{ entity.rust_struct }}> {
+        self.resolve()
+    }
+
+    pub fn unwrap(self) -> &'a crate::{{ entity.rust_struct }} {
+        self.resolve().expect("Value was legitimately null in database!")
+    }
+
+{% for field in entity.fields %}
+{% if field.rust_name != "id" %}
+{% if field.rust_type is startingwith("Option<") %}
+    pub fn get_{{ field.rust_name }}(self) -> crate::e::ValueExpression<'a, {{ field.rust_type[7:-1] }}> {
+        let next = self.result.and_then("{{ field.name }}", |e| e.eval_{{ field.rust_name }}());
+        crate::e::ValueExpression::new(next)
+    }
+{% else %}
+    pub fn get_{{ field.rust_name }}(self) -> crate::e::ValueExpression<'a, {{ field.rust_type }}> {
+        let next = self.result.and_then("{{ field.name }}", |e| e.eval_{{ field.rust_name }}());
+        crate::e::ValueExpression::new(next)
+    }
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{% for rel in entity.relations %}
+{% if not rel.many %}
+    pub fn get_{{ rel.rust_name }}(self) -> crate::e::{{ rel.target_struct }}Expression<'a> {
+        let next = self.result.and_then("{{ rel.name }}", |e| e.eval_{{ rel.rust_name }}());
+        crate::e::{{ rel.target_struct }}Expression::new(next)
+    }
+{% endif %}
+{% endfor %}
+}
+{% endfor %}
