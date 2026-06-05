@@ -1,0 +1,348 @@
+{# Auto-generated API Guide template #}
+{# This template generates an API_GUIDE.md for a TeaQL Rust project. #}
+{# Context: crate_name, module_name, entities (Vec<RenderEntity>) #}
+
+# {{ crate_name }} — API Guide
+
+> **Module**: `{{ module_name }}`
+>
+> This document describes the query, mutation, and relation APIs available in this crate.
+> It is divided into two parts: universal API rules, and the domain-specific entity graph.
+
+---
+
+## Part 1 — API Rules
+
+### 1. Query Chain Pattern
+
+Every data access follows the **Query Chain** pattern. Chains are built from a
+root query constructor, zero or more filters, optional relation loads, optional
+ordering, **required** documentation calls, and a terminal executor.
+
+```rust
+Q::{{ entities[0].rust_module }}s()
+    .{{ entities[0].attribute_predicate_prefix }}_<property>_<operator>(value)  // 0..N filters
+    .select_<relation>()               // 0..N relation loads
+    .order_by_<property>_asc()          // optional ordering
+    .comment("what this query loads")   // REQUIRED — describes the data
+    .purpose("why this data is needed") // REQUIRED — describes the intent
+    .execute_for_list(&ctx).await?      // terminal — executes the query
+```
+
+**Terminal methods:**
+
+| Method | Returns |
+|--------|---------|
+| `.execute_for_list(&ctx).await?` | `Vec<Entity>` — all matching rows |
+| `.execute_for_first(&ctx).await?` | `Option<Entity>` — first match |
+| `.execute_for_page(&ctx, page, size).await?` | paginated result |
+| `.count(&ctx).await?` | `i64` — row count |
+
+> ⚠️ Every query chain **must** include both `.comment(...)` and `.purpose(...)`.
+> Omitting them is a compile-time or review-time error.
+
+---
+
+### 2. Filter Operators by Property Type
+
+Filters are chained methods on the query builder. The method name is formed as:
+
+```
+.<predicate_prefix>_<property>_<operator>(value)
+```
+
+#### String Properties
+
+| Operator | Example |
+|----------|---------|
+| `_is(v)` | exact match |
+| `_is_not(v)` | exclude exact |
+| `_in(vec)` | match any in list |
+| `_not_in(vec)` | exclude list |
+| `_containing(v)` / `_contains(v)` | substring (thing / human) |
+| `_not_containing(v)` / `_not_contains(v)` | exclude substring |
+| `_starting_with(v)` / `_starts_with(v)` | prefix (thing / human) |
+| `_ending_with(v)` / `_ends_with(v)` | suffix (thing / human) |
+| `_greater_than(v)` | lexicographic > |
+| `_less_than(v)` | lexicographic < |
+| `_between(a, b)` | lexicographic range |
+| `_is_unknown()` | NULL check |
+
+#### Number Properties
+
+| Operator | Example |
+|----------|---------|
+| `_is(v)` | exact match |
+| `_is_not(v)` | exclude exact |
+| `_in(vec)` | match any in list |
+| `_not_in(vec)` | exclude list |
+| `_greater_than(v)` | `>` |
+| `_greater_than_or_equal_to(v)` | `>=` |
+| `_less_than(v)` | `<` |
+| `_less_than_or_equal_to(v)` | `<=` |
+| `_between(a, b)` | inclusive range |
+
+#### DateTime Properties
+
+All Number operators **plus**:
+
+| Operator | Example |
+|----------|---------|
+| `_before(v)` | earlier than |
+| `_after(v)` | later than |
+
+#### ID Properties
+
+| Operator | Example |
+|----------|---------|
+| `_is(v)` | exact match |
+| `_is_not(v)` | exclude exact |
+| `_in(vec)` | match any in list |
+| `_not_in(vec)` | exclude list |
+
+---
+
+### 3. Human vs Thing Naming Convention
+
+Entities are classified as **Human** or **Thing**. This affects the predicate
+prefixes and verb suffixes used in filter method names.
+
+| Aspect | Thing | Human |
+|--------|-------|-------|
+| Attribute prefix | `with_` | `whose_` |
+| Boolean prefix | `which_are_` | `who_are_` |
+| String verb suffix | `-ing` (e.g. `_containing`) | `-s` (e.g. `_contains`) |
+
+**Examples:**
+
+```rust
+// Thing entity (e.g. Order)
+Q::orders()
+    .with_title_containing("urgent")
+    .which_are_active()
+
+// Human entity (e.g. User)
+Q::users()
+    .whose_name_contains("Alice")
+    .who_are_verified()
+```
+
+---
+
+### 4. Entity Instance Methods (per property)
+
+For every property `p` on an entity instance, the following methods are available:
+
+| Method | Purpose |
+|--------|---------|
+| `.p()` | Getter — returns the current value of `p` |
+| `.update_p(value)` | Updater — sets a new value (change is tracked) |
+| `.changed_p()` | Check — returns `true` if `p` was modified |
+
+```rust
+let name = user.name();           // getter
+user.update_name("New Name");     // tracked update
+if user.changed_name() {          // change detection
+    // handle change
+}
+```
+
+---
+
+### 5. Relation Methods
+
+#### Eager Loading (on query builder)
+
+| Method | Purpose |
+|--------|---------|
+| `.select_<rel>()` | Eagerly load the related entity/entities |
+| `.with_<rel>_matching(sub)` | Filter parent rows by a condition on the relation |
+
+#### Parent (forward FK) — on entity instance
+
+| Method | Purpose |
+|--------|---------|
+| `.r()` | Access the loaded parent entity |
+| `.r_id()` | Get the foreign key value |
+| `.update_r_id(id)` | Change the foreign key (tracked) |
+
+#### Children (reverse FK) — on entity instance
+
+| Method | Purpose |
+|--------|---------|
+| `.r_list()` | Immutable slice of loaded children |
+| `.r_list_mut()` | Mutable access to loaded children |
+
+---
+
+### 6. Status Enum Shortcuts
+
+When an entity has a `status` field backed by an enum, convenience methods are
+generated for each enum code:
+
+**On the query builder:**
+
+```rust
+Q::orders()
+    .with_status_is_pending()         // filter: status == PENDING
+    .with_status_is_not_cancelled()   // filter: status != CANCELLED
+```
+
+**On the entity instance:**
+
+```rust
+order.update_status_to_shipped();     // set status = SHIPPED
+if order.status_is_delivered() {      // check status == DELIVERED
+    // ...
+}
+```
+
+---
+
+### 7. Mutation Patterns
+
+#### Create
+
+```rust
+let mut new_entity = Entity::new();
+new_entity.update_field_a("value");
+new_entity.update_field_b(42);
+new_entity
+    .save(&ctx)
+    .comment("Create a new entity")
+    .purpose("Needed for ...")
+    .await?;
+```
+
+#### Update
+
+```rust
+let mut entity = Q::entities()
+    .with_id_is(target_id)
+    .comment("Load entity for update")
+    .purpose("Update field_a value")
+    .execute_for_first(&ctx).await?
+    .ok_or_else(|| anyhow!("not found"))?;
+
+entity.update_field_a("new value");
+entity
+    .save(&ctx)
+    .comment("Update entity field_a")
+    .purpose("Reflect new business state")
+    .await?;
+```
+
+#### Delete
+
+```rust
+entity
+    .delete(&ctx)
+    .comment("Remove entity")
+    .purpose("Clean up after process completion")
+    .await?;
+```
+
+---
+
+### 8. Expression Facade `E`
+
+The `E` (Expression) facade provides a way to reference entity properties in
+complex expressions, typically used in advanced queries or computed fields.
+
+```rust
+E::<Entity>(&instance).property()
+```
+
+This returns an expression node that can be composed with other expressions.
+
+---
+---
+
+## Part 2 — Domain Graph
+
+> The following sections are generated from the domain model of **{{ crate_name }}**.
+{% for entity in entities %}
+
+---
+
+### Entity: `{{ entity.rust_struct }}`{% if entity.is_human %} 👤 (Human){% endif %}
+
+- **Rust struct**: `{{ entity.rust_struct }}`
+- **Rust module**: `{{ entity.rust_module }}`
+- **Query root**: `Q::{{ entity.rust_module }}s()`
+- **Category**: {% if entity.is_human %}Human — predicates use `{{ entity.attribute_predicate_prefix }}_` / `{{ entity.bool_predicate_prefix }}_`{% else %}Thing — predicates use `{{ entity.attribute_predicate_prefix }}_` / `{{ entity.bool_predicate_prefix }}_`{% endif %}
+
+#### Properties
+
+| Property | Rust Name | Type | Required |
+|----------|-----------|------|----------|
+{% for field in entity.fields -%}
+| {{ field.name }} | `{{ field.rust_name }}` | `{{ field.rust_type }}` | {% if field.required %}✅{% else %}—{% endif %} |
+{% endfor %}
+{% if entity.relations %}
+#### Relations (forward FK)
+
+| Relation | Rust Name | Target | Local Key | Many |
+|----------|-----------|--------|-----------|------|
+{% for rel in entity.relations -%}
+| {{ rel.name }} | `{{ rel.rust_name }}` | `{{ rel.target_struct }}` | `{{ rel.local_key }}` | {% if rel.many %}yes{% else %}no{% endif %} |
+{% endfor %}
+
+**Usage:**
+
+```rust
+{# Show a concrete select example for the first relation #}
+{% for rel in entity.relations -%}
+Q::{{ entity.rust_module }}s()
+    .select_{{ rel.target_method }}()
+    .comment("Load {{ entity.rust_module }}s with {{ rel.rust_name }}")
+    .purpose("...")
+    .execute_for_list(&ctx).await?;
+{% endfor %}
+```
+{% endif %}
+{% if entity.reverse_relations %}
+#### Children (reverse FK)
+
+| Relation | Rust Name | Source Entity | Many |
+|----------|-----------|--------------|------|
+{% for rev in entity.reverse_relations -%}
+| {{ rev.name }} | `{{ rev.rust_name }}` | `{{ rev.target_struct }}` | {% if rev.many %}one-to-many{% else %}one-to-one{% endif %} |
+{% endfor %}
+
+**Usage:**
+
+```rust
+{% for rev in entity.reverse_relations -%}
+// Access {{ rev.rust_name }} on a loaded {{ entity.rust_struct }}
+let items = instance.{{ rev.rust_name }}_list();
+{% endfor %}
+```
+{% endif %}
+{% endfor %}
+
+---
+
+## Relation Map
+
+> Visual overview of all entity relationships in **{{ crate_name }}**.
+
+```
+{% for entity in entities -%}
+{% if entity.relations or entity.reverse_relations -%}
+{{ entity.rust_struct }}
+{% for rel in entity.relations -%}
+  ├──{{ rel.rust_name }}──► {{ rel.target_struct }}{% if rel.many %} [*]{% endif %}
+
+{% endfor -%}
+{% for rev in entity.reverse_relations -%}
+  ◄──{{ rev.rust_name }}──┤ {{ rev.target_struct }}{% if rev.many %} [*]{% endif %}
+
+{% endfor -%}
+{% endif -%}
+{% endfor -%}
+```
+
+---
+
+{# End of API_GUIDE.md template #}
