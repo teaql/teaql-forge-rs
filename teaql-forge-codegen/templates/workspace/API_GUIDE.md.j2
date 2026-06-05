@@ -244,16 +244,27 @@ entity
 
 ---
 
-### 8. Expression Facade `E`
+### 8. Native Expression Safety (`eval_xxx`)
 
-The `E` (Expression) facade provides a way to reference entity properties in
-complex expressions, typically used in advanced queries or computed fields.
+The system uses a highly optimized, zero-cost abstraction for navigating entity relationships safely without causing panics or requiring expensive `.clone()` operations. 
+
+Instead of directly accessing properties that might not be loaded from the database, always use the `eval_{property}` methods combined with `.and_then()` for deep graph traversals:
 
 ```rust
-E::<Entity>(&instance).property()
+let result = task.eval_status()
+    .and_then("status", |s| s.eval_name());
+
+match result {
+    teaql_core::eval::EvalResult::Value(val) => { /* use the loaded value */ },
+    teaql_core::eval::EvalResult::Null => { /* legitimately empty */ },
+    teaql_core::eval::EvalResult::NotLoaded { missing_path } => {
+        // AI RULE: If you encounter NotLoaded, your SelectQuery failed to fetch this path!
+        // You MUST update your query to `.select("path.to.missing_property")` and retry.
+    }
+}
 ```
 
-This returns an expression node that can be composed with other expressions.
+This ensures compile-time safety (no unexpected null pointers) and perfect runtime context for self-healing queries.
 
 ---
 ---
