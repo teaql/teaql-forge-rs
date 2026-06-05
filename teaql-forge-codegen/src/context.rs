@@ -1,6 +1,6 @@
 use heck::{ToPascalCase, ToSnakeCase};
 use serde::Serialize;
-use teaql_forge_model::ir::{Domain, Entity, FieldType};
+use teaql_forge_model::ir::{Domain, FieldType};
 
 #[derive(Debug, Serialize)]
 pub struct RenderDomain {
@@ -96,12 +96,10 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 } else {
                     e.name.to_snake_case()
                 }
+            } else if has_many {
+                format!("{}_list_as_{}", e.name.to_snake_case(), r.name.to_snake_case())
             } else {
-                if has_many {
-                    format!("{}_list_as_{}", e.name.to_snake_case(), r.name.to_snake_case())
-                } else {
-                    format!("{}_list", e.name.to_snake_case())
-                }
+                format!("{}_list", e.name.to_snake_case())
             };
 
             let reverse_rust_name = if !many {
@@ -110,12 +108,10 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 } else {
                     e.name.to_snake_case()
                 }
+            } else if has_many {
+                format!("{}_as_{}", inflector::string::pluralize::to_plural(&e.name.to_snake_case()), r.name.to_snake_case())
             } else {
-                if has_many {
-                    format!("{}_as_{}", inflector::string::pluralize::to_plural(&e.name.to_snake_case()), r.name.to_snake_case())
-                } else {
-                    inflector::string::pluralize::to_plural(&e.name.to_snake_case())
-                }
+                inflector::string::pluralize::to_plural(&e.name.to_snake_case())
             };
 
             let target_method = reverse_rust_name.clone();

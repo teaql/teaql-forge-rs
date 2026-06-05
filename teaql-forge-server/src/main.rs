@@ -6,15 +6,14 @@ use axum::{
     Json, Router,
 };
 use std::io::Write;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use teaql_forge_codegen::context::{build_render_context, RenderDomain};
+use teaql_forge_codegen::context::build_render_context;
 use teaql_forge_codegen::engine::generate_virtual_crate;
 use teaql_forge_model::parser::parse_model;
 use zip::write::SimpleFileOptions;
 use clap::Parser;
 
 mod eval;
+mod rules;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

@@ -26,11 +26,10 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
             let attr_name = attr.name();
             let attr_value = attr.value();
 
-            if attr_name == "_category" || attr_name == "category" {
-                if attr_value.eq_ignore_ascii_case("human") {
+            if (attr_name == "_category" || attr_name == "category")
+                && attr_value.eq_ignore_ascii_case("human") {
                     is_human = true;
                 }
-            }
 
             // Skip metadata attributes starting with '_'
             if attr_name.starts_with('_') {

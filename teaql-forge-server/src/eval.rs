@@ -56,6 +56,13 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
         warnings: Vec::new(),
     };
 
+    if let Ok(doc) = roxmltree::Document::parse(&xml) {
+        crate::rules::evaluate_root_rule(&doc, &mut response, &xml_path);
+        crate::rules::evaluate_structure_rule(&doc, &mut response, &xml_path);
+        crate::rules::evaluate_object_metadata_rule(&doc, &mut response, &xml_path);
+        crate::rules::evaluate_module_rule(&doc, &mut response, &xml_path);
+    }
+
     let rust_kw: HashSet<&str> = ["as", "async", "await", "become", "box", "break", "const", "continue", "crate", "do", "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield", "try", "macro", "union"].into_iter().collect();
     let java_kw: HashSet<&str> = ["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while", "true", "false", "var", "yield", "record", "sealed", "non-sealed", "permits"].into_iter().collect();
     let go_kw: HashSet<&str> = ["break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"].into_iter().collect();

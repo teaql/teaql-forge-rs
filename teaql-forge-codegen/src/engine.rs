@@ -53,7 +53,7 @@ pub fn generate_virtual_crate(domain: &RenderDomain) -> Result<Vec<GeneratedFile
 }
 
 pub fn generate_crate(domain: &RenderDomain, output_dir: &Path) -> std::io::Result<()> {
-    let files = generate_virtual_crate(domain).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    let files = generate_virtual_crate(domain).map_err(|e| std::io::Error::other(e.to_string()))?;
     
     for file in files {
         let full_path = output_dir.join(&file.path);
