@@ -1,7 +1,7 @@
 use crate::error::ParseError;
 use crate::ir::{Cardinality, Domain, Entity, EntityMember, Field, FieldType, Relation};
 
-pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
+pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
     let doc = roxmltree::Document::parse(src)?;
 
     let root_node = doc.root_element();
@@ -20,6 +20,7 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
         let mut members = Vec::new();
         let mut has_id = false;
         let mut is_human = false;
+        let line_number = doc.text_pos_at(node.range().start).row as usize;
 
         for attr in node.attributes() {
             let attr_name = attr.name();
@@ -44,6 +45,8 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
                     ty: FieldType::Id,
                     required: true,
                     unique: true,
+                    line_number,
+                    xml_path: xml_path.to_string(),
                 }));
                 has_id = true;
                 continue;
@@ -74,6 +77,8 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
                     name: attr_name.to_string(),
                     target: rel_target.to_string(),
                     cardinality,
+                    line_number,
+                    xml_path: xml_path.to_string(),
                 }));
             } else {
                 let ty = if attr_value.contains("string") || attr_value.contains('|') {
@@ -95,6 +100,8 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
                     ty,
                     required: false, // simplified for now
                     unique: false,
+                    line_number,
+                    xml_path: xml_path.to_string(),
                 }));
             }
         }
@@ -105,6 +112,8 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
                 ty: FieldType::Id,
                 required: true,
                 unique: true,
+                line_number,
+                xml_path: xml_path.to_string(),
             }));
         }
 
@@ -113,6 +122,8 @@ pub fn parse_model(src: &str) -> Result<Domain, ParseError> {
             table: None, // Can be derived in normalize/naming step
             members,
             is_human,
+            line_number,
+            xml_path: xml_path.to_string(),
         });
     }
 

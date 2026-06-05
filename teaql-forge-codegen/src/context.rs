@@ -14,6 +14,8 @@ pub struct RenderDomain {
 #[derive(Debug, Serialize)]
 pub struct RenderEntity {
     pub name: String,
+    pub line_number: usize,
+    pub xml_path: String,
     pub rust_struct: String,
     pub rust_module: String,
     pub table_name: String,
@@ -29,6 +31,8 @@ pub struct RenderEntity {
 #[derive(Debug, Serialize)]
 pub struct RenderField {
     pub name: String,
+    pub line_number: usize,
+    pub xml_path: String,
     pub rust_name: String,
     pub column_name: String,
     pub rust_type: String,
@@ -38,6 +42,8 @@ pub struct RenderField {
 #[derive(Debug, Serialize)]
 pub struct RenderRelation {
     pub name: String,
+    pub line_number: usize,
+    pub xml_path: String,
     pub rust_name: String,
     pub target_method: String,
     pub target_struct: String,
@@ -51,6 +57,8 @@ pub struct RenderRelation {
 #[derive(Debug, Serialize)]
 pub struct RenderReverseRelation {
     pub name: String,
+    pub line_number: usize,
+    pub xml_path: String,
     pub rust_name: String,
     pub target_method: String,
     pub target_struct: String,
@@ -114,6 +122,8 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
 
             reverse_relations_map.entry(target_struct.clone()).or_default().push(RenderReverseRelation {
                 name: reverse_name,
+                line_number: r.line_number,
+                xml_path: r.xml_path.clone(),
                 rust_name: reverse_rust_name,
                 target_method,
                 target_struct: e.name.to_pascal_case(),
@@ -158,6 +168,8 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
 
             RenderField {
                 name: f.name.clone(),
+                line_number: f.line_number,
+                xml_path: f.xml_path.clone(),
                 rust_name,
                 column_name,
                 rust_type,
@@ -171,6 +183,8 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         }).map(|r| {
             RenderRelation {
                 name: r.name.clone(),
+                line_number: r.line_number,
+                xml_path: r.xml_path.clone(),
                 rust_name: r.name.to_snake_case(),
                 target_method: inflector::string::pluralize::to_plural(&r.target.to_snake_case()),
                 target_struct: r.target.to_pascal_case(),
@@ -186,6 +200,8 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
 
         RenderEntity {
             name: e.name.clone(),
+            line_number: e.line_number,
+            xml_path: e.xml_path.clone(),
             rust_struct,
             rust_module,
             table_name,

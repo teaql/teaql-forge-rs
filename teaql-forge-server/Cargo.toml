@@ -15,3 +15,4 @@ zip = "2.1.3"
 teaql-forge-model = { path = "../teaql-forge-model" }
 teaql-forge-codegen = { path = "../teaql-forge-codegen" }
 clap.workspace = true
+serde = { workspace = true, features = ["derive"] }

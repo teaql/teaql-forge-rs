@@ -2,12 +2,21 @@ use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::pin::Pin;
 
+{%- if entity.xml_path %}
+// @source {{ entity.xml_path }}:{{ entity.line_number }}
+{%- endif %}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct {{ entity.rust_struct }} {
 {%- for field in entity.fields %}
+{%- if field.xml_path %}
+// @source {{ field.xml_path }}:{{ field.line_number }}
+{%- endif %}
     pub {{ field.rust_name }}: {{ field.rust_type }},
 {%- endfor %}
 {%- for rel in entity.relations %}
+{%- if rel.xml_path %}
+// @source {{ rel.xml_path }}:{{ rel.line_number }}
+{%- endif %}
 {%- if rel.many %}
     pub {{ rel.rust_name }}: Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>,
 {%- else %}
@@ -16,6 +25,9 @@ pub struct {{ entity.rust_struct }} {
 {%- endif %}
 {%- endfor %}
 {%- for rel in entity.reverse_relations %}
+{%- if rel.xml_path %}
+// @source {{ rel.xml_path }}:{{ rel.line_number }}
+{%- endif %}
 {%- if rel.many %}
     pub {{ rel.rust_name }}: Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>,
 {%- else %}

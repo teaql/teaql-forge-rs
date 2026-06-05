@@ -12,8 +12,9 @@ use teaql_forge_codegen::context::{build_render_context, RenderDomain};
 use teaql_forge_codegen::engine::generate_virtual_crate;
 use teaql_forge_model::parser::parse_model;
 use zip::write::SimpleFileOptions;
-
 use clap::Parser;
+
+mod eval;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -31,7 +32,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/version", get(version_handler))
-        .route("/generate", post(generate_handler));
+        .route("/generate", post(generate_handler))
+        .route("/evaluate", post(eval::evaluate_handler));
 
     if args.host == "0.0.0.0" {
         println!("Warning: You are exposing TeaQL Local Server to the network.");
@@ -60,10 +62,14 @@ async fn version_handler() -> impl IntoResponse {
 async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
     let mut file_content = None;
     let mut scope = "rust-lib".to_string();
+    let mut xml_path = "model.xml".to_string();
 
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
         let name = field.name().unwrap_or("").to_string();
         if name == "file" {
+            if let Some(file_name) = field.file_name() {
+                xml_path = file_name.to_string();
+            }
             let data = field.bytes().await.unwrap();
             file_content = Some(String::from_utf8_lossy(&data).to_string());
         } else if name == "scope" {
@@ -81,7 +87,7 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
         println!("Warning: unsupported scope {}, assuming rust-lib", scope);
     }
 
-    let domain = match parse_model(&xml) {
+    let domain = match parse_model(&xml, &xml_path) {
         Ok(d) => d,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("Parse error: {}", e)).into_response(),
     };

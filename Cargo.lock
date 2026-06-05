@@ -1261,6 +1261,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "clap",
+ "serde",
  "serde_json",
  "teaql-forge-codegen",
  "teaql-forge-model",
