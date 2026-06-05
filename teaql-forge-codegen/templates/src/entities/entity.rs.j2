@@ -37,6 +37,8 @@ pub struct {{ entity.rust_struct }} {
     pub version: i64,
     pub comment: String,
     pub deleted: bool,
+    #[serde(skip)]
+    pub __load_state: teaql_core::eval::LoadState,
 }
 
 impl {{ entity.rust_struct }} {
@@ -73,6 +75,7 @@ impl {{ entity.rust_struct }} {
             version: 0,
             comment: String::new(),
             deleted: false,
+            __load_state: Default::default(),
         }
     }
     
@@ -100,6 +103,14 @@ impl {{ entity.rust_struct }} {
 
     pub fn mark_as_delete(&mut self) {
         self.deleted = true;
+    }
+
+    pub fn is_loaded(&self, field_or_relation: &str) -> bool {
+        self.__load_state.is_loaded(field_or_relation)
+    }
+
+    pub fn set_load_state(&mut self, state: teaql_core::eval::LoadState) {
+        self.__load_state = state;
     }
 
 {%- for rel in entity.reverse_relations %}
