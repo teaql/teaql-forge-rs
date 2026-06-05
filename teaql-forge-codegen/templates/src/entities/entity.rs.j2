@@ -75,7 +75,7 @@ impl {{ entity.rust_struct }} {
             version: 0,
             comment: String::new(),
             deleted: false,
-            __load_state: Default::default(),
+            __load_state: teaql_core::eval::LoadState::FullyLoaded,
         }
     }
     
