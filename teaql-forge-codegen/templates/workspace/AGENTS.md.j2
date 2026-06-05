@@ -72,11 +72,7 @@ Do not add a web framework unless the project explicitly needs one.
 ## TeaQL Rust Pitfalls
 
 - SQLite `:memory:` is not suitable for TeaQL integration tests. TeaQL/SQLx may use a different connection from the pool, and SQLite in-memory databases are connection-local, so later operations can fail with missing tables. Use a file-backed SQLite database for integration tests.
-- The teaql.io Cargo registry requires a registry token even for public reads. Configure an anonymous token before resolving generated dependencies:
 
-```bash
-cargo login --registry teaql anon
-```
 
 
 ## Checks
