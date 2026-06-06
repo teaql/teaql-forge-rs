@@ -12,6 +12,7 @@ pub fn generate_virtual_crate(domain: &RenderDomain) -> Result<Vec<GeneratedFile
     let mut env = Environment::new();
     env.add_template("Cargo.toml", include_str!("../templates/Cargo.toml.j2"))?;
     env.add_template("lib.rs", include_str!("../templates/src/lib.rs.j2"))?;
+    env.add_template("e.rs", include_str!("../templates/src/e.rs.j2"))?;
     env.add_template("entities_mod.rs", include_str!("../templates/src/entities/mod.rs.j2"))?;
     env.add_template("entity.rs", include_str!("../templates/src/entities/entity.rs.j2"))?;
     env.add_template("q.rs", include_str!("../templates/src/q.rs.j2"))?;
@@ -26,6 +27,10 @@ pub fn generate_virtual_crate(domain: &RenderDomain) -> Result<Vec<GeneratedFile
     files.push(GeneratedFile {
         path: "src/lib.rs".to_string(),
         content: env.get_template("lib.rs")?.render(domain)?,
+    });
+    files.push(GeneratedFile {
+        path: "src/e.rs".to_string(),
+        content: env.get_template("e.rs")?.render(domain)?,
     });
     files.push(GeneratedFile {
         path: "src/entities/mod.rs".to_string(),
