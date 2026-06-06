@@ -12,6 +12,10 @@ pub struct Entity {
     pub table: Option<String>,
     pub members: Vec<EntityMember>,
     pub is_human: bool,
+    #[serde(default)]
+    pub line_number: usize,
+    #[serde(default)]
+    pub xml_path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,6 +30,10 @@ pub struct Field {
     pub ty: FieldType,
     pub required: bool,
     pub unique: bool,
+    #[serde(default)]
+    pub line_number: usize,
+    #[serde(default)]
+    pub xml_path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,6 +75,10 @@ pub struct Relation {
     pub name: String,
     pub target: String,
     pub cardinality: Cardinality,
+    #[serde(default)]
+    pub line_number: usize,
+    #[serde(default)]
+    pub xml_path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

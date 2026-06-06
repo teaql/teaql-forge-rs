@@ -2,12 +2,21 @@ use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::pin::Pin;
 
+{%- if entity.xml_path %}
+// @source {{ entity.xml_path }}:{{ entity.line_number }}
+{%- endif %}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct {{ entity.rust_struct }} {
 {%- for field in entity.fields %}
+{%- if field.xml_path %}
+// @source {{ field.xml_path }}:{{ field.line_number }}
+{%- endif %}
     pub {{ field.rust_name }}: {{ field.rust_type }},
 {%- endfor %}
 {%- for rel in entity.relations %}
+{%- if rel.xml_path %}
+// @source {{ rel.xml_path }}:{{ rel.line_number }}
+{%- endif %}
 {%- if rel.many %}
     pub {{ rel.rust_name }}: Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>,
 {%- else %}
@@ -16,6 +25,9 @@ pub struct {{ entity.rust_struct }} {
 {%- endif %}
 {%- endfor %}
 {%- for rel in entity.reverse_relations %}
+{%- if rel.xml_path %}
+// @source {{ rel.xml_path }}:{{ rel.line_number }}
+{%- endif %}
 {%- if rel.many %}
     pub {{ rel.rust_name }}: Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}>,
 {%- else %}
@@ -25,6 +37,8 @@ pub struct {{ entity.rust_struct }} {
     pub version: i64,
     pub comment: String,
     pub deleted: bool,
+    #[serde(skip)]
+    pub __load_state: teaql_core::eval::LoadState,
 }
 
 impl {{ entity.rust_struct }} {
@@ -61,6 +75,7 @@ impl {{ entity.rust_struct }} {
             version: 0,
             comment: String::new(),
             deleted: false,
+            __load_state: teaql_core::eval::LoadState::FullyLoaded,
         }
     }
     
@@ -90,6 +105,14 @@ impl {{ entity.rust_struct }} {
         self.deleted = true;
     }
 
+    pub fn is_loaded(&self, field_or_relation: &str) -> bool {
+        self.__load_state.is_loaded(field_or_relation)
+    }
+
+    pub fn set_load_state(&mut self, state: teaql_core::eval::LoadState) {
+        self.__load_state = state;
+    }
+
 {%- for rel in entity.reverse_relations %}
 {%- if rel.many %}
     pub fn {{ rel.rust_name }}_mut(&mut self) -> &mut Vec<crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}> {
@@ -108,6 +131,16 @@ impl {{ entity.rust_struct }} {
         self.{{ field.rust_name }} = Some(value.into());
         self
     }
+    pub fn eval_{{ field.rust_name }}(&self) -> teaql_core::eval::EvalResult<{{ field.rust_type[7:-1] }}> {
+        if !self.__load_state.is_loaded("{{ field.name }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ field.name }}".to_string(), attempted_path: "{{ field.name }}".to_string() }
+        } else {
+            match &self.{{ field.rust_name }} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v.clone()),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
+    }
     {%- else %}
     pub fn {{ field.rust_name }}(&self) -> {{ field.rust_type }} {
         self.{{ field.rust_name }}.clone()
@@ -115,6 +148,13 @@ impl {{ entity.rust_struct }} {
     pub fn update_{{ field.rust_name }}(&mut self, value: impl Into<{{ field.rust_type }}>) -> &mut Self {
         self.{{ field.rust_name }} = value.into();
         self
+    }
+    pub fn eval_{{ field.rust_name }}(&self) -> teaql_core::eval::EvalResult<{{ field.rust_type }}> {
+        if !self.__load_state.is_loaded("{{ field.name }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ field.name }}".to_string(), attempted_path: "{{ field.name }}".to_string() }
+        } else {
+            teaql_core::eval::EvalResult::Value(self.{{ field.rust_name }}.clone())
+        }
     }
     {%- endif %}
 {%- endif %}
@@ -129,6 +169,48 @@ impl {{ entity.rust_struct }} {
     pub fn update_{{ rel.rust_name }}_id(&mut self, value: impl Into<u64>) -> &mut Self {
         self.{{ rel.rust_name }}_id = Some(value.into());
         self
+    }
+
+    pub fn eval_{{ rel.rust_name }}(&self) -> teaql_core::eval::EvalResult<&crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}> {
+        if !self.__load_state.is_loaded("{{ rel.name }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ rel.name }}".to_string(), attempted_path: "{{ rel.name }}".to_string() }
+        } else {
+            match &self.{{ rel.rust_name }} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v.as_ref()),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
+    }
+{%- else %}
+    pub fn eval_{{ rel.rust_name }}(&self) -> teaql_core::eval::EvalResult<&[crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}]> {
+        if !self.__load_state.is_loaded("{{ rel.name }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ rel.name }}".to_string(), attempted_path: "{{ rel.name }}".to_string() }
+        } else {
+            teaql_core::eval::EvalResult::Value(&self.{{ rel.rust_name }})
+        }
+    }
+{%- endif %}
+{%- endfor %}
+
+{%- for rel in entity.reverse_relations %}
+{%- if rel.many %}
+    pub fn eval_{{ rel.rust_name }}(&self) -> teaql_core::eval::EvalResult<&[crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}]> {
+        if !self.__load_state.is_loaded("{{ rel.name }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ rel.name }}".to_string(), attempted_path: "{{ rel.name }}".to_string() }
+        } else {
+            teaql_core::eval::EvalResult::Value(&self.{{ rel.rust_name }})
+        }
+    }
+{%- else %}
+    pub fn eval_{{ rel.rust_name }}(&self) -> teaql_core::eval::EvalResult<&crate::entities::{{ rel.target_module }}::{{ rel.target_struct }}> {
+        if !self.__load_state.is_loaded("{{ rel.name }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ rel.name }}".to_string(), attempted_path: "{{ rel.name }}".to_string() }
+        } else {
+            match &self.{{ rel.rust_name }} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v.as_ref()),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
     }
 {%- endif %}
 {%- endfor %}

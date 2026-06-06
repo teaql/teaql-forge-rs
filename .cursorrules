@@ -1,0 +1,15 @@
+# AI Memory / Instructions for teaql-forge-rs
+
+## Docker Image Naming & Publishing
+- **Official Image Name:** ALWAYS use `teaql/teaql-forge-rs` (e.g. `teaql/teaql-forge-rs:latest-arm64`) as the unified Docker image name for this repository. Do NOT push to `teaql/teaql-forge-server`. 
+- **Publishing Workflow:** 
+  1. This repo builds a tiny `scratch` Docker container. The binary must be a static binary cross-compiled using musl.
+  2. Use `cargo zigbuild --target aarch64-unknown-linux-musl --release` to compile for ARM64 Linux.
+  3. The compiled binary will be located in the workspace's shared target dir (usually `~/shared-cargo-target/aarch64-unknown-linux-musl/release/teaql-forge-server`). 
+  4. Copy it to `teaql-forge-server-bin` in the repo root.
+  5. Run `docker build --platform linux/arm64 -t teaql/teaql-forge-rs:latest-arm64 .`
+  6. Run `docker push teaql/teaql-forge-rs:latest-arm64`
+
+## Workspace Organization
+- This is a Cargo workspace consisting of `teaql-forge-model`, `teaql-forge-codegen`, and `teaql-forge-server`. 
+- `target/` is typically shared and not inside this repo directory. Use `cargo metadata --format-version 1 --no-deps | jq -r .target_directory` to reliably find the output directory.
