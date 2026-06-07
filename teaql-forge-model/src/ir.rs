@@ -15,6 +15,7 @@ pub struct Entity {
     pub data_service: Option<String>,
     pub audit_mask_fields: Option<String>,
     pub audit_value_max_len: Option<usize>,
+    pub metadata: std::collections::BTreeMap<String, String>,
     #[serde(default)]
     pub line_number: usize,
     #[serde(default)]

@@ -23,35 +23,29 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
         let mut data_service = None;
         let mut audit_mask_fields = None;
         let mut audit_value_max_len = None;
+        let mut metadata = std::collections::BTreeMap::new();
         let line_number = doc.text_pos_at(node.range().start).row as usize;
 
         for attr in node.attributes() {
             let attr_name = attr.name();
             let attr_value = attr.value();
 
-            if attr_name == "_category" || attr_name == "category" {
-                if attr_value.eq_ignore_ascii_case("human") {
+            if attr_name.starts_with('_') {
+                let key = &attr_name[1..];
+                metadata.insert(key.to_string(), attr_value.to_string());
+
+                if key == "category" && attr_value.eq_ignore_ascii_case("human") {
                     is_human = true;
                 }
-            }
-
-            if attr_name == "_data_service" || attr_name == "data_service" {
-                data_service = Some(attr_value.to_string());
-                continue;
-            }
-
-            if attr_name == "_audit_mask_fields" || attr_name == "audit_mask_fields" {
-                audit_mask_fields = Some(attr_value.to_string());
-                continue;
-            }
-
-            if attr_name == "_audit_value_max_len" || attr_name == "audit_value_max_len" {
-                audit_value_max_len = attr_value.parse::<usize>().ok();
-                continue;
-            }
-
-            // Skip metadata attributes starting with '_'
-            if attr_name.starts_with('_') {
+                if key == "data_service" {
+                    data_service = Some(attr_value.to_string());
+                }
+                if key == "audit_mask_fields" {
+                    audit_mask_fields = Some(attr_value.to_string());
+                }
+                if key == "audit_value_max_len" {
+                    audit_value_max_len = attr_value.parse::<usize>().ok();
+                }
                 continue;
             }
 
@@ -143,6 +137,7 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
             data_service,
             audit_mask_fields,
             audit_value_max_len,
+            metadata,
             line_number,
             xml_path: xml_path.to_string(),
         });
