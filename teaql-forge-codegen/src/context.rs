@@ -23,6 +23,9 @@ pub struct RenderEntity {
     pub relations: Vec<RenderRelation>,
     pub reverse_relations: Vec<RenderReverseRelation>,
     pub is_human: bool,
+    pub data_service: Option<String>,
+    pub audit_mask_fields: Vec<String>,
+    pub audit_value_max_len: Option<usize>,
     pub attribute_predicate_prefix: String,
     pub attribute_predicate_suffix: String,
     pub bool_predicate_prefix: String,
@@ -194,6 +197,12 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
 
         let reverse_relations = reverse_relations_map.remove(&rust_struct).unwrap_or_default();
 
+        let data_service = e.data_service.clone();
+        let audit_mask_fields = e.audit_mask_fields.as_ref()
+            .map(|s| s.split(',').map(|f| f.trim().to_string()).filter(|f| !f.is_empty()).collect())
+            .unwrap_or_default();
+        let audit_value_max_len = e.audit_value_max_len;
+
         RenderEntity {
             name: e.name.clone(),
             line_number: e.line_number,
@@ -205,6 +214,9 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             relations,
             reverse_relations,
             is_human: e.is_human,
+            data_service,
+            audit_mask_fields,
+            audit_value_max_len,
             attribute_predicate_prefix: if e.is_human { "whose".to_string() } else { "with".to_string() },
             attribute_predicate_suffix: if e.is_human { "s".to_string() } else { "ing".to_string() },
             bool_predicate_prefix: if e.is_human { "who_are".to_string() } else { "which_are".to_string() },

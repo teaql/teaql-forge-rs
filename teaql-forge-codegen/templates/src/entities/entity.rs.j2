@@ -298,6 +298,7 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
         teaql_core::EntityDescriptor { 
             name: "{{ entity.name }}".to_string(),
             table_name: "{{ entity.name }}_data".to_string(),
+            data_service: {% if entity.data_service %}Some("{{ entity.data_service }}".to_string()){% else %}None{% endif %},
             properties: vec![
                 teaql_core::PropertyDescriptor {
                     name: "id".to_string(),
@@ -374,6 +375,12 @@ impl teaql_core::TeaqlEntity for {{ entity.rust_struct }} {
                 },
                 {%- endfor %}
             ],
+            audit_mask_fields: vec![
+                {%- for f in entity.audit_mask_fields %}
+                "{{ f }}".to_string(),
+                {%- endfor %}
+            ],
+            audit_value_max_len: {% if entity.audit_value_max_len %}Some({{ entity.audit_value_max_len }}){% else %}None{% endif %},
         }
     }
 }

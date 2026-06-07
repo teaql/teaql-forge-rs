@@ -12,6 +12,9 @@ pub struct Entity {
     pub table: Option<String>,
     pub members: Vec<EntityMember>,
     pub is_human: bool,
+    pub data_service: Option<String>,
+    pub audit_mask_fields: Option<String>,
+    pub audit_value_max_len: Option<usize>,
     #[serde(default)]
     pub line_number: usize,
     #[serde(default)]
