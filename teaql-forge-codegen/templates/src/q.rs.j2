@@ -174,12 +174,14 @@ pub mod request_support {
     fn save(self, ctx: &Self::Context) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>>;
 }
 
-impl<T: teaql_core::Entity> AuditedSave for teaql_core::entity::Audited<T> {
+{%- for entity in entities %}
+impl AuditedSave for teaql_core::Audited<crate::{{ entity.rust_struct }}> {
     type Context = teaql_runtime::UserContext;
     fn save(self, ctx: &Self::Context) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
-        self.inner._save(ctx)
+        self.into_entity()._save(ctx)
     }
 }
+{%- endfor %}
 
 pub trait TeaqlRepositoryProvider: TeaqlRuntime {
     {%- for entity in entities %}
@@ -1008,7 +1010,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         C: request_support::TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
     {
-        let rows = self.limit(1).execute_for_list(ctx).await?;
+        let rows = self.limit(1)._execute_for_list(ctx).await?;
         Ok(rows.data.into_iter().next())
     }
 
@@ -1032,7 +1034,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
         C: request_support::TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
     {
-        self.and_filter(teaql_core::Expr::eq("id", id)).execute_for_first(ctx).await
+        self.and_filter(teaql_core::Expr::eq("id", id))._execute_for_first(ctx).await
     }
 
     pub(crate) async fn _execute_for_records<'a, C>(
@@ -1063,7 +1065,7 @@ impl<R> {{ entity.rust_struct }}Request<R> {
     where
         C: request_support::TeaqlRepositoryProvider + ?Sized,
     {
-        let records = self.limit(1).execute_for_records(ctx).await?;
+        let records = self.limit(1)._execute_for_records(ctx).await?;
         Ok(records.data.into_iter().next())
     }
 
@@ -1718,7 +1720,7 @@ impl<R: teaql_core::Entity> crate::q::PurposedQuery<{{ entity.rust_struct }}Requ
         self.inner._execute_for_count(ctx).await
     }
 }
-impl<R: teaql_core::Entity> teaql_core::PurposedQuery<{{ entity.rust_struct }}Request<R>> {
+impl<R: teaql_core::Entity> crate::q::PurposedQuery<{{ entity.rust_struct }}Request<R>> {
     pub fn new_entity(&self, _ctx: &teaql_runtime::UserContext) -> crate::{{ entity.rust_struct }} {
         crate::{{ entity.rust_struct }}::new()
     }

@@ -63,7 +63,7 @@ pub struct E;
 
 impl E {
 {% for entity in entities %}
-    pub fn {{ entity.rust_name }}<'a>(value: &'a crate::{{ entity.rust_struct }}) -> {{ entity.rust_struct }}Expression<'a> {
+    pub fn {{ entity.rust_module }}<'a>(value: &'a crate::{{ entity.rust_struct }}) -> {{ entity.rust_struct }}Expression<'a> {
         let root_desc = std::sync::Arc::new(format!("{}(id={})", "{{ entity.rust_struct }}", value.id()));
         {{ entity.rust_struct }}Expression::new(teaql_core::eval::EvalResult::Value(value), root_desc)
     }

@@ -244,8 +244,8 @@ impl {{ entity.rust_struct }} {
     }
 {%- endif %}
 
-    pub fn audit_as(self, comment: impl Into<String>) -> teaql_core::entity::Audited<Self> {
-        teaql_core::entity::Audited::new(self, comment)
+    pub fn audit_as(self, comment: impl Into<String>) -> teaql_core::Audited<Self> {
+        teaql_core::Audited::new(self, comment)
     }
     
     pub(crate) fn _save(mut self, ctx: &teaql_runtime::UserContext) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, std::io::Error>> + Send + '_>> {
