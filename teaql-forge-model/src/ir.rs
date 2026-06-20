@@ -16,10 +16,16 @@ pub struct Entity {
     pub audit_mask_fields: Option<String>,
     pub audit_value_max_len: Option<usize>,
     pub metadata: std::collections::BTreeMap<String, String>,
+    pub seed_values: Vec<SeedValue>,
     #[serde(default)]
     pub line_number: usize,
     #[serde(default)]
     pub xml_path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeedValue {
+    pub properties: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,9 +44,11 @@ pub struct Field {
     pub line_number: usize,
     #[serde(default)]
     pub xml_path: String,
+    #[serde(default)]
+    pub metadata: std::collections::BTreeMap<String, String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FieldType {
     Id,
     String,
@@ -79,13 +87,14 @@ pub struct Relation {
     pub name: String,
     pub target: String,
     pub cardinality: Cardinality,
+    pub required: bool,
     #[serde(default)]
     pub line_number: usize,
     #[serde(default)]
     pub xml_path: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Cardinality {
     OneToOne,
     ManyToOne,

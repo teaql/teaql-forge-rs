@@ -1,5 +1,10 @@
-pub use {{ module_name }}::Q;
+//! #  Service Workspace
+//!
+//! **Before writing queries**, read the generated `AGENTS.md` at the workspace root.
+//! It contains the entity list and the exact `cargo teaql` commands to fetch API prompts.
+
+pub use {{ rust_module_name }}::{teaql_core, E, Q};
 
 pub fn generated_domain_crate() -> &'static str {
-    "{{ crate_name }}"
+    "{{ rust_crate_name }}"
 }

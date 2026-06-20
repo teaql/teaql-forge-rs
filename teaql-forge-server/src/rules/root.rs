@@ -49,7 +49,10 @@ pub fn evaluate_root_rule(doc: &Document, response: &mut EvaluationResponse, xml
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-ROOT-004".to_string(),
                 title: "Non-standard alias model name".to_string(),
-                message: format!("alias_model_name should preferably be snake_case, but found '{}'.", alias),
+                message: format!(
+                    "alias_model_name should preferably be snake_case, but found '{}'.",
+                    alias
+                ),
                 path: path.clone(),
                 object_name: "root".to_string(),
                 field_name: None,
@@ -72,7 +75,11 @@ pub fn evaluate_root_rule(doc: &Document, response: &mut EvaluationResponse, xml
             xml_path: xml_path.to_string(),
             line_number: doc.text_pos_at(root.range().start).row as usize,
         });
-    } else if data_service != "sqlite" && data_service != "postgres" && data_service != "mysql" && data_service != "rusqlite" {
+    } else if data_service != "sqlite"
+        && data_service != "postgres"
+        && data_service != "mysql"
+        && data_service != "rusqlite"
+    {
         response.warnings.push(EvaluationItem {
             rule_id: "KSML-ROOT-005".to_string(),
             title: "Non-standard data service".to_string(),
@@ -91,7 +98,10 @@ pub fn evaluate_root_rule(doc: &Document, response: &mut EvaluationResponse, xml
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-ROOT-006".to_string(),
                 title: "Non-standard organization name".to_string(),
-                message: format!("AI-generated models typically use org=\"doublechaintech\", but found '{}'.", org),
+                message: format!(
+                    "AI-generated models typically use org=\"doublechaintech\", but found '{}'.",
+                    org
+                ),
                 path: path.clone(),
                 object_name: "root".to_string(),
                 field_name: None,
@@ -107,7 +117,10 @@ pub fn evaluate_root_rule(doc: &Document, response: &mut EvaluationResponse, xml
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-ROOT-007".to_string(),
                 title: "Non-standard module key".to_string(),
-                message: format!("_module_key for root should be \"root\", but found '{}'.", module_key),
+                message: format!(
+                    "_module_key for root should be \"root\", but found '{}'.",
+                    module_key
+                ),
                 path: path.clone(),
                 object_name: "root".to_string(),
                 field_name: None,

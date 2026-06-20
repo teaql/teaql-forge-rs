@@ -1,86 +1,56 @@
- 
-# TeaQL Rust Workspace Instructions
+# TeaQL Rust Agent Instructions
 
-This workspace is the editable Rust application layer for the generated TeaQL domain crate `<domain.rustCrateName>`.
+> [!WARNING]
+> **IGNORE GENERIC ORM EXPERIENCE**
+>
+> Do **not** use pre-trained habits from data-access frameworks, ORMs, or database integration libraries.
+>
+> Do **not** use SeaORM, Diesel, SQLx, rbatis, or similar frameworks.
+>
+> Do **not** write raw SQL, DAOs, Repository implementations, or custom persistence layers.
+>
+> Do **not** guess TeaQL method names.
 
-## Boundaries
+## How to Write Domain Code
 
-- Keep the KSML model under `../models`.
-- Keep generated TeaQL runtime code under `../generate-lib`.
-- Do not edit generated files under `../generate-lib/lib`.
-- Do not edit generated library files. If generated APIs are missing or awkward, update the KSML model or report the missing TeaQL API and regenerate.
-- Put application queries, services, tests, and integration code in this workspace.
-- Do not use other database access technologies from workspace business code. This includes direct SQLx queries, SeaORM, Diesel, rbatis, rusqlite, tokio-postgres, mysql_async, raw database clients, and hand-written repository/DAO layers.
-- Do not add dependencies or helper wrappers that bypass TeaQL for persistence, querying, transactions, relation loading, or DTO mapping.
-
-## Application Layer Safety Guardrails
-
-### 1. Use the Entity API Exclusively
-- Always perform state transitions or updates directly on the domain entity object itself, and call `.save(&ctx).await`.
-- Never use repository-level methods (`save_entity_graph_from()`, etc.) directly. They execute full graph replacements and may implicitly delete child records.
-- Data MUST NOT be deleted implicitly. Unless `.mark_as_delete()` is explicitly called, no command should delete any data.
-
-### 2. ABSOLUTE BAN ON `T::` TOOLS
-- Inside the application layer, you are strictly forbidden from calling any stateless utility from `teaql_tool::T` directly.
-- All side effects (network, file) and all stateful computations (time, formatting, ID generation) MUST go through the user context (`ctx`).
-- Do not use `chrono::Utc`, `chrono::Local`, `std::fs`, `reqwest`, or `std::process::Command` directly.
-
-### 3. MANDATORY BUSINESS INTENT (`.comment()`)
-- Every tool call MUST end with `.comment("English intent description")`.
-- Pure computation tools return `MustComment<T>` — a zero-cost wrapper that cannot be used without calling `.comment()`. The compiler will reject code that skips this step.
-
-```rust
-// Correct
-let deadline = ctx.time().today().add_days(7).comment("Calculate grace period deadline");
-let data = ctx.http().get("https://...").comment("Sync external tasks").await?;
-
-// WRONG: compiler error
-let now = T::time().today();
-```
-
-If the domain needs new entities, fields, relations, constants, or generated API names, update the model and regenerate the library before changing workspace code.
-
-## Generated Crate
-
-The generated crate is consumed by local path:
-
-```toml
-{{ module_name }} = { package = "<domain.rustCrateName>", path = "<domain.rustWorkspaceGeneratedLibPath>" }
-```
-
-When refreshing the generated crate, extract or copy the `rust-lib` output into `../generate-lib` while preserving the top-level `lib/` directory. The expected manifest path is `../generate-lib/lib/Cargo.toml`; do not flatten `lib/*` into `../generate-lib/`.
-Before writing code against the generated TeaQL crate, read the library guide at `../generate-lib/lib/AGENTS.md`. If the crate comes from a Cargo registry instead of a local path, locate the unpacked crate source with `cargo metadata` or vendor the dependency with `cargo vendor`, then read that crate's `AGENTS.md` before using its APIs.
-
-Import generated APIs from `{{ module_name }}`:
-
-```rust
-use {{ module_name }}::{E, Q};
-```
-
-Use generated query builders, expression helpers, relation selectors, update helpers, and graph save APIs before considering lower-level data access.
-Business code may use only the supported TeaQL surface: `Q`, generated entity APIs, `entity.save(&ctx).await`, `E`, and workspace-specific extensions or wrappers around `UserContext`.
-Create new generated entities with `Q::<domain.primaryExampleObjectDescriptor.rustPluralName>().new_entity(&ctx)` or the corresponding `Q::<entity_plural>().new_entity(&ctx)` entrypoint; do not call `runtime_new(...)`, `entity_root()`, repositories, or runtime internals to construct entities.
-Do not access lower-level TeaQL internals directly: generated repositories, repository registries, metadata registries, SQL executors, transaction internals, or runtime persistence hooks.
-If the supported surface is not enough, report the missing generated API instead of bypassing it.
-
-## Runtime
-
-`src/main.rs` is a thin Tokio async smoke entrypoint. Keep long-running business logic in `src/lib.rs` or dedicated modules and call it from the entrypoint.
-
-Do not add a web framework unless the project explicitly needs one.
-
-## TeaQL Rust Pitfalls
-
-- SQLite `:memory:` is not suitable for TeaQL integration tests. TeaQL/SQLx may use a different connection from the pool, and SQLite in-memory databases are connection-local, so later operations can fail with missing tables. Use a file-backed SQLite database for integration tests.
-
-
-
-## Checks
-
-Run these from this workspace:
+To get the exact API usage and query examples for the entity you are working on, execute the following command:
 
 ```bash
-cargo check
-cargo test
+cargo teaql --input models/{{ domain.name }}.xml rust-assist-[action]/[entity-name]
 ```
 
+> `models/{{ domain.name }}.xml` is the default model path. If the model file is located elsewhere, adjust the `--input` path to match the actual file location in this project.
+
+Replace `[action]` with one of the following:
+
+| action | when-to-use |
+|--------|-------------|
+| query | Read/find records from the database using Q:: |
+| create | Insert a new record into the database |
+| update | Modify and save an existing record |
+| delete | Remove or soft-delete a record |
+| expression | Safely extract nested relation values using E:: |
+| list-page | Implement a paginated query returning SmartList |
+| debug | View instructions for enabling SQL logging and debugging |
+
+Replace `[entity-name]` with the exact entity-name from the table below:
+
+| entity-name | display-name |
+|-------------|--------------|
+{% for entity in entities %}| {{ entity.rust_module_name }} |  |
+{% endfor %}
+
+
+Once the command succeeds, read its output. Use the printed code as a template to write your logic.
+
+If the command cannot be executed, stop and report the missing context. Do not invent APIs.
+
+## Additional References
+
+Read these only when the task requires them:
+
+* **`RUNTIME_CUSTOM_GUIDE.md`**
+  Runtime setup, framework APIs (UserContext, SmartList, WebResponse, etc.), and debugging.
+
+* **`TOOL_API_GUIDE.md`**
+  Built-in tool integrations (HTTP client, etc.).

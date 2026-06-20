@@ -5,12 +5,12 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use clap::Parser;
 use std::io::Write;
 use teaql_forge_codegen::context::build_render_context;
 use teaql_forge_codegen::engine::generate_virtual_crate;
 use teaql_forge_model::parser::parse_model;
 use zip::write::SimpleFileOptions;
-use clap::Parser;
 
 mod eval;
 mod rules;
@@ -88,41 +88,72 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
 
     let domain = match parse_model(&xml, &xml_path) {
         Ok(d) => d,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("Parse error: {}", e)).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Parse error: {}", e),
+            )
+                .into_response()
+        }
     };
 
     let render_domain = build_render_context(&domain);
     let files = if scope == "rust-workspace" {
         match teaql_forge_codegen::engine::generate_virtual_workspace(&render_domain) {
             Ok(f) => f,
-            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("CodeGen error: {}", e)).into_response(),
+            Err(e) => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("CodeGen error: {}", e),
+                )
+                    .into_response()
+            }
         }
     } else {
         match generate_virtual_crate(&render_domain) {
             Ok(f) => f,
-            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("CodeGen error: {}", e)).into_response(),
+            Err(e) => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("CodeGen error: {}", e),
+                )
+                    .into_response()
+            }
         }
     };
 
     let mut zip_buffer = Vec::new();
     {
         let mut zip = zip::ZipWriter::new(std::io::Cursor::new(&mut zip_buffer));
-        let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        let options =
+            SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         for generated_file in files {
             // Need to add directories if missing, but zip crate might handle it or we can just add files
-            // For safety, we can just add the file and zip viewers usually figure it out, 
+            // For safety, we can just add the file and zip viewers usually figure it out,
             // but let's add files properly.
             if let Err(e) = zip.start_file(&generated_file.path, options) {
-                return (StatusCode::INTERNAL_SERVER_ERROR, format!("Zip error: {}", e)).into_response();
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Zip error: {}", e),
+                )
+                    .into_response();
             }
             if let Err(e) = zip.write_all(generated_file.content.as_bytes()) {
-                return (StatusCode::INTERNAL_SERVER_ERROR, format!("Zip write error: {}", e)).into_response();
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Zip write error: {}", e),
+                )
+                    .into_response();
             }
         }
 
         if let Err(e) = zip.finish() {
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("Zip finish error: {}", e)).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Zip finish error: {}", e),
+            )
+                .into_response();
         }
     }
 

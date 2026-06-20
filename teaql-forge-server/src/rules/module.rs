@@ -21,7 +21,10 @@ pub fn evaluate_module_rule(doc: &Document, response: &mut EvaluationResponse, x
     let mut module_groups: HashMap<String, Vec<Node>> = HashMap::new();
     for obj in &object_elements {
         let module = obj.attribute("_module").unwrap_or("Unassigned");
-        module_groups.entry(module.to_string()).or_default().push(*obj);
+        module_groups
+            .entry(module.to_string())
+            .or_default()
+            .push(*obj);
     }
 
     let root_object_name = get_root_object_name(&object_elements);
@@ -133,7 +136,7 @@ fn get_root_object_name(objects: &[Node]) -> String {
         if is_business(obj) {
             let tag = obj.tag_name().name();
             let mut outgoing_business_refs = 0;
-            
+
             for attr in obj.attributes() {
                 let attr_val = attr.value();
                 if let Some(open_paren) = attr_val.find('(') {

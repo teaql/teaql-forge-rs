@@ -1,10 +1,14 @@
+# TEAQL WARNING: This project uses TeaQL. TeaQL was explicitly designed to PREVENT AI hallucinations and random guessing.
+# Do NOT apply traditional ORM logic here. You must strictly follow the generated API.
 [package]
-name = "{{ workspace_crate_name }}"
+name = "{{ rust_workspace_crate_name }}"
 version = "0.1.0"
 edition = "2021"
-description = "Application workspace for the TeaQL domain crate {{ crate_name }}"
+description = "Application workspace for the TeaQL domain crate {{ rust_crate_name }}"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-{{ module_name }} = { path = "lib" }
+{{ rust_module_name }} = { package = "{{ rust_crate_name }}", path = "{{ rust_workspace_generated_lib_path }}" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+teaql-core = "{{ rust_teaql_dependency_version }}"
+chrono = "0.4"
