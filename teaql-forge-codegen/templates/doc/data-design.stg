@@ -1,0 +1,186 @@
+index(naming, domain) ::= <<
+\<!DOCTYPE html\>
+\<html lang="en"\>
+\<head\>
+    \<meta charset="utf-8"\>
+    \<meta name="viewport" content="width=device-width, initial-scale=1"\>
+    \<title\><domain.name> Data Design Document\</title\>
+    \<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"\>
+    \<style\>
+        body { padding: 40px; font-family: system-ui, -apple-system, sans-serif; }
+        .table-wrap { margin-bottom: 40px; }
+        th { background-color: #f8f9fa !important; }
+        .table\>tbody\>tr\>td { vertical-align: middle; }
+        .nav-sidebar { position: sticky; top: 40px; max-height: calc(100vh - 80px); overflow-y: auto; }
+        .preface { margin-bottom: 50px; text-align: center; }
+        @media print {
+            .page-break { page-break-after: always; }
+        }
+    \</style\>
+\</head\>
+\<body\>
+
+\<div class="container-fluid"\>
+    \<div class="row"\>
+        \<!-- Sidebar --\>
+        \<div class="col-md-3 col-lg-2 d-md-block bg-light sidebar nav-sidebar p-3 border-end"\>
+            \<h5 class="mb-3"\>Table Index\</h5\>
+            \<div class="list-group list-group-flush"\>
+                <domain.objectDescriptors:{objectDescriptor | <sidebarIndexRow(objectDescriptor,i)>};separator="\n">
+            \</div\>
+        \</div\>
+
+        \<!-- Main Content --\>
+        \<div class="col-md-9 ms-sm-auto col-lg-10 px-md-4"\>
+            \<div class="preface page-break"\>
+                \<h1 class="display-4"\><domain.name>\</h1\>
+                \<h2\>Data Design Document\</h2\>
+            \</div\>
+
+            \<h3 class="mt-5 mb-4 border-bottom pb-2"\>Change History\</h3\>
+            \<table class="table table-bordered table-striped"\>
+                \<thead\>
+                    \<tr\>\<th\>#\</th\>\<th\>Date\</th\>\<th\>Author\</th\>\</tr\>
+                \</thead\>
+                \<tbody\>
+                    \<tr\>\<td\>1\</td\>\<td\>2025-03-04\</td\>\<td\>TeaQL Doc Rob\</td\>\</tr\>
+                \</tbody\>
+            \</table\>
+
+            \<h3 class="mt-5 mb-4 border-bottom pb-2"\>Summary of Concepts\</h3\>
+            \<div class="mb-5 text-center"\>
+                <domain.wordCloudSVG>
+            \</div\>
+
+            \<h3 class="mt-5 mb-4 border-bottom pb-2"\>Tables Index\</h3\>
+            \<table class="table table-bordered table-hover"\>
+                \<thead\>
+                    \<tr\>\<th\>#\</th\>\<th\>Table Name\</th\>\<th\>Columns Count\</th\>\<th\>Relation Count\</th\>\</tr\>
+                \</thead\>
+                \<tbody\>
+                    <domain.objectDescriptors:{objectDescriptor | <tableIndexRow(objectDescriptor,i)>};separator="\n">
+                \</tbody\>
+            \</table\>
+
+            \<div class="tables-section mt-5"\>
+                <domain.objectDescriptors:{objectDescriptor | <tableDefinition(objectDescriptor,i)>};separator="\n">
+            \</div\>
+        \</div\>
+    \</div\>
+\</div\>
+
+\<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"\>\</script\>
+\</body\>
+\</html\>
+>>
+
+sidebarIndexRow(objectDescriptor,i) ::= <<
+\<a href="#Table-<objectDescriptor.PresentTableName>" class="list-group-item list-group-item-action text-truncate" title="<objectDescriptor.PresentTableName>"\>
+    \<small\><i>. <objectDescriptor.PresentTableName>\</small\>
+\</a\>
+>>
+
+tableIndexRow(objectDescriptor,i) ::= <<
+\<tr\>
+    \<td\><i>\</td\>
+    \<td\>\<a href="#Table-<objectDescriptor.PresentTableName>"\><objectDescriptor.PresentTableName>\</a\>\</td\>
+    \<td\><length(objectDescriptor.properties)>\</td\>
+    \<td\><length(objectDescriptor.reverseRelations)>\</td\>
+\</tr\>
+>>
+
+tableDefinition(objectDescriptor,i) ::= <<
+\<div id="Table-<objectDescriptor.PresentTableName>" class="table-wrap page-break pt-4"\>
+    \<h3 class="mb-3 text-primary"\><i>. Table: <objectDescriptor.PresentTableName>\</h3\>
+
+    \<h5 class="mt-4"\>Columns\</h5\>
+    \<table class="table table-bordered table-sm table-striped"\>
+        \<thead class="table-light"\>
+            \<tr\>\<th width="5%"\>#\</th\>\<th width="20%"\>Column Name\</th\>\<th width="25%"\>Name\</th\>\<th width="25%"\>Type\</th\>\<th width="25%"\>Sample\</th\>\</tr\>
+        \</thead\>
+        \<tbody\>
+            <objectDescriptor.fields:{fd | <columns(fd,i,i0)>};separator="\n">
+        \</tbody\>
+    \</table\>
+
+    <if(objectDescriptor.indexes)>
+    \<h5 class="mt-4"\>Index\</h5\>
+    \<table class="table table-bordered table-sm"\>
+        \<thead class="table-light"\>
+            \<tr\>\<th\>#\</th\>\<th\>Index Name\</th\>\<th\>Columns\</th\>\<th\>Type\</th\>\<th\>Remark\</th\>\</tr\>
+        \</thead\>
+        \<tbody\>
+            <objectDescriptor.indexes:{index | <indexDesc(index,i,i0)>};separator="\n">
+        \</tbody\>
+    \</table\>
+    <endif>
+
+    <if(objectDescriptor.constrains)>
+    \<h5 class="mt-4"\>Constraints\</h5\>
+    \<table class="table table-bordered table-sm"\>
+        \<thead class="table-light"\>
+            \<tr\>\<th\>#\</th\>\<th\>Constraint Name\</th\>\<th\>Column\</th\>\<th\>Reference Table\</th\>\<th\>Reference Column\</th\>\<th\>Remark\</th\>\</tr\>
+        \</thead\>
+        \<tbody\>
+            <objectDescriptor.constrains:{constraint | <constraintDesc(constraint,i,i0)>};separator="\n">
+        \</tbody\>
+    \</table\>
+    <endif>
+
+    <if(!objectDescriptor.depends.empty)>
+    \<h5 class="mt-4"\>Depends Tables\</h5\>
+    \<table class="table table-bordered table-sm"\>
+        \<thead class="table-light"\>
+            \<tr\>\<th\>#\</th\>\<th\>Table Name\</th\>\<th\>Reference Column\</th\>\<th\>Remark\</th\>\</tr\>
+        \</thead\>
+        \<tbody\>
+            <objectDescriptor.depends:{depend | <dependDesc(depend,i,i0)>};separator="\n">
+        \</tbody\>
+    \</table\>
+    <endif>
+
+    <if(!objectDescriptor.dependedBy.empty)>
+    \<h5 class="mt-4"\>Depended by\</h5\>
+    \<table class="table table-bordered table-sm"\>
+        \<thead class="table-light"\>
+            \<tr\>\<th\>#\</th\>\<th\>Table Name\</th\>\<th\>Reference Column\</th\>\<th\>Remark\</th\>\</tr\>
+        \</thead\>
+        \<tbody\>
+            <objectDescriptor.dependedBy:{depend | <dependDesc(depend,i,i0)>};separator="\n">
+        \</tbody\>
+    \</table\>
+    <endif>
+
+    <if(objectDescriptor.constant)>
+    \<h5 class="mt-4"\>Internal Data\</h5\>
+    \<table class="table table-bordered table-sm"\>
+        \<thead class="table-light"\>
+            \<tr\><objectDescriptor.columns:{column | \<th\><column.SQLPresentName>\</th\>};separator="">\</tr\>
+        \</thead\>
+        \<tbody\>
+            <objectDescriptor.rows:{row | <rowDesc(row,i,i0)>};separator="\n">
+        \</tbody\>
+    \</table\>
+    <endif>
+\</div\>
+>>
+
+columns(fd,i,i0) ::= <<
+\<tr\>\<td\><i>\</td\>\<td\><fd.SQLPresentName>\</td\>\<td\><fd.PresentName>\</td\>\<td\>\<code\><fd.sqlType>\</code\>\</td\>\<td\><fd.defaultSampleValue>\</td\>\</tr\>
+>>
+
+indexDesc(index,i,i0) ::= <<
+\<tr\>\<td\><i>\</td\>\<td\><index.name>\</td\>\<td\><index.columns>\</td\>\<td\><index.type>\</td\>\<td\><index.remark>\</td\>\</tr\>
+>>
+
+constraintDesc(constraint,i,i0) ::= <<
+\<tr\>\<td\><i>\</td\>\<td\><constraint.name>\</td\>\<td\><constraint.columns>\</td\>\<td\><constraint.tableName>\</td\>\<td\><constraint.referenceColumns>\</td\>\<td\><constraint.remark>\</td\>\</tr\>
+>>
+
+dependDesc(depend,i,i0) ::= <<
+\<tr\>\<td\><i>\</td\>\<td\><depend.tableName>\</td\>\<td\><depend.columns>\</td\>\<td\><depend.remark>\</td\>\</tr\>
+>>
+
+rowDesc(row,i,i0) ::= <<
+\<tr\><row.values:{value | \<td\><value>\</td\>};separator="">\</tr\>
+>>

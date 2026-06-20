@@ -55,7 +55,20 @@ pub fn trigger_logic_bug_panic(root_desc: &str, failed_node: &str, attempted_pat
 
     let human_message = format!("\"访问 {}.{} 时缺少预加载。请在查询中加入 {}{}\"", root_name, attempted_path, suggested_fix, human_nested);
 
-    panic!("\n\n💥 [Coding Logic Bug]\n\noriginal_expr_with_broken_point: \"{}\"\nroot: {}\naccess_path: {}\nbreak_point: \"{}\"\nmissing_preload: {}\nsuggested_fix: {}\nnested_fix: {}\nseverity: \"error\"\nhuman_message: {}\n", 
+    panic!("
+
+💥 [Coding Logic Bug]
+
+original_expr_with_broken_point: \"{}\"
+root: {}
+access_path: {}
+break_point: \"{}\"
+missing_preload: {}
+suggested_fix: {}
+nested_fix: {}
+severity: \"error\"
+human_message: {}
+", 
         original_expr, root_desc, access_path_json, failed_node, missing_preload_json, suggested_fix, nested_fix, human_message);
 }
 
@@ -116,16 +129,16 @@ impl<'a, T: Clone> ValueExpression<'a, T> {
 {% for entity in entities %}
 #[derive(Clone)]
 pub struct {{ entity.rust_struct }}Expression<'a> {
-    result: teaql_core::eval::EvalResult<&'a crate::{{ entity.rust_struct }}>,
+    result: teaql_core::eval::EvalResult<&'a crate::{{ entity.rust_struct },
     root_desc: std::sync::Arc<String>,
 }
 
 impl<'a> {{ entity.rust_struct }}Expression<'a> {
-    pub fn new(result: teaql_core::eval::EvalResult<&'a crate::{{ entity.rust_struct }}>, root_desc: std::sync::Arc<String>) -> Self {
+    pub fn new(result: teaql_core::eval::EvalResult<&'a crate::{{ entity.rust_struct }, root_desc: std::sync::Arc<String>) -> Self {
         Self { result, root_desc }
     }
 
-    fn resolve(self) -> Option<&'a crate::{{ entity.rust_struct }}> {
+    fn resolve(self) -> Option<&'a crate::{{ entity.rust_struct }{
         match self.result {
             teaql_core::eval::EvalResult::Value(v) => Some(v),
             teaql_core::eval::EvalResult::Null => None,
@@ -135,7 +148,7 @@ impl<'a> {{ entity.rust_struct }}Expression<'a> {
         }
     }
 
-    pub fn eval(self) -> Option<&'a crate::{{ entity.rust_struct }}> {
+    pub fn eval(self) -> Option<&'a crate::{{ entity.rust_struct }{
         self.resolve()
     }
 
@@ -144,14 +157,14 @@ impl<'a> {{ entity.rust_struct }}Expression<'a> {
     }
 
 {% for field in entity.fields %}
-{% if field.rust_name != "id" %}
+{% if field.rust_name not = "id" %}
 {% if field.rust_type is startingwith("Option<") %}
-    pub fn get_{{ field.rust_name }}(self) -> crate::e::ValueExpression<'a, {{ field.rust_type[7:-1] }}> {
+    pub fn get_{{ field.rust_name }}(self) -> crate::e::ValueExpression<'a, {{ field.rust_type[7:-1] }{
         let next = self.result.and_then("{{ field.name }}", |e| e.eval_{{ field.rust_name }}());
         crate::e::ValueExpression::new(next, self.root_desc)
     }
 {% else %}
-    pub fn get_{{ field.rust_name }}(self) -> crate::e::ValueExpression<'a, {{ field.rust_type }}> {
+    pub fn get_{{ field.rust_name }}(self) -> crate::e::ValueExpression<'a, {{ field.rust_type }{
         let next = self.result.and_then("{{ field.name }}", |e| e.eval_{{ field.rust_name }}());
         crate::e::ValueExpression::new(next, self.root_desc)
     }

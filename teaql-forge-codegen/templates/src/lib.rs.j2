@@ -63,7 +63,7 @@ impl teaql_data_service::MutationExecutor for ServiceRuntimeExecutor {
 pub fn module_with_behaviors_and_checkers() -> teaql_runtime::RuntimeModule {
     let mut module = teaql_runtime::RuntimeModule::new();
     {% for entity in entities %}
-    module = module.entity::<{{ entity.rust_struct }}>();
+    module = module.entity::<{{ entity.rust_struct }();
     {% endfor %}
     module
         .initial_graph(teaql_runtime::GraphNode::new("platform")

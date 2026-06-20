@@ -1,0 +1,2245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root alias_model_name="crp_erp_suite"
+      cfg_mask_china_mobile="false"
+      chinese_name="Customer Relation and Enterprise Resource Planning"
+      english_name="Customer Relation and Enterprise Resource Planning"
+      data_service="postgres"
+      name="crm-erp-service"
+      org="doublechaintech"
+      _module_key="root">
+
+    <platform
+            name="CRPERPPlatform"
+            create_time="createTime()"
+            last_update_time="updateTime()"
+            _module_key="platform"
+            _module="platform"
+            _name="System Platform"
+    />
+
+    <merchant
+            _module_key="organizational_structure"
+            _name="Organization"
+            _module="organization"
+            name="Global Logistics and Service Corporation"
+            tax_number="91XXXXXXXXXXXXX"
+            address="Headquarters Address"
+            external_id="MERCHANT_GLOBAL_ID"
+            platform="platform()"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <employee
+            _name="Employee"
+            _module="employee_and_payroll"
+            _module_key="employee_management"
+            employee_number="EMP00001"
+            name="Liisa Koivisto"
+            gender="gender_type()"
+            birth_date="1985-01-01"
+            mobile_phone="+358401234567"
+            email="liisa.koivisto@corp.com"
+            job_title="Department Manager"
+            hiring_date="2020-01-01"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <user_account
+            _name="User Account"
+            _module="user_and_role_management"
+            _module_key="user_management"
+            login_id="liisa_k"
+            display_name="Liisa Koivisto"
+            employee="employee()"
+            last_login_time="updateTime()"
+            remote_ip="remoteIp()"
+            city_by_ip="cityByIp()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <user_role
+            _name="User Role"
+            _module="user_and_role_management"
+            _module_key="role_management"
+            role_code="MANAGER"
+            role_name="Manager"
+            role_description="Has full departmental administration rights"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <user_role_assignment
+            _name="User Role Assignment"
+            _module="user_and_role_management"
+            _module_key="role_assignment"
+            user="user_account()"
+            role="user_role()"
+            assigned_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <permission_set
+            _name="Permission Set"
+            _module="user_and_role_management"
+            _module_key="permission_control"
+            set_name="Finance View Access"
+            set_description="Allows viewing of all financial reports"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <role_permission
+            _name="Role Permission"
+            _module="user_and_role_management"
+            _module_key="permission_control"
+            user_role="user_role()"
+            permission="permission_set()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <address
+            _name="Address"
+            _module="operations_and_logistics"
+            _module_key="addresses"
+            line1="Keskuskatu 10"
+            line2="Apt 3"
+            city="Helsinki"
+            region="Uusimaa"
+            postal_code="00100"
+            country="Finland"
+            latitude="60.1699"
+            longitude="24.9384"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <route
+            _name="Route"
+            _module="operations_and_logistics"
+            _module_key="routes"
+            route_name="Helsinki-Tampere Main Route"
+            start_city="Helsinki"
+            end_city="Tampere"
+            distance_km="175"
+            estimated_duration_hours="2.5"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <time_slot
+            _name="Time Slot"
+            _module="operations_and_logistics"
+            _module_key="time_slots"
+            slot_name="Morning Delivery"
+            start_time="09:00"
+            end_time="12:00"
+            is_peak_hour="false"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <shipment
+            _name="Shipment"
+            _module="operations_and_logistics"
+            _module_key="moves"
+            shipment_number="SHP00001"
+            customer="customer()"
+            pickup_address="address()"
+            delivery_address="address()"
+            route="route()"
+            time_slot="time_slot()"
+            scheduled_date="2025-12-01"
+            status="shipment_status_type()"
+            total_value="12000.50"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <shipment_item
+            _name="Shipment Item"
+            _module="operations_and_logistics"
+            _module_key="moves"
+            shipment="shipment()"
+            product="product()"
+            quantity="10"
+            unit_price="1200.00"
+            extended_price="12000.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <fulfillment_event
+            _name="Fulfillment Event"
+            _module="operations_and_logistics"
+            _module_key="fulfillment_events"
+            shipment="shipment()"
+            event_type="event_type()"
+            event_time="updateTime()"
+            location_address="address()"
+            notes="Goods loaded at warehouse"
+            reported_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <warehouse
+            _name="Warehouse"
+            _module="operations_and_logistics"
+            _module_key="inventory"
+            warehouse_name="Helsinki Central Warehouse"
+            warehouse_address="address()"
+            manager="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <inventory_level
+            _name="Inventory Level"
+            _module="operations_and_logistics"
+            _module_key="inventory"
+            warehouse="warehouse()"
+            product="product()"
+            quantity_on_hand="1000"
+            last_counted_date="2025-11-01"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <stock_movement
+            _name="Stock Movement"
+            _module="operations_and_logistics"
+            _module_key="inventory"
+            product="product()"
+            source_warehouse="warehouse()"
+            target_warehouse="warehouse()"
+            quantity="50"
+            movement_type="movement_type()"
+            move_date="2025-11-10"
+            processed_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <delivery_vehicle
+            _name="Delivery Vehicle"
+            _module="operations_and_logistics"
+            _module_key="fleet_management"
+            vehicle_license="XYZ-888"
+            vehicle_type="vehicle_type()"
+            capacity_volume="50.5"
+            capacity_weight="10000"
+            driver="employee()"
+            current_location="address()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <vehicle_assignment
+            _name="Vehicle Assignment"
+            _module="operations_and_logistics"
+            _module_key="fleet_management"
+            delivery_vehicle="delivery_vehicle()"
+            shipment="shipment()"
+            assignment_date="2025-12-01"
+            assigned_driver="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <load_plan
+            _name="Load Plan"
+            _module="operations_and_logistics"
+            _module_key="route_planning"
+            route="route()"
+            vehicle="delivery_vehicle()"
+            plan_date="2025-12-01"
+            planner="employee()"
+            total_volume="45.0"
+            total_weight="8000"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <load_plan_item
+            _name="Load Plan Item"
+            _module="operations_and_logistics"
+            _module_key="route_planning"
+            load_plan="load_plan()"
+            shipment="shipment()"
+            loading_sequence="1"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <service_appointment
+            _name="Service Appointment"
+            _module="operations_and_logistics"
+            _module_key="service_scheduling"
+            customer="customer()"
+            service="product_service()"
+            appointment_date="2025-12-05"
+            time_slot="time_slot()"
+            service_address="address()"
+            assigned_team="service_team()"
+            status="service_status_type()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <service_team
+            _name="Service Team"
+            _module="operations_and_logistics"
+            _module_key="service_scheduling"
+            team_name="Moving Service Team A"
+            team_lead="employee()"
+            base_location="address()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <team_member
+            _name="Team Member"
+            _module="operations_and_logistics"
+            _module_key="service_scheduling"
+            service_team="service_team()"
+            employee="employee()"
+            role="team_member_role()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <job_assignment
+            _name="Job Assignment"
+            _module="operations_and_logistics"
+            _module_key="service_scheduling"
+            service_appointment="service_appointment()"
+            assigned_employee="employee()"
+            assignment_date="2025-12-04"
+            start_time="08:00:00"
+            end_time="17:00:00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <work_order
+            _name="Work Order"
+            _module="operations_and_logistics"
+            _module_key="work_order_management"
+            order_number="WO20251201"
+            related_shipment="shipment()"
+            related_service_appointment="service_appointment()"
+            status="work_order_status()"
+            priority="priority_type()"
+            assigned_to="employee()"
+            due_date="2025-12-02"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <task
+            _name="Task"
+            _module="operations_and_logistics"
+            _module_key="work_order_management"
+            work_order="work_order()"
+            task_description="Packing fragile items"
+            assigned_to="employee()"
+            status="task_status()"
+            estimated_hours="2.0"
+            actual_hours="1.5"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <department
+            _name="Department"
+            _module="employee_and_payroll"
+            _module_key="staff_registry"
+            department_name="Operations Department"
+            department_code="OPS"
+            manager="employee()"
+
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <job_position
+            _name="Job Position"
+            _module="employee_and_payroll"
+            _module_key="staff_registry"
+            position_title="Senior Logistics Coordinator"
+            department="department()"
+            salary_grade="grade_type"
+            description="Responsible for coordinating daily logistics activities"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <employment_record
+            _name="Employment Record"
+            _module="employee_and_payroll"
+            _module_key="staff_registry"
+            employee="employee()"
+            department="department()"
+            job_position="job_position()"
+            start_date="2020-01-01"
+            end_date="null"
+            employment_type="employment_type()"
+            status="employment_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <worked_hour_entry
+            _name="Worked Hour Entry"
+            _module="employee_and_payroll"
+            _module_key="worked_hours"
+            employee="employee()"
+            work_date="2025-11-11"
+            start_time="09:00:00"
+            end_time="17:30:00"
+            break_minutes="30"
+            total_hours="8.0"
+            task_performed="task()"
+            is_overtime="false"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <timesheet
+            _name="Timesheet"
+            _module="employee_and_payroll"
+            _module_key="worked_hours"
+            employee="employee()"
+            period_start_date="2025-11-01"
+            period_end_date="2025-11-30"
+            status="timesheet_status()"
+            approved_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <payroll_calculation
+            _name="Payroll Calculation"
+            _module="employee_and_payroll"
+            _module_key="payroll_calculations"
+            employee="employee()"
+            pay_period_start="2025-11-01"
+            pay_period_end="2025-11-30"
+            gross_salary="4500.00"
+            tax_deduction="1500.00"
+            net_pay="3000.00"
+            status="payroll_status()"
+            processed_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <payroll_item
+            _name="Payroll Item"
+            _module="employee_and_payroll"
+            _module_key="payroll_calculations"
+            payroll="payroll_calculation()"
+            item_type="payroll_item_type()"
+            amount="150.00"
+            description="Performance Bonus"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <bonus_scheme
+            _name="Bonus Scheme"
+            _module="employee_and_payroll"
+            _module_key="bonuses"
+            scheme_name="Quarterly Performance Bonus"
+            eligibility_criteria="KPI 90% or higher"
+            calculation_rule="rule_type()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <employee_bonus
+            _name="Employee Bonus"
+            _module="employee_and_payroll"
+            _module_key="bonuses"
+            employee="employee()"
+            bonus_scheme="bonus_scheme()"
+            bonus_amount="150.00"
+            bonus_date="2025-12-15"
+            status="bonus_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <leave_request
+            _name="Leave Request"
+            _module="employee_and_payroll"
+            _module_key="leave_tracking"
+            employee="employee()"
+            leave_type="leave_type()"
+            start_date="2025-12-24"
+            end_date="2025-12-26"
+            total_days="3.0"
+            reason="Personal matters"
+            status="leave_status()"
+            approved_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <leave_balance
+            _name="Leave Balance"
+            _module="employee_and_payroll"
+            _module_key="leave_tracking"
+            employee="employee()"
+            leave_type="leave_type()"
+            annual_entitlement="15.0"
+            taken_days="3.0"
+            remaining_days="12.0"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <training_program
+            _name="Training Program"
+            _module="employee_and_payroll"
+            _module_key="training_and_development"
+            program_name="New Employee Onboarding"
+            start_date="2025-12-01"
+            end_date="2025-12-05"
+            trainer="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <employee_training_enrollment
+            _name="Employee Training Enrollment"
+            _module="employee_and_payroll"
+            _module_key="training_and_development"
+            employee="employee()"
+            training_program="training_program()"
+            enrollment_date="2025-11-20"
+            completion_status="training_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <customer
+            _name="Customer"
+            _module="customer_management"
+            _module_key="private_and_corporate_customers"
+            customer_type="customer_type()"
+            name="Mr. and Mrs. Virtanen"
+            mobile_phone="+358509876543"
+            email="virtanen@private.fi"
+            billing_address="address()"
+            shipping_address="address()"
+            lead_source="lead_source()"
+            status="customer_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <corporate_customer
+            _name="Corporate Customer"
+            _module="customer_management"
+            _module_key="private_and_corporate_customers"
+            customer="customer()"
+            company_name="Finnish Logistics Oy"
+            tax_id="FI12345678"
+            industry="industry_type()"
+            website="www.finlog.fi"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <customer_contact
+            _name="Customer Contact"
+            _module="customer_management"
+            _module_key="linked_contacts"
+            customer="customer()"
+            contact_name="Mr. Kari Niemi"
+            title="Logistics Director"
+            contact_mobile="+358451122334"
+            contact_email="kari.niemi@finlog.fi"
+            is_primary="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <billing_info
+            _name="Billing Info"
+            _module="customer_management"
+            _module_key="billing_info"
+            customer="customer()"
+            payment_method="payment_method()"
+            account_number="FI1410093000123458"
+            billing_cycle="billing_cycle()"
+            default_billing_address="address()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <customer_history_event
+            _name="Customer History Event"
+            _module="customer_management"
+            _module_key="customer_history"
+            customer="customer()"
+            event_type="history_event_type()"
+            event_date="updateTime()"
+            description="Complaint successfully resolved"
+            related_employee="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <service_contract
+            _name="Service Contract"
+            _module="customer_management"
+            _module_key="contracts"
+            customer="customer()"
+            contract_number="SC20251101"
+            contract_type="contract_type()"
+            start_date="2025-11-01"
+            end_date="2026-10-31"
+            total_value="50000.00"
+            status="contract_status()"
+            managed_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <contract_document
+            _name="Contract Document"
+            _module="customer_management"
+            _module_key="document_storage"
+            service_contract="service_contract()"
+            document_type="document_type()"
+            file_name="service_contract_2025.pdf"
+            storage_path="/docs/contract/SC20251101.pdf"
+            uploaded_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <support_ticket
+            _name="Support Ticket"
+            _module="customer_management"
+            _module_key="customer_support"
+            customer="customer()"
+            subject="Damaged goods complaint"
+            description="Received shipment with noticeable damage"
+            priority="priority_type()"
+            status="ticket_status()"
+            assigned_to="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <ticket_reply
+            _name="Ticket Reply"
+            _module="customer_management"
+            _module_key="customer_support"
+            support_ticket="support_ticket()"
+            replied_by="employee()"
+            reply_content="Compensation specialist assigned"
+            reply_time="createTime()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <product_category
+            _name="Product Category"
+            _module="products_and_services"
+            _module_key="product_configuration"
+            category_name="Moving Services"
+            category_code="MOVING"
+
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <product
+            _name="Product"
+            _module="products_and_services"
+            _module_key="product_configuration"
+            product_number="PROD001"
+            product_name="Standard Moving Package"
+            category="product_category()"
+            unit_of_measure="unit_of_measure()"
+            is_service="true"
+            is_taxable="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <product_service
+            _name="Service Configuration"
+            _module="products_and_services"
+            _module_key="service_configuration"
+            product="product()"
+            service_duration_hours="8.0"
+            required_staff_count="3"
+            is_customizable="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <product_pricing
+            _name="Product Pricing"
+            _module="products_and_services"
+            _module_key="pricing"
+            product="product()"
+            price_list="price_list()"
+            unit_price="3000.00"
+            currency="currency_type()"
+            effective_date="2025-01-01"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <price_list
+            _name="Price List"
+            _module="products_and_services"
+            _module_key="pricing"
+            list_name="Standard Retail Price"
+            is_default="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <service_configuration_option
+            _name="Service Config Option"
+            _module="products_and_services"
+            _module_key="service_configuration"
+            product_service="product_service()"
+            option_name="Includes packing materials"
+            extra_cost="200.00"
+            is_required="false"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <product_bundle
+            _name="Product Bundle"
+            _module="products_and_services"
+            _module_key="product_configuration"
+            bundle_name="Complete Corporate Relocation Plan"
+            bundle_price="15000.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <bundle_item
+            _name="Bundle Item"
+            _module="products_and_services"
+            _module_key="product_configuration"
+            product_bundle="product_bundle()"
+            product="product()"
+            quantity="1"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <material_item
+            _name="Material Item"
+            _module="products_and_services"
+            _module_key="product_configuration"
+            item_name="Cardboard Box"
+            item_code="BOX001"
+            unit_cost="5.00"
+            rental_price="2.00"
+            is_consumable="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <material_inventory
+            _name="Material Inventory"
+            _module="products_and_services"
+            _module_key="inventory"
+            material="material_item()"
+            warehouse="warehouse()"
+            quantity_on_hand="5000"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <sales_campaign
+            _name="Sales Campaign"
+            _module="marketing_and_sales"
+            _module_key="campaigns"
+            campaign_name="Year-End Sales Event"
+            start_date="2025-12-01"
+            end_date="2025-12-31"
+            budget="10000.00"
+            target_audience="target_audience_type()"
+            manager="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <discount_code
+            _name="Discount Code"
+            _module="marketing_and_sales"
+            _module_key="discount_codes"
+            code="SAVE10PERCENT"
+            campaign="sales_campaign()"
+            discount_type="discount_type()"
+            discount_value="0.10"
+            max_uses="1000"
+            is_active="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <lead
+            _name="Lead"
+            _module="marketing_and_sales"
+            _module_key="lead_tracking"
+            lead_name="Mr. Vesa"
+            contact_email="vesa.lead@potential.fi"
+            source="lead_source()"
+            status="lead_status()"
+            assigned_to="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <lead_activity
+            _name="Lead Activity"
+            _module="marketing_and_sales"
+            _module_key="lead_tracking"
+            lead="lead()"
+            activity_type="lead_activity_type()"
+            activity_date="createTime()"
+            notes="Phone follow-up, expressed interest in service"
+            performed_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <conversion_metric
+            _name="Conversion Metric"
+            _module="marketing_and_sales"
+            _module_key="conversion_metrics"
+            campaign="sales_campaign()"
+            metric_date="2025-12-10"
+            total_leads="500"
+            qualified_leads="100"
+            converted_customers="50"
+            conversion_rate="0.10"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <quotation
+            _name="Quotation"
+            _module="marketing_and_sales"
+            _module_key="sales_process"
+            quotation_number="QOUT20251111"
+            customer="customer()"
+            prepared_by="employee()"
+            quotation_date="2025-11-11"
+            expiry_date="2025-12-11"
+            total_amount="12000.00"
+            status="quotation_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <quotation_line_item
+            _name="Quotation Line Item"
+            _module="marketing_and_sales"
+            _module_key="sales_process"
+            quotation="quotation()"
+            product="product()"
+            quantity="1"
+            unit_price="12000.00"
+            line_total="12000.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <sales_order
+            _name="Sales Order"
+            _module="marketing_and_sales"
+            _module_key="sales_process"
+            order_number="SO20251111"
+            customer="customer()"
+            quotation="quotation()"
+            sales_rep="employee()"
+            order_date="2025-11-11"
+            required_ship_date="2025-12-01"
+            total_amount="12000.00"
+            status="sales_order_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <account_chart
+            _name="Account Chart"
+            _module="finance_and_accounting"
+            _module_key="financial_summaries"
+            account_code="3000"
+            account_name="Sales Revenue"
+            account_type="account_type()"
+            is_active="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <journal_entry
+            _name="Journal Entry"
+            _module="finance_and_accounting"
+            _module_key="financial_summaries"
+            entry_date="2025-11-11"
+            description="Revenue recognition for Sales Order SO20251111"
+            reference_number="JEV20251111"
+            status="journal_status()"
+            posted_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <ledger_transaction
+            _name="Ledger Transaction"
+            _module="finance_and_accounting"
+            _module_key="financial_summaries"
+            journal_entry="journal_entry()"
+            account="account_chart()"
+            debit_amount="12000.00"
+            credit_amount="0.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <payment
+            _name="Payment Record"
+            _module="finance_and_accounting"
+            _module_key="payments"
+            customer="customer()"
+            payment_number="PAY20251111"
+            payment_date="2025-11-11"
+            amount="12000.00"
+            payment_method="payment_method()"
+            status="payment_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <invoice
+            _name="Invoice"
+            _module="finance_and_accounting"
+            _module_key="invoices"
+            customer="customer()"
+            sales_order="sales_order()"
+            invoice_number="INV20251111"
+            invoice_date="2025-11-11"
+            due_date="2025-12-11"
+            total_amount="14880.00"
+            vat_amount="2880.00"
+            status="invoice_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <invoice_line_item
+            _name="Invoice Line Item"
+            _module="finance_and_accounting"
+            _module_key="invoices"
+            invoice="invoice()"
+            product="product()"
+            quantity="1"
+            unit_price="12000.00"
+            line_total="12000.00"
+            vat_rate="vat_rate()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <expense_report
+            _name="Expense Report"
+            _module="finance_and_accounting"
+            _module_key="expenses"
+            employee="employee()"
+            report_date="2025-11-10"
+            total_amount="55.00"
+            purpose="Business trip meals"
+            status="expense_status()"
+            approved_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <expense_item
+            _name="Expense Item"
+            _module="finance_and_accounting"
+            _module_key="expenses"
+            expense_report="expense_report()"
+            expense_date="2025-11-09"
+            category="expense_category()"
+            amount="55.00"
+            description="Lunch and dinner"
+            receipt_attachment="contract_document()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <vat_rate_config
+            _name="VAT Rate Configuration"
+            _module="finance_and_accounting"
+            _module_key="vat"
+            vat_rate="0.24"
+            rate_name="Standard VAT Rate"
+            effective_date="2025-01-01"
+            country="Finland"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <financial_statement
+            _name="Financial Statement"
+            _module="finance_and_accounting"
+            _module_key="financial_summaries"
+            statement_type="statement_type()"
+            period_start="2025-10-01"
+            period_end="2025-12-31"
+            generation_date="2026-01-10"
+            status="statement_status()"
+            prepared_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <budget
+            _name="Budget"
+            _module="finance_and_accounting"
+            _module_key="budgeting"
+            department="department()"
+            fiscal_year="2026"
+            budget_amount="500000.00"
+            budget_category="budget_category()"
+            status="budget_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <bank_account
+            _name="Bank Account"
+            _module="finance_and_accounting"
+            _module_key="cash_management"
+            account_name="Company Operating Account"
+            bank_name="Nordea Bank"
+            account_number="FI6415213500001402"
+            currency="currency_type()"
+            is_operating_account="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <asset_category
+            _name="Asset Category"
+            _module="asset_management"
+            _module_key="asset_management"
+            category_name="Heavy Trucks"
+            depreciation_method="depreciation_method()"
+            lifespan_years="10"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <asset
+            _name="Asset"
+            _module="asset_management"
+            _module_key="asset_management"
+            asset_tag="ASSET0001"
+            asset_name="5-ton Box Truck"
+            asset_category="asset_category()"
+            purchase_date="2020-05-01"
+            purchase_price="35000.00"
+            current_value="15000.00"
+            assigned_location="address()"
+            responsible_employee="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <equipment
+            _name="Equipment"
+            _module="asset_management"
+            _module_key="equipment"
+            asset="asset()"
+            equipment_model="EQP-FORKLIFT-01"
+            serial_number="SN123456"
+            is_mobile="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <vehicle
+            _name="Vehicle Asset"
+            _module="asset_management"
+            _module_key="vehicles"
+            asset="asset()"
+            license_plate="vehicle_license"
+            vin_number="VINXXXXXXXXXXXXX"
+            mileage_km="50000"
+            last_service_date="2025-10-01"
+            vehicle_type="vehicle_type()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <consumable
+            _name="Consumable"
+            _module="asset_management"
+            _module_key="consumables"
+            item_name="Packaging Tape"
+            item_code="C_TAPE001"
+            unit_of_measure="unit_of_measure()"
+            unit_cost="3.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <consumable_stock
+            _name="Consumable Stock"
+            _module="asset_management"
+            _module_key="consumables"
+            consumable="consumable()"
+            warehouse="warehouse()"
+            quantity_on_hand="1000"
+            reorder_point="200"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <maintenance_schedule
+            _name="Maintenance Schedule"
+            _module="asset_management"
+            _module_key="maintenance_schedules"
+            asset="asset()"
+            schedule_type="maintenance_type()"
+            scheduled_date="2026-05-01"
+            interval_months="12"
+            responsible_employee="employee()"
+            status="maintenance_status()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <maintenance_log
+            _name="Maintenance Log"
+            _module="asset_management"
+            _module_key="maintenance_schedules"
+            asset="asset()"
+            maintenance_date="2025-05-01"
+            maintenance_type="maintenance_type()"
+            cost="150.00"
+            performed_by="employee()"
+            notes="Oil and filter change"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <depreciation_record
+            _name="Depreciation Record"
+            _module="asset_management"
+            _module_key="asset_accounting"
+            asset="asset()"
+            record_date="2025-12-31"
+            depreciation_amount="3500.00"
+            accumulated_depreciation="10500.00"
+            remaining_value="24500.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <insurance_policy
+            _name="Insurance Policy"
+            _module="administration_and_compliance"
+            _module_key="insurance"
+            policy_number="POLICYA12345"
+            policy_type="policy_type()"
+            insured_asset="asset()"
+            insured_entity="merchant(context)"
+            start_date="2025-01-01"
+            end_date="2025-12-31"
+            premium_amount="1200.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <compliance_document
+            _name="Compliance Document"
+            _module="administration_and_compliance"
+            _module_key="document_storage"
+            document_title="Safety Operations Manual"
+            document_type="compliance_type()"
+            version_number="1.0"
+            effective_date="2025-01-01"
+            file_path="/compliance/safety_manual.pdf"
+            uploaded_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <audit_log
+            _name="Audit Log"
+            _module="administration_and_compliance"
+            _module_key="audit_logs"
+            log_time="createTime()"
+            user="user_account()"
+            action_type="action_type()"
+            target_object_type="shipment"
+            target_object_id="SHP00001"
+            change_details="Status updated from PENDING to IN_TRANSIT"
+            remote_ip="remoteIp()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <version_history
+            _name="Version History"
+            _module="administration_and_compliance"
+            _module_key="versioning_and_soft_deletes"
+            object_type="customer"
+            object_id="CUST001"
+            field_name="name"
+            old_value="Mr. and Mrs. Virtanen"
+            new_value="Mr. Vesa Virtanen"
+            change_time="createTime()"
+            changed_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <deleted_record
+            _name="Soft Delete Record"
+            _module="administration_and_compliance"
+            _module_key="versioning_and_soft_deletes"
+            object_type="lead"
+            object_id="LEAD005"
+            deleted_time="createTime()"
+            deleted_by="employee()"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <notification_template
+            _name="Notification Template"
+            _module="administration_and_compliance"
+            _module_key="notifications"
+            template_name="Shipment Completion Notice"
+            channel="notification_channel()"
+            subject_template="Shipment ${shipment_number} Completed"
+            body_template="Your goods were delivered at ${delivery_time}"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <system_automation_hook
+            _name="System Automation Hook"
+            _module="administration_and_compliance"
+            _module_key="automation_hooks"
+            hook_name="Post-Payment Journal Entry"
+            trigger_event="payment_status_changed"
+            target_function="create_journal_entry"
+            is_active="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <external_integration
+            _name="External Integration"
+            _module="administration_and_compliance"
+            _module_key="api_ready_architecture"
+            system_name="Third-Party Payment Interface"
+            api_endpoint="string()"
+            authentication_method="auth_method_type()"
+            is_active="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <gender_type
+            _name="Gender Type"
+            _module="platform_data"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Male" code="MALE"/>
+        <_value id="2" name="Female" code="FEMALE"/>
+        <_value id="3" name="Undisclosed" code="OTHER"/>
+    </gender_type>
+
+    <shipment_status_type
+            _name="Shipment Status"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending" code="PENDING"/>
+        <_value id="2" name="Assigned" code="ASSIGNED"/>
+        <_value id="3" name="In Transit" code="IN_TRANSIT"/>
+        <_value id="4" name="Delivered" code="DELIVERED"/>
+        <_value id="5" name="Canceled" code="CANCELED"/>
+    </shipment_status_type>
+
+    <event_type
+            _name="Event Type"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pickup" code="PICKUP"/>
+        <_value id="2" name="Left Warehouse" code="LEFT_WAREHOUSE"/>
+        <_value id="3" name="Arrived Destination" code="ARRIVED_DESTINATION"/>
+        <_value id="4" name="Exception" code="EXCEPTION"/>
+    </event_type>
+
+    <movement_type
+            _name="Inventory Movement Type"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Receive" code="RECEIVE"/>
+        <_value id="2" name="Issue" code="ISSUE"/>
+        <_value id="3" name="Transfer" code="TRANSFER"/>
+        <_value id="4" name="Adjustment" code="ADJUSTMENT"/>
+    </movement_type>
+
+    <vehicle_type
+            _name="Vehicle Type"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Van" code="VAN"/>
+        <_value id="2" name="Heavy Truck" code="TRUCK_HEAVY"/>
+        <_value id="3" name="Light Truck" code="LIGHT_TRUCK"/>
+    </vehicle_type>
+
+    <service_status_type
+            _name="Service Status"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Scheduled" code="SCHEDULED"/>
+        <_value id="2" name="In Progress" code="IN_PROGRESS"/>
+        <_value id="3" name="Completed" code="COMPLETED"/>
+        <_value id="4" name="Cancelled" code="CANCELLED"/>
+    </service_status_type>
+
+    <team_member_role
+            _name="Team Member Role"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Team Lead" code="TEAM_LEAD"/>
+        <_value id="2" name="Mover" code="MOVER"/>
+        <_value id="3" name="Packer" code="PACKER"/>
+    </team_member_role>
+
+    <work_order_status
+            _name="Work Order Status"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="New" code="NEW"/>
+        <_value id="2" name="Pending" code="PENDING"/>
+        <_value id="3" name="Closed" code="CLOSED"/>
+    </work_order_status>
+
+    <priority_type
+            _name="Priority Type"
+            _module="platform_data"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="High" code="HIGH"/>
+        <_value id="2" name="Medium" code="MEDIUM"/>
+        <_value id="3" name="Low" code="LOW"/>
+    </priority_type>
+
+    <task_status
+            _name="Task Status"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="To Do" code="TO_DO"/>
+        <_value id="2" name="In Progress" code="IN_PROGRESS"/>
+        <_value id="3" name="Done" code="DONE"/>
+    </task_status>
+
+    <salary_grade
+            _name="Salary Grade"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="G1" code="GRADE_1"/>
+        <_value id="2" name="G2" code="GRADE_2"/>
+        <_value id="3" name="G3" code="GRADE_3"/>
+    </salary_grade>
+
+    <employment_type
+            _name="Employment Type"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Full Time" code="FULL_TIME"/>
+        <_value id="2" name="Part Time" code="PART_TIME"/>
+        <_value id="3" name="Contract" code="CONTRACT"/>
+    </employment_type>
+
+    <employment_status
+            _name="Employment Status"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Active" code="ACTIVE"/>
+        <_value id="2" name="Inactive" code="INACTIVE"/>
+    </employment_status>
+
+    <timesheet_status
+            _name="Timesheet Status"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Pending Approval" code="PENDING_APPROVAL"/>
+        <_value id="3" name="Approved" code="APPROVED"/>
+    </timesheet_status>
+
+    <payroll_status
+            _name="Payroll Status"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending" code="PENDING"/>
+        <_value id="2" name="Processed" code="PROCESSED"/>
+        <_value id="3" name="Paid" code="PAID"/>
+    </payroll_status>
+
+    <payroll_item_type
+            _name="Payroll Item Type"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Base Salary" code="BASE_SALARY"/>
+        <_value id="2" name="Bonus" code="BONUS"/>
+        <_value id="3" name="Tax Deduction" code="TAX_DEDUCTION"/>
+    </payroll_item_type>
+
+    <rule_type
+            _name="Calculation Rule Type"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Fixed Amount" code="FIXED_AMOUNT"/>
+        <_value id="2" name="Percentage" code="PERCENTAGE"/>
+    </rule_type>
+
+    <bonus_status
+            _name="Bonus Status"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending" code="PENDING"/>
+        <_value id="2" name="Issued" code="ISSUED"/>
+    </bonus_status>
+
+    <leave_type
+            _name="Leave Type"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Annual Leave" code="ANNUAL_LEAVE"/>
+        <_value id="2" name="Sick Leave" code="SICK_LEAVE"/>
+        <_value id="3" name="Personal Leave" code="PERSONAL_LEAVE"/>
+    </leave_type>
+
+    <leave_status
+            _name="Leave Request Status"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending Approval" code="PENDING_APPROVAL"/>
+        <_value id="2" name="Approved" code="APPROVED"/>
+        <_value id="3" name="Rejected" code="REJECTED"/>
+    </leave_status>
+
+    <training_status
+            _name="Training Status"
+            _module="employee_and_payroll"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Not Started" code="NOT_STARTED"/>
+        <_value id="2" name="In Progress" code="IN_PROGRESS"/>
+        <_value id="3" name="Completed" code="COMPLETED"/>
+    </training_status>
+
+    <customer_type
+            _name="Customer Type"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Private" code="PRIVATE"/>
+        <_value id="2" name="Corporate" code="CORPORATE"/>
+    </customer_type>
+
+    <industry_type
+            _name="Industry Type"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Logistics" code="LOGISTICS"/>
+        <_value id="2" name="Technology" code="TECH"/>
+        <_value id="3" name="Manufacturing" code="MANUFACTURING"/>
+    </industry_type>
+
+    <payment_method
+            _name="Payment Method"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Bank Transfer" code="BANK_TRANSFER"/>
+        <_value id="2" name="Credit Card" code="CREDIT_CARD"/>
+        <_value id="3" name="Cash" code="CASH"/>
+    </payment_method>
+
+    <billing_cycle
+            _name="Billing Cycle"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Monthly" code="MONTHLY"/>
+        <_value id="2" name="Quarterly" code="QUARTERLY"/>
+        <_value id="3" name="One Time" code="ONE_TIME"/>
+    </billing_cycle>
+
+    <history_event_type
+            _name="History Event Type"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Service Completed" code="SERVICE_COMPLETED"/>
+        <_value id="2" name="Complaint" code="COMPLAINT"/>
+        <_value id="3" name="Contract Renewed" code="CONTRACT_RENEWED"/>
+    </history_event_type>
+
+    <contract_type
+            _name="Contract Type"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Framework Agreement" code="FRAMEWORK"/>
+        <_value id="2" name="Single Service" code="SINGLE_SERVICE"/>
+    </contract_type>
+
+    <contract_status
+            _name="Contract Status"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Active" code="ACTIVE"/>
+        <_value id="3" name="Expired" code="EXPIRED"/>
+    </contract_status>
+
+    <document_type
+            _name="Document Type"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Contract" code="CONTRACT"/>
+        <_value id="2" name="Invoice" code="INVOICE"/>
+        <_value id="3" name="Receipt" code="RECEIPT"/>
+    </document_type>
+
+    <ticket_status
+            _name="Ticket Status"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Open" code="OPEN"/>
+        <_value id="2" name="In Process" code="IN_PROCESS"/>
+        <_value id="3" name="Resolved" code="RESOLVED"/>
+    </ticket_status>
+
+    <unit_of_measure
+            _name="Unit of Measure"
+            _module="products_and_services"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Unit" code="UNIT"/>
+        <_value id="2" name="Hour" code="HOUR"/>
+        <_value id="3" name="Cubic Meter" code="CUBIC_METER"/>
+        <_value id="4" name="Kilogram" code="KILOGRAM"/>
+    </unit_of_measure>
+
+    <currency_type
+            _name="Currency Type"
+            _module="products_and_services"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Euro" code="EUR"/>
+        <_value id="2" name="US Dollar" code="USD"/>
+        <_value id="3" name="Pound Sterling" code="GBP"/>
+    </currency_type>
+
+    <target_audience_type
+            _name="Target Audience Type"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="New Customers" code="NEW_CUSTOMERS"/>
+        <_value id="2" name="Existing Customers" code="EXISTING_CUSTOMERS"/>
+    </target_audience_type>
+
+    <discount_type
+            _name="Discount Type"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Amount Off" code="AMOUNT_OFF"/>
+        <_value id="2" name="Percent Off" code="PERCENT_OFF"/>
+        <_value id="3" name="Free Service" code="FREE_SERVICE"/>
+    </discount_type>
+
+    <lead_source
+            _name="Lead Source"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Website" code="WEBSITE"/>
+        <_value id="2" name="Phone Call" code="PHONE_CALL"/>
+        <_value id="3" name="Referral" code="REFERRAL"/>
+    </lead_source>
+
+    <lead_status
+            _name="Lead Status"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="New" code="NEW"/>
+        <_value id="2" name="Contacting" code="CONTACTING"/>
+        <_value id="3" name="Qualified" code="QUALIFIED"/>
+        <_value id="4" name="Converted" code="CONVERTED"/>
+    </lead_status>
+
+    <lead_activity_type
+            _name="Lead Activity Type"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Call" code="CALL"/>
+        <_value id="2" name="Email" code="EMAIL"/>
+        <_value id="3" name="Meeting" code="MEETING"/>
+    </lead_activity_type>
+
+    <quotation_status
+            _name="Quotation Status"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Sent" code="SENT"/>
+        <_value id="3" name="Accepted" code="ACCEPTED"/>
+        <_value id="4" name="Rejected" code="REJECTED"/>
+    </quotation_status>
+
+    <sales_order_status
+            _name="Sales Order Status"
+            _module="marketing_and_sales"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Confirmed" code="CONFIRMED"/>
+        <_value id="2" name="Fulfilling" code="FULFILLING"/>
+        <_value id="3" name="Closed" code="CLOSED"/>
+    </sales_order_status>
+
+    <account_type
+            _name="Account Type"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Asset" code="ASSET"/>
+        <_value id="2" name="Liability" code="LIABILITY"/>
+        <_value id="3" name="Revenue" code="REVENUE"/>
+        <_value id="4" name="Expense" code="EXPENSE"/>
+    </account_type>
+
+    <journal_status
+            _name="Journal Status"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Posted" code="POSTED"/>
+    </journal_status>
+
+    <payment_status
+            _name="Payment Status"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending" code="PENDING"/>
+        <_value id="2" name="Paid" code="PAID"/>
+        <_value id="3" name="Refunded" code="REFUNDED"/>
+    </payment_status>
+
+    <invoice_status
+            _name="Invoice Status"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Issued" code="ISSUED"/>
+        <_value id="3" name="Settled" code="SETTLED"/>
+        <_value id="4" name="Overdue" code="OVERDUE"/>
+    </invoice_status>
+
+    <vat_rate
+            _name="VAT Rate"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="24%" code="VAT_24"/>
+        <_value id="2" name="14%" code="VAT_14"/>
+        <_value id="3" name="10%" code="VAT_10"/>
+        <_value id="4" name="0%" code="VAT_0"/>
+    </vat_rate>
+
+    <expense_status
+            _name="Expense Status"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Pending Approval" code="PENDING_APPROVAL"/>
+        <_value id="3" name="Approved" code="APPROVED"/>
+        <_value id="4" name="Reimbursed" code="REIMBURSED"/>
+    </expense_status>
+
+    <expense_category
+            _name="Expense Category"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Travel" code="TRAVEL"/>
+        <_value id="2" name="Meals" code="MEALS"/>
+        <_value id="3" name="Office Supplies" code="OFFICE_SUPPLIES"/>
+    </expense_category>
+
+    <statement_type
+            _name="Statement Type"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Balance Sheet" code="BALANCE_SHEET"/>
+        <_value id="2" name="Income Statement" code="INCOME_STATEMENT"/>
+        <_value id="3" name="Cash Flow" code="CASH_FLOW"/>
+    </statement_type>
+
+    <statement_status
+            _name="Statement Status"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Generating" code="GENERATING"/>
+        <_value id="2" name="Completed" code="COMPLETED"/>
+        <_value id="3" name="Archived" code="ARCHIVED"/>
+    </statement_status>
+
+    <budget_category
+            _name="Budget Category"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Operational" code="OPERATIONAL"/>
+        <_value id="2" name="Capital" code="CAPITAL"/>
+        <_value id="3" name="Marketing" code="MARKETING"/>
+    </budget_category>
+
+    <budget_status
+            _name="Budget Status"
+            _module="finance_and_accounting"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Draft" code="DRAFT"/>
+        <_value id="2" name="Approved" code="APPROVED"/>
+        <_value id="3" name="Closed" code="CLOSED"/>
+    </budget_status>
+
+    <depreciation_method
+            _name="Depreciation Method"
+            _module="asset_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Straight Line" code="STRAIGHT_LINE"/>
+        <_value id="2" name="Double Declining" code="DOUBLE_DECLINING"/>
+    </depreciation_method>
+
+    <maintenance_type
+            _name="Maintenance Type"
+            _module="asset_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Preventive" code="PREVENTIVE"/>
+        <_value id="2" name="Corrective" code="CORRECTIVE"/>
+        <_value id="3" name="Overhaul" code="OVERHAUL"/>
+    </maintenance_type>
+
+    <maintenance_status
+            _name="Maintenance Status"
+            _module="asset_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending" code="PENDING"/>
+        <_value id="2" name="In Progress" code="IN_PROGRESS"/>
+        <_value id="3" name="Completed" code="COMPLETED"/>
+    </maintenance_status>
+
+    <policy_type
+            _name="Policy Type"
+            _module="administration_and_compliance"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Property" code="PROPERTY"/>
+        <_value id="2" name="Vehicle" code="VEHICLE"/>
+        <_value id="3" name="Liability" code="LIABILITY"/>
+    </policy_type>
+
+    <compliance_type
+            _name="Compliance Type"
+            _module="administration_and_compliance"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Industry Standard" code="INDUSTRY_STANDARD"/>
+        <_value id="2" name="Internal Policy" code="INTERNAL_POLICY"/>
+        <_value id="3" name="Regulation" code="REGULATION"/>
+    </compliance_type>
+
+    <action_type
+            _name="Action Type"
+            _module="administration_and_compliance"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Create" code="CREATE"/>
+        <_value id="2" name="Update" code="UPDATE"/>
+        <_value id="3" name="Delete" code="DELETE"/>
+        <_value id="4" name="Login" code="LOGIN"/>
+    </action_type>
+
+    <notification_channel
+            _name="Notification Channel"
+            _module="administration_and_compliance"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Email" code="EMAIL"/>
+        <_value id="2" name="SMS" code="SMS"/>
+        <_value id="3" name="In-App Notification" code="IN_APP"/>
+    </notification_channel>
+
+    <auth_method_type
+            _name="Authentication Method Type"
+            _module="administration_and_compliance"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="API Key" code="API_KEY"/>
+        <_value id="2" name="OAuth2" code="OAUTH2"/>
+        <_value id="3" name="Basic Auth" code="BASIC_AUTH"/>
+    </auth_method_type>
+
+    <customer_status
+            _name="Customer Status"
+            _module="customer_management"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Active" code="ACTIVE"/>
+        <_value id="2" name="Inactive" code="INACTIVE"/>
+        <_value id="3" name="Blacklisted" code="BLACKLISTED"/>
+    </customer_status>
+
+</root>

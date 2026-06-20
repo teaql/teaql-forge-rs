@@ -1,0 +1,58 @@
+Please help me complete the paginated list (List Page) service business code for the `{{ entity.name }}` object.
+
+To ensure absolute correctness of the API, please refer to and strictly imitate the following **real list page code example for `{{ entity.name }}`**.
+
+### Standard Paginated List Example (Reference)
+Please carefully observe the `execute_for_page()` method with offset/limit parameters, the `_minimal()` query start, and the strictly required `.purpose()` and `.comment()` cascade:
+
+```rust
+use teaql_core::Entity;
+use {{ entity.domain.rustModuleName }}::{Q, {{ entity.name }}, TeaqlRepositoryProvider};
+use teaql_core::SmartList;
+use serde_json::Value as JsonValue;
+
+pub async fn list_page_example(
+    ctx: &impl TeaqlRepositoryProvider, 
+    offset: u64, 
+    limit: u64, 
+    ui_filters_json: &JsonValue
+) -> Result<SmartList<{{ entity.name }, Box<dyn std::error::Error>>
+{
+    // [BEST PRACTICE]: Always start with _minimal() to avoid over-fetching
+    let page = Q::{{ entity.rustPluralName }}_minimal()
+<entity.fields:{f | {% if f.id %}{% elif f.version %}{{ else }}        .select_{{ f.rustMemberName }}()
+{% endif %}.filter_with_json(ui_filters_json.clone()) // Dynamic UI Search Support
+
+        // --- Drill-Down Options: Fetch nested objects and tailor fields (uncomment as needed) ---
+<entity.fields:{f | {% if f.objectProperty %}
+        // .select_{{ f.rustMemberName }}_with(
+        //     Q::{{ f.fieldType.refer.rustPluralName }}_minimal()
+<f.fieldType.refer.fields:{rf | {% if rf.id %}{% elif rf.version %}{{ else }}        //         .select_{{ rf.rustMemberName }}()
+{% endif %}// )
+{% endif %}{% if entity.reverseRelations %}
+<entity.reverseRelations:{r |         // .select_{{ r.rustMemberName }}_with(
+        //     Q::{{ r.child.rustPluralName }}_minimal()
+<r.child.fields:{cf | {% if cf.id %}{% elif cf.version %}{{ else }}        //         .select_{{ cf.rustMemberName }}()
+{% endif %}// )
+{% endif %}        // -----------------------------------------------------------------------------------------------
+
+        // --- Facet Options: Aggregate referenced objects directly (uncomment as needed) ---
+<entity.fields:{f | {% if f.objectProperty %}
+        // .facet_by_{{ f.rustMemberName }}_as(
+        //     "{{ f.rustMemberName }}_facet",
+        //     Q::{{ f.fieldType.refer.rustPluralName }}_minimal().aggregate_count("count")
+        // )
+{% endif %}// -----------------------------------------------------------------------------------------------
+
+        // [CRITICAL]: All execute methods must cascade these two methods!
+        .comment("why: Need to display a paginated list on the frontend")
+        .purpose("what: Query paginated list of {{ entity.name }}")
+        .execute_for_page(ctx, offset, limit)
+        .await?;
+
+    Ok(page)
+}
+```
+
+### Your Task
+Please completely imitate the framework, imports, and syntax features of the above code to implement the real paginated list logic for `{{ entity.name }}` based on my specific business needs. Please output the Rust source code directly.

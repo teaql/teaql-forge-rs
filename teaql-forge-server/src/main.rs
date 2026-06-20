@@ -32,7 +32,8 @@ async fn main() {
     let app = Router::new()
         .route("/version", get(version_handler))
         .route("/generate", post(generate_handler))
-        .route("/evaluate", post(eval::evaluate_handler));
+        .route("/evaluate", post(eval::evaluate_handler))
+        .route("/*path", get(preview_get_handler).post(preview_post_handler));
 
     if args.host == "0.0.0.0" {
         println!("Warning: You are exposing TeaQL Local Server to the network.");
@@ -56,6 +57,94 @@ async fn version_handler() -> impl IntoResponse {
         serde_json::Value::String("teaql-code-generator".to_string()),
     );
     Json(map)
+}
+
+async fn preview_get_handler(
+    axum::extract::Path(path): axum::extract::Path<String>,
+) -> impl IntoResponse {
+    render_preview_internal(path, include_str!("demo.xml"), "demo.xml").await
+}
+
+async fn preview_post_handler(
+    axum::extract::Path(path): axum::extract::Path<String>,
+    mut multipart: Multipart,
+) -> impl IntoResponse {
+    let mut file_content = None;
+    let mut xml_path = "model.xml".to_string();
+
+    while let Some(field) = multipart.next_field().await.unwrap_or(None) {
+        let name = field.name().unwrap_or("").to_string();
+        if name == "file" {
+            if let Some(file_name) = field.file_name() {
+                xml_path = file_name.to_string();
+            }
+            let data = field.bytes().await.unwrap();
+            file_content = Some(String::from_utf8_lossy(&data).to_string());
+        }
+    }
+
+    let xml = match file_content {
+        Some(c) => c,
+        None => return (StatusCode::BAD_REQUEST, "Missing file part").into_response(),
+    };
+
+    render_preview_internal(path, &xml, &xml_path).await
+}
+
+async fn render_preview_internal(path: String, xml: &str, xml_path: &str) -> axum::response::Response {
+    let lower_path = path.to_lowercase();
+    let template_name;
+    let mut target_entity = None;
+
+    if path == "model-view.html" {
+        template_name = "doc/model-view".to_string();
+    } else if lower_path == "data-design.md"
+        || lower_path == "data-design.html"
+        || lower_path == "data-design-react.html"
+    {
+        template_name = format!("doc/{}", path.split('.').next().unwrap());
+    } else if lower_path.contains("-assist-") {
+        let parts: Vec<&str> = path.split('/').collect();
+        template_name = parts[0].to_string();
+        if parts.len() > 1 {
+            target_entity = Some(parts[1].to_string());
+        }
+    } else {
+        return (
+            StatusCode::METHOD_NOT_ALLOWED,
+            "GET/POST is only supported for -assist- previews and doc previews",
+        )
+            .into_response();
+    }
+
+    let domain = match parse_model(xml, xml_path) {
+        Ok(d) => d,
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Parse error: {}", e),
+            )
+                .into_response()
+        }
+    };
+    let render_domain = build_render_context(&domain);
+
+    match teaql_forge_codegen::engine::render_preview(&render_domain, &template_name, target_entity)
+    {
+        Ok(content) => {
+            let content_type = if path.ends_with(".html") {
+                "text/html;charset=UTF-8"
+            } else {
+                "text/markdown;charset=UTF-8"
+            };
+            ([(header::CONTENT_TYPE, content_type)], content).into_response()
+        }
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Render error: {}", e),
+        )
+            .into_response(),
+    }
 }
 
 async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {

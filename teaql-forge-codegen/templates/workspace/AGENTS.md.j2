@@ -37,9 +37,8 @@ Replace `[entity-name]` with the exact entity-name from the table below:
 
 | entity-name | display-name |
 |-------------|--------------|
-{% for entity in entities %}| {{ entity.rust_module_name }} |  |
+{% for it in domain.entities %}| {{ it.rust_module_name }} |  |
 {% endfor %}
-
 
 Once the command succeeds, read its output. Use the printed code as a template to write your logic.
 

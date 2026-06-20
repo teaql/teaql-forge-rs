@@ -1,0 +1,39 @@
+Please help me complete the delete (Soft Delete) service business code for the `{{ entity.name }}` object.
+
+To ensure absolute correctness of the API, please refer to and strictly imitate the following **real soft delete code example for `{{ entity.name }}`**.
+
+### Standard Delete Example (Reference)
+Please carefully observe the querying mechanism and the strictly required `.mark_as_delete()`, `.audit_as()`, and `.save()` cascade in the example code. 
+**Note:** Data MUST NOT be deleted implicitly or physically. Unless `.mark_as_delete()` is explicitly called, no command should delete any data.
+
+```rust
+use teaql_core::Entity;
+use {{ entity.domain.rustModuleName }}::{Q, {{ entity.name }}, TeaqlRepositoryProvider, AuditedSave};
+
+pub async fn delete_example(
+    ctx: &impl TeaqlRepositoryProvider, 
+    entity_id: i64
+) -> Result<bool, Box<dyn std::error::Error>>
+{
+    // 1. Fetch the entity first (Use _minimal to avoid over-fetching during deletion checks)
+    if let Some(mut existing_entity) = Q::{{ entity.rustPluralName }}_minimal()
+        .with_id_is(entity_id)
+        .purpose("what: Find entity for soft deletion")
+        .comment("why: Need to execute soft delete")
+        .execute(ctx)
+        .await?
+    {
+        // 2. CRITICAL: Execute mark_as_delete and attach security audit constraints before saving!
+        existing_entity.mark_as_delete();
+        existing_entity.audit_as("Why this soft delete operation was executed (audit record)")
+            .save(ctx).await?;
+
+        return Ok(true);
+    }
+
+    Ok(false)
+}
+```
+
+### Your Task
+Please completely imitate the framework, imports, and syntax features of the above code to implement the real soft delete logic for `{{ entity.name }}` based on my specific business needs. Please output the Rust source code directly.

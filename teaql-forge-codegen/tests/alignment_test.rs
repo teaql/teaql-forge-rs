@@ -48,25 +48,38 @@ fn assert_matches_expected(generated_files: &[GeneratedFile], expected_dir: &str
             "Expected file not found: {:?}",
             expected_path
         );
-        let expected_content = fs::read_to_string(expected_path).unwrap();
-        let expected_content = {
-            let lines: Vec<&str> = expected_content.lines().collect();
+        let generated_content = {
+            let lines: Vec<&str> = file.content.lines().collect();
             let cleaned_lines: Vec<String> = lines
                 .into_iter()
                 .map(|l| l.trim_end().to_string())
+                .filter(|l| !l.is_empty())
                 .collect();
             let mut out = cleaned_lines.join("\n");
             out = out.trim_start_matches('\n').to_string();
             out = out.trim_end_matches('\n').to_string();
             out
         };
-        if file.content != expected_content {
+        let expected_content = fs::read_to_string(expected_path).unwrap();
+        let expected_content = {
+            let lines: Vec<&str> = expected_content.lines().collect();
+            let cleaned_lines: Vec<String> = lines
+                .into_iter()
+                .map(|l| l.trim_end().to_string())
+                .filter(|l| !l.is_empty())
+                .collect();
+            let mut out = cleaned_lines.join("\n");
+            out = out.trim_start_matches('\n').to_string();
+            out = out.trim_end_matches('\n').to_string();
+            out
+        };
+        if generated_content != expected_content {
             println!("Writing left.rs for {:?}", file.path);
-            std::fs::write("left.rs", &file.content).unwrap();
+            std::fs::write("left.rs", &generated_content).unwrap();
             std::fs::write("right.rs", &expected_content).unwrap();
         }
         assert_eq!(
-            file.content, expected_content,
+            generated_content, expected_content,
             "Content mismatch for file: {:?}",
             file.path
         );

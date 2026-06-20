@@ -340,7 +340,7 @@ let items = instance.{{ rev.rust_name }}_list();
 
 ```
 {% for entity in entities -%}
-{% if entity.relations or entity.reverse_relations -%}
+{% if entity.relations or entity.reverse_relations - %}
 {{ entity.rust_struct }}
 {% for rel in entity.relations -%}
   ├──{{ rel.rust_name }}──► {{ rel.target_struct }}{% if rel.many %} [*]{% endif %}

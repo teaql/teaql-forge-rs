@@ -1,0 +1,24 @@
+index(naming, domain) ::= <<
+<naming.package.(domain.fullpackage)>
+
+<naming.imports>
+
+public interface Constants  {
+  <domain.rootDescriptors:root();separator="\n">
+  <domain.constantDescriptors:constant();separator="\n">
+}
+>>
+
+root(objectDescriptor)  ::= <<
+public static final long <objectDescriptor.ROOT_ID> = 1l;
+public static final <naming.(objectDescriptor.fullName)> <objectDescriptor.ROOT_ENTITY> = <naming.(objectDescriptor.fullName)>.refer(<objectDescriptor.ROOT_ID>);
+>>
+
+constant(objectDescriptor) ::= <<
+<objectDescriptor.identityConstants:candidate()>
+>>
+
+candidate(identifier) ::= <<
+public static final long <identifier.key>_ID = <identifier.id>l ;
+public static final <naming.(objectDescriptor.fullName)> <identifier.key> = <naming.(objectDescriptor.fullName)>.refer(<identifier.key>_ID);
+>>

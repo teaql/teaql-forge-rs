@@ -1,0 +1,2066 @@
+{% macro q(domain) %}
+use teaql_core::Expr;
+
+use crate::*;
+
+pub struct PurposedQuery<T> {
+    pub inner: T,
+    pub purpose: String,
+}
+
+impl<T> PurposedQuery<T> {
+    pub fn new(inner: T, purpose: impl Into<String>) -> Self {
+        Self { inner, purpose: purpose.into() }
+    }
+}
+
+pub struct Q;
+
+impl Q {
+{% for item in domain.objectDescriptors %}{{ qMethod(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+}
+
+{% endmacro %}
+
+{% macro requestModule(objectDescriptor) %}
+mod {{ objectDescriptor.rust_module_name }};
+pub use {{ objectDescriptor.rust_module_name }}::*;
+
+{% endmacro %}
+
+{% macro qMethod(objectDescriptor) %}
+    pub fn {{ objectDescriptor.rust_plural_name }}() -> {{ objectDescriptor.rust_struct_name }}Request {
+        {{ objectDescriptor.rust_struct_name }}Request::new()
+            .select_self()
+            .and_filter(Expr::gt("version", 0_i64))
+    }
+
+    pub fn {{ objectDescriptor.rust_plural_name }}_minimal() -> {{ objectDescriptor.rust_struct_name }}Request {
+        {{ objectDescriptor.rust_struct_name }}Request::new()
+            .and_filter(Expr::gt("version", 0_i64))
+    }
+
+    pub fn {{ objectDescriptor.rust_plural_name }}_with_children() -> {{ objectDescriptor.rust_struct_name }}Request {
+        {{ objectDescriptor.rust_struct_name }}Request::new()
+            .unlimited()
+            .select_self_fields()
+            .enhance_children_if_needed()
+    }
+
+{% endmacro %}
+
+{% macro runtimeRepositoryType(objectDescriptor) %}
+    type {{ objectDescriptor.rust_struct_name }}Repository<'a>: TeaqlEntityRepository + 'a
+    where
+        Self: 'a;
+
+    fn {{ objectDescriptor.rust_module_name }}_repository(&self) -> Result<Self::{{ objectDescriptor.rust_struct_name }}Repository<'_>, ContextError>;
+
+{% endmacro %}
+
+{% macro runtimeRepositoryImpl(objectDescriptor) %}
+    type {{ objectDescriptor.rust_struct_name }}Repository<'a> = teaql_runtime::ResolvedRepository<'a, crate::runtime::DataServiceExecutor>
+    where
+        Self: 'a;
+
+    fn {{ objectDescriptor.rust_module_name }}_repository(&self) -> Result<Self::{{ objectDescriptor.rust_struct_name }}Repository<'_>, ContextError> {
+        self.resolve_repository::<crate::runtime::DataServiceExecutor>("{{ objectDescriptor.rust_struct_name }}")
+    }
+
+{% endmacro %}
+
+{% macro entityReferenceImpl(objectDescriptor) %}
+impl EntityReference for crate::{{ objectDescriptor.rust_struct_name }} {
+    fn entity_id_value(self) -> teaql_core::Value {
+        teaql_core::IdentifiableEntity::id_value(&self)
+    }
+}
+
+impl EntityReference for &crate::{{ objectDescriptor.rust_struct_name }} {
+    fn entity_id_value(self) -> teaql_core::Value {
+        teaql_core::IdentifiableEntity::id_value(self)
+    }
+}
+
+{% endmacro %}
+
+{% macro request(objectDescriptor) %}
+use std::marker::PhantomData;
+use serde_json::Value as JsonValue;
+use teaql_core::{Aggregate, AggregateFunction, EntityDescriptor, Expr, Record, SelectQuery, SmartList};
+use teaql_runtime::{RepositoryError, RuntimeError};
+use crate::request_support::*;
+
+{{ entityReferenceImpl(objectDescriptor) }}
+
+// ⛔ AI agents: DO NOT read this file for API discovery. Instead run: cargo teaql --input modeling/MODEL.xml rust-assist-query/{{ objectDescriptor.rust_module_name }}
+#[derive(Debug)]
+pub struct {{ objectDescriptor.rust_struct_name }}Request<R = crate::{{ objectDescriptor.rust_struct_name }}> {
+    query: SelectQuery,
+    relation_selections: Vec<RelationSelection>,
+    relation_filters: Vec<RelationFilter>,
+    child_enhancements: Vec<QuerySelection>,
+    query_options: QueryOptions,
+    marker: PhantomData<R>,
+}
+
+impl<R> Clone for {{ objectDescriptor.rust_struct_name }}Request<R> {
+    fn clone(&self) -> Self {
+        Self {
+            query: self.query.clone(),
+            relation_selections: self.relation_selections.clone(),
+            relation_filters: self.relation_filters.clone(),
+            child_enhancements: self.child_enhancements.clone(),
+            query_options: self.query_options.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
+    pub(crate) fn new() -> Self {
+        Self {
+            query: SelectQuery::new("{{ objectDescriptor.rust_struct_name }}"){% for f in objectDescriptor.rustScalarFields %}{% if f.isId %}{{ "\n" }}                .project("{{ f.rustStorageFieldName }}"){% elif f.isVersion %}{{ "\n" }}                .project("{{ f.rustStorageFieldName }}"){% endif %}{% endfor %},
+            relation_selections: Vec::new(),
+            relation_filters: Vec::new(),
+            child_enhancements: Vec::new(),
+            query_options: QueryOptions::default(),
+            marker: PhantomData,
+        }
+    }
+
+    pub fn return_type<T>(self) -> {{ objectDescriptor.rust_struct_name }}Request<T> {
+        {{ objectDescriptor.rust_struct_name }}Request {
+            query: self.query,
+            relation_selections: self.relation_selections,
+            relation_filters: self.relation_filters,
+            child_enhancements: self.child_enhancements,
+            query_options: self.query_options,
+            marker: PhantomData,
+        }
+    }
+
+    pub fn query(&self) -> &SelectQuery {
+        &self.query
+    }
+
+    pub fn relation_selections(&self) -> &[RelationSelection] {
+        &self.relation_selections
+    }
+
+    pub fn relation_filters(&self) -> &[RelationFilter] {
+        &self.relation_filters
+    }
+
+    pub fn child_enhancements(&self) -> &[QuerySelection] {
+        &self.child_enhancements
+    }
+
+    pub fn query_options(&self) -> &QueryOptions {
+        &self.query_options
+    }
+
+    pub fn into_query(self) -> SelectQuery {
+        self.query
+    }
+
+    
+    pub fn purpose(self, purpose: impl Into<String>) -> crate::PurposedQuery<Self> {
+        crate::PurposedQuery::new(self, purpose)
+    }
+
+    pub(crate) async fn _execute_for_list<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<SmartList<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+        R: teaql_core::Entity,
+    {
+        let repository = ctx
+            .{{ objectDescriptor.rust_module_name }}_repository()
+            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+        let query_options = self.query_options.clone();
+        let relation_aggregates = runtime_relation_aggregates(&query_options);
+        let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
+        let mut rows = repository.fetch_enhanced_entities_with_relation_aggregates::<R>(
+            &query,
+            &relation_aggregates,
+        ).await?;
+        let facets = execute_facets(ctx, &query, &query_options)
+            .await
+            .map_err(RepositoryError::Runtime)?;
+        attach_facets(&mut rows, facets);
+        Ok(rows)
+    }
+
+    pub(crate) async fn _execute_for_stream<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<Vec<teaql_data_service::StreamChunk>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+    {
+        let repository = ctx
+            .{{ objectDescriptor.rust_module_name }}_repository()
+            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+        let query_options = self.query_options.clone();
+        let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
+        let chunks = repository.fetch_stream(&query)
+            .await?;
+        Ok(chunks)
+    }
+
+    pub(crate) async fn _execute_for_first<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<Option<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+        R: teaql_core::Entity,
+    {
+        let rows = self.limit(1)._execute_for_list(ctx).await?;
+        Ok(rows.into_iter().next())
+    }
+
+    pub(crate) async fn _execute_for_one<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<Option<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+        R: teaql_core::Entity,
+    {
+        self._execute_for_first(ctx).await
+    }
+
+
+    pub(crate) async fn _execute_for_page<'a, C>(
+        self,
+        ctx: &'a C,
+        offset: u64,
+        limit: u64,
+    ) -> Result<SmartList<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+        R: teaql_core::Entity,
+    {
+        let total_count = self.clone()._execute_for_count(ctx).await?;
+        let mut rows = self.page_offset(offset, limit)._execute_for_list(ctx).await?;
+        rows.total_count = Some(total_count);
+        Ok(rows)
+    }
+
+    pub(crate) async fn _execute_for_count<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<u64, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+    {
+        let repository = ctx
+            .{{ objectDescriptor.rust_module_name }}_repository()
+            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+        let mut query = self.query;
+        query.projection.clear();
+        query.expr_projection.clear();
+        query.order_by.clear();
+        query.slice = None;
+        query.relations.clear();
+        query = query.count(COUNT_ALIAS);
+        let rows = repository.fetch_all(&query).await?;
+        rows.first()
+            .and_then(|row| row.get(COUNT_ALIAS))
+            .and_then(teaql_core::Value::try_u64)
+            .ok_or_else(|| RepositoryError::Runtime(RuntimeError::Graph(format!("count result for {{ objectDescriptor.rust_struct_name }} is missing or not numeric"))))
+    }
+
+    pub(crate) async fn _execute_for_exists<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<bool, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+    {
+        let repository = ctx
+            .{{ objectDescriptor.rust_module_name }}_repository()
+            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+        let mut query = self.query.limit(1);
+        query.relations.clear();
+        let rows = repository.fetch_all(&query).await?;
+        Ok(!rows.is_empty())
+    }
+
+    pub(crate) async fn _execute_for_records<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<SmartList<Record>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+    {
+        let repository = ctx
+            .{{ objectDescriptor.rust_module_name }}_repository()
+            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+        let query_options = self.query_options.clone();
+        let outer_query = self.query.clone();
+        let relation_aggregates = runtime_relation_aggregates(&query_options);
+        let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
+        let mut rows = repository.fetch_smart_list_with_relation_aggregates(&query, &relation_aggregates).await?;
+        let facets = execute_facets(ctx, &outer_query, &query_options)
+            .await
+            .map_err(RepositoryError::Runtime)?;
+        attach_facets(&mut rows, facets);
+        Ok(rows)
+    }
+
+    pub(crate) async fn _execute_for_record<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<Option<Record>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: TeaqlRepositoryProvider + ?Sized,
+    {
+        let records = self.limit(1)._execute_for_records(ctx).await?;
+        Ok(records.into_iter().next())
+    }
+
+    pub fn search_with_text(mut self, text: impl Into<String>) -> Self {
+        self.query = self.query.search_with_text(text);
+        self
+    }
+
+    pub fn filter(mut self, filter: Expr) -> Self {
+        self.query = self.query.filter(filter);
+        self
+    }
+
+    pub fn and_filter(mut self, filter: Expr) -> Self {
+        self.query = self.query.and_filter(filter);
+        self
+    }
+
+    pub fn or_filter(mut self, filter: Expr) -> Self {
+        self.query = self.query.or_filter(filter);
+        self
+    }
+
+    pub fn append_search_criteria(self, criteria: Expr) -> Self {
+        self.and_filter(criteria)
+    }
+
+    pub fn filter_property(
+        mut self,
+        property1: impl AsRef<str>,
+        operator: FieldOperator,
+        property2: impl AsRef<str>,
+    ) -> Self {
+        self.query = self.query.and_filter(field_operator_column_expr(
+            property1.as_ref(),
+            operator,
+            property2.as_ref(),
+        ));
+        self
+    }
+
+    pub fn with_deleted_rows(mut self) -> Self {
+        self.query.filter = remove_default_live_filter(self.query.filter);
+        self
+    }
+
+    pub fn deleted_rows_only(mut self) -> Self {
+        self.query.filter = remove_default_live_filter(self.query.filter);
+        self.query = self.query.and_filter(Expr::lte("version", 0_i64));
+        self
+    }
+
+    pub fn match_types(
+        mut self,
+        types: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
+    ) -> Self {
+        self.query = self.query.and_filter(Expr::in_list(TYPE_FIELD, types.into_iter().map(Into::into)));
+        self
+    }
+
+{% for item in objectDescriptor.childrenOds %}{{ childTypeFilterMethod(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+    pub fn with_type_group(mut self) -> Self {
+        self.query = self.query.project(TYPE_GROUP_FIELD);
+        self
+    }
+
+    pub fn matching_any_of(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        let entity = EntityDescriptor::new(selection.query.entity.clone());
+        self.query = self.query.and_filter(Expr::in_subquery("id", entity, selection.query.clone(), "id"));
+        self
+    }
+
+    pub fn match_any_of(self, request: impl Into<QuerySelection>) -> Self {
+        self.matching_any_of(request)
+    }
+
+    pub fn enhance_child(mut self, request: impl Into<QuerySelection>) -> Self {
+        self.child_enhancements.push(request.into());
+        self
+    }
+
+    pub fn enhance_children_if_needed(self) -> Self {
+        let request = self;
+{% for item in objectDescriptor.childrenOds %}{{ tryEnhanceChild(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+        request
+    }
+
+
+    pub fn comment(mut self, comment: impl Into<String>) -> Self {
+        self.query_options.comment = Some(comment.into());
+        self
+    }
+
+    pub fn raw_sql(self, raw_sql: impl Into<String>) -> Self {
+        self.unsafe_raw_sql(UnsafeRawSqlSegment::trusted(raw_sql))
+    }
+
+    pub fn unsafe_raw_sql(mut self, raw_sql: UnsafeRawSqlSegment) -> Self {
+        self.query_options.raw_sql = Some(raw_sql.into_sql());
+        self
+    }
+
+    pub fn raw_sql_filter(self, raw_sql: impl Into<String>) -> Self {
+        self.unsafe_raw_sql_filter(UnsafeRawSqlSegment::trusted(raw_sql))
+    }
+
+    pub fn unsafe_raw_sql_filter(mut self, raw_sql: UnsafeRawSqlSegment) -> Self {
+        self.query_options.raw_sql_search_criteria.push(raw_sql.into_sql());
+        self
+    }
+    pub fn filter_with_json(self, json_expr: impl Into<String>) -> Self {
+        self.merge_dynamic_json_expr(json_expr.into())
+    }
+
+    fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
+        let json = serde_json::from_str::<JsonValue>(&json_expr)
+            .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
+        self.merge_dynamic_json(&json)
+    }
+
+    fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
+        let Some(object) = json.as_object() else {
+            return self;
+        };
+
+        for (field, value) in object {
+            if field.starts_with('_') {
+                continue;
+            }
+            self = self.apply_dynamic_json_filter(field, value);
+        }
+
+        self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
+
+        if let Some(offset) = dynamic_json_u64_field(object, "_start") {
+            self = self.skip(offset);
+        }
+        if let Some(size) = dynamic_json_u64_field(object, "_size") {
+            self = self.limit(size);
+        }
+
+        if let Some(page_size) = dynamic_json_u64_field(object, "_pageSize") {
+            self = self.limit(page_size);
+        }
+        if let Some(page_number) = dynamic_json_u64_field(object, "_page") {
+            if page_number > 0 {
+                let size = dynamic_json_u64_field(object, "_pageSize")
+                    .or_else(|| self.query.slice.as_ref().and_then(|slice| slice.limit))
+                    .unwrap_or(10);
+                let offset = page_number.saturating_sub(1).saturating_mul(size);
+                self = self.page_offset(offset, size);
+            }
+        }
+
+        self
+    }
+
+    pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
+        if let Some((head, tail)) = field.split_once('.') {
+            self.apply_dynamic_json_chain_filter(head, tail, value)
+        } else if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+            self.and_filter(dynamic_json_filter_expr(storage_field, value))
+        } else {
+            self
+        }
+    }
+
+    fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
+        match order_by {
+            Some(JsonValue::String(field)) => {
+                if let Some(storage_field) = Self::dynamic_json_self_field(field) {
+                    self.query = self.query.order_desc(storage_field);
+                }
+            }
+            Some(JsonValue::Object(order_by)) => {
+                self = self.apply_dynamic_json_single_order_by(order_by);
+            }
+            Some(JsonValue::Array(order_bys)) => {
+                for order_by in order_bys {
+                    if let Some(order_by) = order_by.as_object() {
+                        self = self.apply_dynamic_json_single_order_by(order_by);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    fn apply_dynamic_json_single_order_by(
+        mut self,
+        order_by: &serde_json::Map<String, JsonValue>,
+    ) -> Self {
+        let Some(field) = order_by.get("field").and_then(JsonValue::as_str) else {
+            return self;
+        };
+        let Some(storage_field) = Self::dynamic_json_self_field(field) else {
+            return self;
+        };
+        if order_by
+            .get("useAsc")
+            .and_then(JsonValue::as_bool)
+            .unwrap_or(false)
+        {
+            self.query = self.query.order_asc(storage_field);
+        } else {
+            self.query = self.query.order_desc(storage_field);
+        }
+        self
+    }
+
+    fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
+        match field {
+{% for item in objectDescriptor.rustScalarFields %}{{ dynamicJsonScalarSelfField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ dynamicJsonObjectSelfField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+            _ => None,
+        }
+    }
+
+    fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
+        let _ = (tail, value);
+        match head {
+{% for item in objectDescriptor.rustObjectFields %}{{ dynamicJsonObjectFieldFilter(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ dynamicJsonReverseRelationFilter(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ dynamicJsonReverseRelationFilter(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+            _ => self,
+        }
+    }
+
+    pub fn create_property_as(
+        self,
+        property_name: impl Into<String>,
+        raw_sql_segment: impl Into<String>,
+    ) -> Self {
+        self.unsafe_create_property_as(property_name, UnsafeRawSqlSegment::trusted(raw_sql_segment))
+    }
+
+    pub fn unsafe_create_property_as(
+        mut self,
+        property_name: impl Into<String>,
+        raw_sql_segment: UnsafeRawSqlSegment,
+    ) -> Self {
+        self.query_options
+            .dynamic_properties
+            .push(RawDynamicProperty::new(property_name, raw_sql_segment));
+        self
+    }
+
+    pub fn limit(mut self, limit: u64) -> Self {
+        self.query = self.query.limit(limit);
+        self
+    }
+
+    pub fn skip(mut self, offset: u64) -> Self {
+        self.query = self.query.offset(offset);
+        self
+    }
+
+    pub fn offset_only(self, offset: u64) -> Self {
+        self.skip(offset)
+    }
+
+    pub fn offset(self, offset: u64, size: u64) -> Self {
+        self.page_offset(offset, size)
+    }
+
+    pub fn page_offset(mut self, offset: u64, limit: u64) -> Self {
+        self.query = self.query.page(offset, limit);
+        self
+    }
+
+    pub fn top(self, top_n: u64) -> Self {
+        self.limit(top_n)
+    }
+
+    pub fn offset_size(self, offset: u64, size: u64) -> Self {
+        self.offset(offset, size)
+    }
+
+    pub fn unlimited(mut self) -> Self {
+        self.query.slice = None;
+        self
+    }
+
+    pub fn page_number(self, page_number: u64, page_size: u64) -> Self {
+        let offset = page_number.saturating_sub(1).saturating_mul(page_size);
+        self.page_offset(offset, page_size)
+    }
+
+    pub fn page_number_default(self, page_number: u64) -> Self {
+        self.page_number(page_number, 10)
+    }
+
+    pub fn page(self, page_number: u64, page_size: u64) -> Self {
+        self.page_number(page_number, page_size)
+    }
+
+    pub fn page_default(self, page_number: u64) -> Self {
+        self.page_number_default(page_number)
+    }
+
+    pub fn select_self(mut self) -> Self {
+{% for item in objectDescriptor.rustScalarFields %}{{ selectSelfField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ selectSelfField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+        self
+    }
+
+    pub fn select_self_fields(self) -> Self {
+        self.select_self()
+    }
+
+    pub fn select_self_without_parent(self) -> Self {
+        self.select_self_fields()
+    }
+
+    pub fn select_all(self) -> Self {
+{% if objectDescriptor.rustHasSelectAllRelations %}
+        let mut request = self.select_self();
+{% for item in objectDescriptor.rustObjectFields %}{{ selectAllObjectRelation(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ selectAllReverseRelation(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+        request
+{% else %}
+        self.select_self()
+{% endif %}
+    }
+
+    pub fn select_children(self) -> Self {
+{% if objectDescriptor.rustHasSelectAnyRelations %}
+        let mut request = self.select_all();
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ selectAllReverseRelation(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+        request
+{% else %}
+        self.select_all()
+{% endif %}
+    }
+
+    pub fn select_any(self) -> Self {
+        self.select_children()
+    }
+
+    pub fn group_by(mut self, field: impl Into<String>) -> Self {
+        self.query = self.query.group_by(field);
+        self
+    }
+
+    pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
+        self.query = self.query.count(alias);
+        self
+    }
+
+    pub fn aggregate_count_field(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.count_field(field, alias);
+        self
+    }
+
+    pub fn aggregate_with_function(
+        mut self,
+        field: impl Into<String>,
+        alias: impl Into<String>,
+        function: AggregateFunction,
+    ) -> Self {
+        self.query = self.query.aggregate(Aggregate::new(function, field, alias));
+        self
+    }
+
+    pub fn aggregate_sum(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.sum(field, alias);
+        self
+    }
+
+    pub fn aggregate_avg(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.avg(field, alias);
+        self
+    }
+
+    pub fn aggregate_min(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.min(field, alias);
+        self
+    }
+
+    pub fn aggregate_max(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.max(field, alias);
+        self
+    }
+
+    pub fn aggregate_stddev(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.stddev(field, alias);
+        self
+    }
+
+    pub fn aggregate_stddev_pop(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.stddev_pop(field, alias);
+        self
+    }
+
+    pub fn aggregate_var_samp(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.var_samp(field, alias);
+        self
+    }
+
+    pub fn aggregate_var_pop(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.var_pop(field, alias);
+        self
+    }
+
+    pub fn aggregate_bit_and(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.bit_and(field, alias);
+        self
+    }
+
+    pub fn aggregate_bit_or(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.bit_or(field, alias);
+        self
+    }
+
+    pub fn aggregate_bit_xor(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
+        self.query = self.query.bit_xor(field, alias);
+        self
+    }
+
+    pub fn enable_aggregation_cache(mut self) -> Self {
+        self.query = self.query.enable_aggregation_cache();
+        self
+    }
+
+    pub fn enable_aggregation_cache_for(mut self, cache_expired_millis: u64) -> Self {
+        self.query = self.query.enable_aggregation_cache_for(cache_expired_millis);
+        self
+    }
+
+    pub fn propagate_aggregation_cache(mut self, cache_expired_millis: u64) -> Self {
+        self.query = self.query.propagate_aggregation_cache(cache_expired_millis);
+        self
+    }
+
+{% for item in objectDescriptor.rustScalarFields %}{{ fieldMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustScalarFields %}{{ scalarCandidateMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ objectStorageFilterMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ objectCandidateMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ objectRelationMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ reverseRelationMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ reverseRelationMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ relationAggregateMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+}
+
+impl<R> Default for {{ objectDescriptor.rust_struct_name }}Request<R> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<R> From< {{ objectDescriptor.rust_struct_name }}Request<R> > for SelectQuery {
+    fn from(request: {{ objectDescriptor.rust_struct_name }}Request<R>) -> Self {
+        QuerySelection::from(request).into_query()
+    }
+}
+
+impl<R> From< {{ objectDescriptor.rust_struct_name }}Request<R> > for QuerySelection {
+    fn from(request: {{ objectDescriptor.rust_struct_name }}Request<R>) -> Self {
+        Self {
+            query: request.query,
+            relation_selections: request.relation_selections,
+            relation_filters: request.relation_filters,
+            child_enhancements: request.child_enhancements,
+            query_options: request.query_options,
+        }
+    }
+}
+
+
+impl<'a, C> crate::request_support::AuditedSave<'a, C> for teaql_core::Audited<crate::{{ objectDescriptor.rust_struct_name }}> 
+where C: crate::request_support::TeaqlRepositoryProvider + ?Sized + 'a
+{
+    type Error = crate::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>;
+    fn save(self, ctx: &'a C) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, Self::Error>> + '_>> {
+        Box::pin(async move { self.into_entity().save(ctx).await })
+    }
+}
+
+impl<R: teaql_core::Entity> crate::PurposedQuery<{{ objectDescriptor.rust_struct_name }}Request<R>> {
+    pub fn new_entity<C>(&self, ctx: &C) -> crate::{{ objectDescriptor.rust_struct_name }}
+    where
+        C: crate::TeaqlRuntime + ?Sized,
+    {
+        crate::{{ objectDescriptor.rust_struct_name }}::runtime_new(ctx.user_context().entity_root())
+    }
+
+    fn into_inner_with_trace(mut self) -> {{ objectDescriptor.rust_struct_name }}Request<R> {
+        self.inner.query.trace_chain.push(teaql_core::TraceNode {
+            entity_type: self.inner.query.entity.clone(),
+            entity_id: None,
+            comment: self.purpose,
+        });
+        self.inner
+    }
+
+    pub async fn execute_for_page<'a, C>(
+        self,
+        ctx: &'a C,
+        offset: u64,
+        limit: u64,
+    ) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_page(ctx, offset, limit).await
+    }
+
+    pub async fn execute_for_exists<'a, C>(
+        self,
+        ctx: &'a C,
+    ) -> Result<bool, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_exists(ctx).await
+    }
+
+    pub async fn execute_for_list<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_list(ctx).await
+    }
+
+    /// Execute query in streaming mode (chunked).
+    /// Returns a Vec of StreamChunk, each containing up to chunk_size rows.
+    /// Set chunk size via .stream(chunk_size) or .stream_default() on the query.
+    pub async fn execute_for_stream<'a, C>(self, ctx: &'a C) -> Result<Vec<teaql_data_service::StreamChunk>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_stream(ctx).await
+    }
+
+    pub async fn execute_for_first<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_first(ctx).await
+    }
+
+    pub async fn execute_for_one<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_one(ctx).await
+    }
+
+
+    pub async fn execute_for_records<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<teaql_core::Record>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_records(ctx).await
+    }
+
+    pub async fn execute_for_record<'a, C>(self, ctx: &'a C) -> Result<Option<teaql_core::Record>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_record(ctx).await
+    }
+
+    pub async fn execute_for_count<'a, C>(self, ctx: &'a C) -> Result<u64, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
+    {
+        self.into_inner_with_trace()._execute_for_count(ctx).await
+    }
+}
+
+
+{% endmacro %}
+
+{% macro childTypeFilterMethod(child) %}
+    pub fn is_{{ child.rustModuleName }}(self) -> Self {
+        self.match_types([{{ child.rustTypeMatchList }}])
+    }
+
+{% endmacro %}
+
+{% macro tryEnhanceChild(child) %}
+        let request = request.enhance_child(crate::Q::{{ child.rustPluralName }}_with_children());
+
+{% endmacro %}
+
+{% macro fieldMethods(fieldDescriptor) %}
+{% if not fieldDescriptor.isId and not fieldDescriptor.isVersion %}
+    pub fn select_{{ fieldDescriptor.rustStorageMemberName }}(mut self) -> Self {
+        self.query = self.query.project("{{ fieldDescriptor.rustStorageFieldName }}");
+        self
+    }
+
+    pub fn project_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.select_{{ fieldDescriptor.rustStorageMemberName }}()
+    }
+
+    pub fn select_{{ fieldDescriptor.rustStorageMemberName }}_raw(self, raw_sql_segment: impl Into<String>) -> Self {
+        self.select_{{ fieldDescriptor.rustStorageMemberName }}_unsafe_raw(UnsafeRawSqlSegment::trusted(raw_sql_segment))
+    }
+
+    pub fn select_{{ fieldDescriptor.rustStorageMemberName }}_unsafe_raw(mut self, raw_sql_segment: UnsafeRawSqlSegment) -> Self {
+        self.query_options
+            .raw_projections
+            .push(RawProjection::new("{{ fieldDescriptor.rustStorageFieldName }}", raw_sql_segment));
+        self
+    }
+
+{% if fieldDescriptor.isNumber %}
+    pub fn select_{{ fieldDescriptor.rustStorageMemberName }}_with_function(self, function: AggregateFunction) -> Self {
+        self.select_{{ fieldDescriptor.rustStorageMemberName }}_as_with_function("{{ fieldDescriptor.rustStorageFieldName }}", function)
+    }
+
+    pub fn select_{{ fieldDescriptor.rustStorageMemberName }}_as_with_function(
+        self,
+        alias: impl Into<String>,
+        function: AggregateFunction,
+    ) -> Self {
+        self.aggregate_with_function("{{ fieldDescriptor.rustStorageFieldName }}", alias, function)
+    }
+
+{% endif %}
+{% endif %}
+    pub fn group_by_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.group_by("{{ fieldDescriptor.rustStorageFieldName }}")
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        let alias = alias.into();
+        let mut request = self.group_by("{{ fieldDescriptor.rustStorageFieldName }}");
+        request.query = request
+            .query
+            .project_expr(alias, Expr::column("{{ fieldDescriptor.rustStorageFieldName }}"));
+        request
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustStorageMemberName }}_with_function(
+        self,
+        alias: impl Into<String>,
+        function: AggregateFunction,
+    ) -> Self {
+        self.group_by("{{ fieldDescriptor.rustStorageFieldName }}")
+            .aggregate_with_function("{{ fieldDescriptor.rustStorageFieldName }}", alias, function)
+    }
+
+    pub fn count_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.count_{{ fieldDescriptor.rustStorageMemberName }}_as("{{ fieldDescriptor.rustStorageMemberName }}_count")
+    }
+
+    pub fn count_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_count_field("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn sum_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.sum_{{ fieldDescriptor.rustStorageMemberName }}_as("sum_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn sum_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_sum("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn avg_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.avg_{{ fieldDescriptor.rustStorageMemberName }}_as("avg_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn avg_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_avg("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn min_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.min_{{ fieldDescriptor.rustStorageMemberName }}_as("min_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn min_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_min("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn max_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.max_{{ fieldDescriptor.rustStorageMemberName }}_as("max_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn max_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_max("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+{% if fieldDescriptor.isNumber %}
+    pub fn standard_deviation_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.standard_deviation_{{ fieldDescriptor.rustStorageMemberName }}_as("stdDev_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn standard_deviation_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_stddev("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn square_root_of_population_standard_deviation_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.square_root_of_population_standard_deviation_{{ fieldDescriptor.rustStorageMemberName }}_as("stdDevPop_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn square_root_of_population_standard_deviation_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_stddev_pop("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn sample_variance_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.sample_variance_{{ fieldDescriptor.rustStorageMemberName }}_as("varSamp_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn sample_variance_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_var_samp("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn sample_population_variance_{{ fieldDescriptor.rustStorageMemberName }}(self) -> Self {
+        self.sample_population_variance_{{ fieldDescriptor.rustStorageMemberName }}_as("varPop_{{ fieldDescriptor.rustStorageMemberName }}")
+    }
+
+    pub fn sample_population_variance_{{ fieldDescriptor.rustStorageMemberName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_var_pop("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+{% endif %}
+{% if not fieldDescriptor.isId and not fieldDescriptor.isVersion %}
+    pub fn unselect_{{ fieldDescriptor.rustStorageMemberName }}(mut self) -> Self {
+        self.query.projection.retain(|field| field != "{{ fieldDescriptor.rustStorageFieldName }}");
+        self.query_options.raw_projections.retain(|projection| projection.property_name != "{{ fieldDescriptor.rustStorageFieldName }}");
+        self
+    }
+{% endif %}
+
+{% if not fieldDescriptor.isVersion %}
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}(
+        mut self,
+        operator: FieldOperator,
+        values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
+    ) -> Self {
+        self.query = self.query.and_filter(field_operator_expr(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            operator,
+            values.into_iter().map(Into::into).collect(),
+        ));
+        self
+    }
+
+    pub fn create_{{ fieldDescriptor.rustStorageMemberName }}_criteria(
+        operator: FieldOperator,
+        values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
+    ) -> Expr {
+        field_operator_expr(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            operator,
+            values.into_iter().map(Into::into).collect(),
+        )
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::eq("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::ne("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+{% if not fieldDescriptor.isId %}
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_greater_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_greater_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gte("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_less_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_less_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lte("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_between(
+        mut self,
+        lower: impl Into<teaql_core::Value>,
+        upper: impl Into<teaql_core::Value>,
+    ) -> Self {
+        self.query = self.query.and_filter(Expr::between("{{ fieldDescriptor.rustStorageFieldName }}", lower, upper));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_between_range<T>(mut self, range: DateRange<T>) -> Self
+    where
+        T: Into<teaql_core::Value>,
+    {
+        self.query = self.query.and_filter(Expr::between(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            range.start,
+            range.end,
+        ));
+        self
+    }
+{% endif %}
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_in(
+        mut self,
+        values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
+    ) -> Self {
+        self.query = self.query.and_filter(Expr::in_list(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            values.into_iter().map(Into::into),
+        ));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_not_in(
+        mut self,
+        values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
+    ) -> Self {
+        self.query = self.query.and_filter(Expr::not_in_list(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            values.into_iter().map(Into::into),
+        ));
+        self
+    }
+
+{% if fieldDescriptor.isString and not fieldDescriptor.isText and not fieldDescriptor.isPassword %}
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_contain{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::contain("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_not_contain{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_contain("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_start{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::begin_with("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_not_start{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_begin_with("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_end{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::end_with("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_not_end{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}_with(mut self, value: impl Into<String>) -> Self {
+        self.query = self.query.and_filter(Expr::not_end_with("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_sound{{ fieldDescriptor.rustAttributePredicateSuffixExpr }}_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::sound_like("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+{% endif %}
+{% if not fieldDescriptor.isId %}
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::lt("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
+        self.query = self.query.and_filter(Expr::gt("{{ fieldDescriptor.rustStorageFieldName }}", value));
+        self
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_unknown(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("{{ fieldDescriptor.rustStorageFieldName }}"));
+        self
+    }
+
+
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_known(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("{{ fieldDescriptor.rustStorageFieldName }}"));
+        self
+    }
+
+{% endif %}
+{% endif %}
+
+    pub fn order_by_{{ fieldDescriptor.rustStorageMemberName }}_asc(mut self) -> Self {
+        self.query = self.query.order_asc("{{ fieldDescriptor.rustStorageFieldName }}");
+        self
+    }
+
+    pub fn order_by_{{ fieldDescriptor.rustStorageMemberName }}_desc(mut self) -> Self {
+        self.query = self.query.order_desc("{{ fieldDescriptor.rustStorageFieldName }}");
+        self
+    }
+
+    pub fn order_by_{{ fieldDescriptor.rustStorageMemberName }}_asc_using_gbk(mut self) -> Self {
+        self.query = self.query.order_gbk_asc("{{ fieldDescriptor.rustStorageFieldName }}");
+        self
+    }
+
+    pub fn order_by_{{ fieldDescriptor.rustStorageMemberName }}_desc_using_gbk(mut self) -> Self {
+        self.query = self.query.order_gbk_desc("{{ fieldDescriptor.rustStorageFieldName }}");
+        self
+    }
+
+{% endmacro %}
+
+{% macro scalarCandidateMethods(fieldDescriptor) %}
+{% for candidate in fieldDescriptor.candidates %}{{ scalarCandidateMethod(fieldDescriptor, candidate) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+{% endmacro %}
+
+{% macro scalarCandidateMethod(fieldDescriptor, candidate) %}
+    pub fn {{ fieldDescriptor.rustStorageMemberName }}_is_{{ candidate.rustCandidateMethodValue }}(self) -> Self {
+        self.{{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is("{{ candidate.rustCandidateFilterValue }}")
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_{{ candidate.rustCandidateMethodValue }}(self) -> Self {
+        self.{{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is("{{ candidate.rustCandidateFilterValue }}")
+    }
+
+
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_not_{{ candidate.rustCandidateMethodValue }}(self) -> Self {
+        self.{{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_not("{{ candidate.rustCandidateFilterValue }}")
+    }
+
+
+
+{% endmacro %}
+
+{% macro objectStorageFilterMethods(fieldDescriptor) %}
+{% if fieldDescriptor.candidateForConst %}
+    /// Please use `{{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is` instead
+    pub(crate) fn filter_by_{{ fieldDescriptor.rustName }}(mut self, value: impl EntityReference) -> Self {
+        self.query = self.query.and_filter(Expr::eq("{{ fieldDescriptor.rustStorageFieldName }}", value.entity_id_value()));
+        self
+    }
+{% else %}
+    pub fn filter_by_{{ fieldDescriptor.rustName }}(mut self, value: impl EntityReference) -> Self {
+        self.query = self.query.and_filter(Expr::eq("{{ fieldDescriptor.rustStorageFieldName }}", value.entity_id_value()));
+        self
+    }
+{% endif %}
+
+{% if fieldDescriptor.candidateForConst %}
+    /// Complex relation filter for `{{ fieldDescriptor.rustName }}`.
+    ///
+    /// **Usage Priority:**
+    ///
+    /// 1. **Preferred**: If you only want to filter by specific known constants, please **prefer** the generated semantic shortcut methods, such as:
+    ///    - [`Self::{{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_xxx`]
+    ///
+    ///    This gives the best code readability.
+    ///
+    /// 2. **Advanced**: Only use this method when you need to perform advanced searches, dynamic subqueries, or filter based on complex relation conditions.
+    ///
+    /// # Example
+    /// ```rust
+    /// // Only use when building dynamic queries
+    /// let dynamic_query = crate::Q::{{ fieldDescriptor.targetPlural }}_minimal().filter(...);
+    /// let request = crate::Q::{{ objectDescriptor.rust_plural_name }}().with_{{ fieldDescriptor.rustName }}_matching(dynamic_query);
+    /// ```
+{% endif %}
+    pub fn with_{{ fieldDescriptor.rustName }}_matching(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            <crate::{{ fieldDescriptor.targetStruct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(RelationFilter::new("{{ fieldDescriptor.rustName }}", selection));
+        self
+    }
+
+
+{% if fieldDescriptor.candidateForConst %}
+    /// Complex relation filter for `{{ fieldDescriptor.rustName }}`.
+    ///
+    /// **Usage Priority:**
+    ///
+    /// 1. **Preferred**: If you only want to filter by specific known constants, please **prefer** the generated semantic shortcut methods, such as:
+    ///    - [`Self::{{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_not_xxx`]
+    ///
+    ///    This gives the best code readability.
+    ///
+    /// 2. **Advanced**: Only use this method when you need to perform advanced searches, dynamic subqueries, or filter based on complex relation conditions.
+    ///
+    /// # Example
+    /// ```rust
+    /// // Only use when building dynamic queries
+    /// let dynamic_query = crate::Q::{{ fieldDescriptor.targetPlural }}_minimal().filter(...);
+    /// let request = crate::Q::{{ objectDescriptor.rust_plural_name }}().without_{{ fieldDescriptor.rustName }}_matching(dynamic_query);
+    /// ```
+{% endif %}
+    pub fn without_{{ fieldDescriptor.rustName }}_matching(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            <crate::{{ fieldDescriptor.targetStruct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "id",
+        ));
+        self.relation_filters.push(RelationFilter::new("{{ fieldDescriptor.rustName }}", selection));
+        self
+    }
+
+
+    pub fn have_{{ fieldDescriptor.rustName }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_not_null("{{ fieldDescriptor.rustStorageFieldName }}"));
+        self
+    }
+
+    pub fn have_no_{{ fieldDescriptor.rustName }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::is_null("{{ fieldDescriptor.rustStorageFieldName }}"));
+        self
+    }
+
+
+    pub fn group_by_{{ fieldDescriptor.rustName }}(self) -> Self {
+        self.group_by("{{ fieldDescriptor.rustStorageFieldName }}")
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustName }}_as(self, alias: impl Into<String>) -> Self {
+        let alias = alias.into();
+        let mut request = self.group_by("{{ fieldDescriptor.rustStorageFieldName }}");
+        request.query = request
+            .query
+            .project_expr(alias, Expr::column("{{ fieldDescriptor.rustStorageFieldName }}"));
+        request
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustName }}_with_function(
+        self,
+        alias: impl Into<String>,
+        function: AggregateFunction,
+    ) -> Self {
+        self.group_by("{{ fieldDescriptor.rustStorageFieldName }}")
+            .aggregate_with_function("{{ fieldDescriptor.rustStorageFieldName }}", alias, function)
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustName }}_with(mut self, request: impl Into<QuerySelection>) -> Self {
+        self.query = self.query.group_by("{{ fieldDescriptor.rustStorageFieldName }}");
+        self.query_options.object_group_bys.push(ObjectGroupBy::new(
+            "{{ fieldDescriptor.rustName }}",
+            "{{ fieldDescriptor.rustStorageFieldName }}",
+            request,
+        ));
+        self
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustName }}_with_details(self) -> Self {
+        self.group_by_{{ fieldDescriptor.rustName }}_with_details_from(crate::Q::{{ fieldDescriptor.targetPlural }}().unlimited())
+    }
+
+    pub fn group_by_{{ fieldDescriptor.rustName }}_with_details_from(self, request: impl Into<QuerySelection>) -> Self {
+        self.group_by_{{ fieldDescriptor.rustName }}_with(request)
+    }
+
+
+    pub fn roll_up_to_{{ fieldDescriptor.rustName }}(self) -> Self {
+        self.roll_up_to_{{ fieldDescriptor.rustName }}_with(crate::Q::{{ fieldDescriptor.targetPlural }}().unlimited())
+    }
+
+    pub fn roll_up_to_{{ fieldDescriptor.rustName }}_with(self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.with_{{ fieldDescriptor.rustName }}_matching(selection.clone())
+            .group_by_{{ fieldDescriptor.rustName }}_with(selection)
+    }
+
+    pub fn count_{{ fieldDescriptor.rustName }}(self) -> Self {
+        self.count_{{ fieldDescriptor.rustName }}_as("{{ fieldDescriptor.rustName }}_count")
+    }
+
+    pub fn count_{{ fieldDescriptor.rustName }}_as(self, alias: impl Into<String>) -> Self {
+        self.aggregate_count_field("{{ fieldDescriptor.rustStorageFieldName }}", alias)
+    }
+
+    pub fn unselect_{{ fieldDescriptor.rustName }}(mut self) -> Self {
+        self.query.projection.retain(|field| field != "{{ fieldDescriptor.rustStorageFieldName }}");
+        self.query.relations.retain(|relation| relation.name != "{{ fieldDescriptor.rustName }}");
+        self
+    }
+
+{% endmacro %}
+
+{% macro objectCandidateMethods(fieldDescriptor) %}
+{% for candidate in fieldDescriptor.candidateForConst %}{{ objectCandidateMethod(fieldDescriptor, candidate) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+{% endmacro %}
+
+{% macro objectCandidateMethod(fieldDescriptor, candidate) %}
+    pub fn {{ fieldDescriptor.rustName }}_is_{{ candidate.rustCandidateMethodValue }}(self) -> Self {
+        self.filter_by_{{ fieldDescriptor.rustName }}({{ candidate.id }}_u64)
+    }
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_{{ candidate.rustCandidateMethodValue }}(self) -> Self {
+        self.filter_by_{{ fieldDescriptor.rustName }}({{ candidate.id }}_u64)
+    }
+
+
+
+    pub fn {{ fieldDescriptor.rustAttributePredicatePrefixExpr }}_is_not_{{ candidate.rustCandidateMethodValue }}(mut self) -> Self {
+        self.query = self.query.and_filter(Expr::ne("{{ fieldDescriptor.rustStorageFieldName }}", {{ candidate.id }}_u64));
+        self
+    }
+
+
+
+{% endmacro %}
+
+{% macro objectRelationMethods(fieldDescriptor) %}
+    pub fn select_{{ fieldDescriptor.rustName }}(mut self) -> Self {
+        self.query = self.query.relation("{{ fieldDescriptor.rustName }}");
+        self
+    }
+
+    pub fn select_{{ fieldDescriptor.rustName }}_with(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.relation_query("{{ fieldDescriptor.rustName }}", selection.clone().into_query());
+        self.relation_selections.push(RelationSelection::new("{{ fieldDescriptor.rustName }}", selection));
+        self
+}
+
+    pub fn facet_by_{{ fieldDescriptor.rustName }}_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        self.facet_by_{{ fieldDescriptor.rustName }}_as_with_options(facet_name, request, true)
+    }
+
+    pub fn facet_by_{{ fieldDescriptor.rustName }}_as_with_options(
+        mut self,
+        facet_name: impl Into<String>,
+        request: impl Into<QuerySelection>,
+        include_all_facets: bool,
+    ) -> Self {
+        self.query_options.facets.push(FacetRequest::new(
+            facet_name,
+            "{{ fieldDescriptor.rustName }}",
+            request,
+            include_all_facets,
+        ));
+        self
+    }
+
+{% endmacro %}
+
+{% macro dynamicJsonScalarSelfField(fieldDescriptor) %}
+            "{{ fieldDescriptor.rustStorageFieldName }}" => Some("{{ fieldDescriptor.rustStorageFieldName }}"),
+
+{% endmacro %}
+
+{% macro dynamicJsonObjectSelfField(fieldDescriptor) %}
+            "{{ fieldDescriptor.rustName }}" | "{{ fieldDescriptor.rustStorageFieldName }}" => Some("{{ fieldDescriptor.rustStorageFieldName }}"),
+
+{% endmacro %}
+
+{% macro dynamicJsonObjectFieldFilter(fieldDescriptor) %}
+            "{{ fieldDescriptor.rustName }}" => {
+                self.with_{{ fieldDescriptor.rustName }}_matching(
+                    crate::Q::{{ fieldDescriptor.targetPlural }}_minimal()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+
+{% endmacro %}
+
+{% macro reverseRelationMethods(relation) %}
+    pub fn have_{{ relation.targetPlural }}(self) -> Self {
+        self.with_{{ relation.rustMemberName }}_matching(SelectQuery::new("{{ relation.targetStruct }}"))
+    }
+
+    pub fn have_no_{{ relation.targetPlural }}(self) -> Self {
+        self.without_{{ relation.rustMemberName }}_matching(SelectQuery::new("{{ relation.targetStruct }}"))
+    }
+
+    pub fn with_{{ relation.rustMemberName }}_matching(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::in_subquery(
+            "id",
+            <crate::{{ relation.targetStruct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "{{ relation.localKey }}",
+        ));
+        self.relation_filters.push(RelationFilter::new("{{ relation.rustMemberName }}", selection));
+        self
+    }
+
+    pub fn without_{{ relation.rustMemberName }}_matching(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.and_filter(Expr::not_in_subquery(
+            "id",
+            <crate::{{ relation.targetStruct }} as teaql_core::TeaqlEntity>::entity_descriptor(),
+            selection.query.clone(),
+            "{{ relation.localKey }}",
+        ));
+        self.relation_filters.push(RelationFilter::new("{{ relation.rustMemberName }}", selection));
+        self
+    }
+
+    pub fn select_{{ relation.rustMemberName }}(mut self) -> Self {
+        self.query = self.query.relation("{{ relation.rustMemberName }}");
+        self
+    }
+
+    pub fn select_{{ relation.rustMemberName }}_with(mut self, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query = self.query.relation_query("{{ relation.rustMemberName }}", selection.clone().into_query());
+        self.relation_selections.push(RelationSelection::new("{{ relation.rustMemberName }}", selection));
+        self
+}
+
+{% endmacro %}
+
+{% macro dynamicJsonReverseRelationFilter(relation) %}
+            "{{ relation.rustMemberName }}" => {
+                self.with_{{ relation.rustMemberName }}_matching(
+                    crate::Q::{{ relation.targetPlural }}_minimal()
+                        .apply_dynamic_json_filter(tail, value),
+                )
+            }
+
+{% endmacro %}
+
+{% macro relationAggregateMethods(relation) %}
+    pub fn count_{{ relation.targetPlural }}(self) -> Self {
+        self.count_{{ relation.targetPlural }}_as("count_{{ relation.targetPlural }}")
+    }
+
+    pub fn count_{{ relation.targetPlural }}_as(self, alias: impl Into<String>) -> Self {
+        self.count_{{ relation.targetPlural }}_with(alias, crate::Q::{{ relation.targetPlural }}().unlimited())
+    }
+
+    pub fn count_{{ relation.targetPlural }}_with(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query_options.relation_aggregates.push(RelationAggregate::new(
+            "{{ relation.rustMemberName }}",
+            alias,
+            selection,
+            true,
+        ));
+        self
+    }
+
+    pub fn stats_from_{{ relation.targetPlural }}(self, request: impl Into<QuerySelection>) -> Self {
+        self.stats_from_{{ relation.targetPlural }}_as("refinements", request)
+    }
+
+    pub fn stats_from_{{ relation.targetPlural }}_as(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        let selection = request.into();
+        self.query_options.relation_aggregates.push(RelationAggregate::new(
+            "{{ relation.rustMemberName }}",
+            alias,
+            selection,
+            false,
+        ));
+        self
+    }
+
+    pub fn group_by_{{ relation.targetPlural }}_with_details(self, request: impl Into<QuerySelection>) -> Self {
+        self.stats_from_{{ relation.targetPlural }}(request)
+    }
+
+
+{% for method in relation.rustFieldAggregateMethods %}{{ relationFieldAggregateMethod(method) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+{% endmacro %}
+
+{% macro relationFieldAggregateMethod(method) %}
+    pub fn {{ method.name }}(self) -> Self {
+        self.{{ method.aliasName }}("{{ method.defaultAlias }}", crate::Q::{{ method.childPluralName }}().unlimited())
+    }
+
+    pub fn {{ method.aliasName }}(self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
+        self.stats_from_{{ method.relationMemberNames }}_as(alias, request.into().into_query().{{ method.queryMethodName }}("{{ method.fieldStorageName }}", "{{ method.queryAlias }}"))
+    }
+
+{% endmacro %}
+
+{% macro selectSelfField(fieldDescriptor) %}
+        self.query = self.query.project("{{ fieldDescriptor.rustStorageFieldName }}");
+
+{% endmacro %}
+
+{% macro selectAllObjectRelation(fieldDescriptor) %}
+        request = request.select_{{ fieldDescriptor.rustName }}();
+
+{% endmacro %}
+
+{% macro selectAllReverseRelation(relation) %}
+        request = request.select_{{ relation.rustMemberName }}();
+{% endmacro %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#![allow(unused_imports)]
+#![allow(async_fn_in_trait)]
+use std::{collections::BTreeMap, future::Future, marker::PhantomData};
+
+use serde_json::Value as JsonValue;
+use teaql_core::{
+    BinaryOp, Expr, Record,
+    RelationAggregate as RuntimeRelationAggregate, SelectQuery, SmartList,
+};
+use teaql_runtime::{ContextError, GraphNode, RepositoryBehavior, RepositoryError, RuntimeError, UserContext};
+
+// Re-export query builder types from teaql_core::request
+pub use teaql_core::request::{
+    COUNT_ALIAS, TYPE_FIELD, TYPE_GROUP_FIELD,
+    FieldOperator, DateRange, EntityReference,
+    QuerySelection, RelationSelection, RelationFilter, QueryOptions,
+    UnsafeRawSqlSegment, RawDynamicProperty, RawProjection,
+    RelationAggregate, FacetRequest, ObjectGroupBy,
+    apply_relation_selections, apply_runtime_metadata,
+    field_operator_expr, field_operator_column_expr,
+    required_value, required_text,
+    remove_default_live_filter, remove_filter_expr,
+    dynamic_json_value_to_teaql_value, dynamic_json_values,
+    dynamic_json_operator, dynamic_json_filter_expr,
+    dynamic_json_u64_field,
+    runtime_relation_aggregates,
+    merge_outer_filter_into_facet_aggregates, attach_facets,
+};
+
+
+pub trait TeaqlRecordRepository {
+    type Error: std::error::Error + Send + Sync + 'static;
+
+    async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>>;
+
+    async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>>;
+
+    async fn fetch_smart_list_with_relation_aggregates(
+        &self,
+        query: &SelectQuery,
+        relation_aggregates: &[RuntimeRelationAggregate],
+    ) -> Result<SmartList<Record>, RepositoryError<Self::Error>>;
+
+    async fn fetch_stream(&self, query: &SelectQuery) -> Result<Vec<teaql_data_service::StreamChunk>, RepositoryError<Self::Error>>;
+}
+
+pub trait TeaqlEntityRepository: TeaqlRecordRepository {
+    async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    where
+        T: teaql_core::Entity;
+
+    async fn fetch_enhanced_entities_with_relation_aggregates<T>(
+        &self,
+        query: &SelectQuery,
+        relation_aggregates: &[RuntimeRelationAggregate],
+    ) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    where
+        T: teaql_core::Entity;
+
+    async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
+    where
+        T: teaql_core::Entity;
+}
+
+impl<'a, E> TeaqlRecordRepository for teaql_runtime::ResolvedRepository<'a, E>
+where
+    E: teaql_data_service::QueryExecutor + teaql_data_service::MutationExecutor + teaql_data_service::StreamQueryExecutor + Send + Sync + 'static,
+{
+    type Error = E::Error;
+
+    async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>> {
+        teaql_runtime::ResolvedRepository::fetch_all(self, query).await
+    }
+
+    async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>> {
+        teaql_runtime::ResolvedRepository::fetch_smart_list(self, query).await
+    }
+
+    async fn fetch_smart_list_with_relation_aggregates(
+        &self,
+        query: &SelectQuery,
+        relation_aggregates: &[RuntimeRelationAggregate],
+    ) -> Result<SmartList<Record>, RepositoryError<Self::Error>> {
+        teaql_runtime::ResolvedRepository::fetch_smart_list_with_relation_aggregates(
+            self,
+            query,
+            relation_aggregates,
+        ).await
+    }
+
+    async fn fetch_stream(&self, query: &SelectQuery) -> Result<Vec<teaql_data_service::StreamChunk>, RepositoryError<Self::Error>> {
+        teaql_runtime::ResolvedRepository::fetch_stream(self, query).await
+    }
+}
+
+impl<'a, E> TeaqlEntityRepository for teaql_runtime::ResolvedRepository<'a, E>
+where
+    E: teaql_data_service::QueryExecutor + teaql_data_service::MutationExecutor + teaql_data_service::StreamQueryExecutor + Send + Sync + 'static,
+{
+    async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    where
+        T: teaql_core::Entity,
+    {
+        teaql_runtime::ResolvedRepository::fetch_enhanced_entities(self, query).await
+    }
+
+    async fn fetch_enhanced_entities_with_relation_aggregates<T>(
+        &self,
+        query: &SelectQuery,
+        relation_aggregates: &[RuntimeRelationAggregate],
+    ) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    where
+        T: teaql_core::Entity,
+    {
+        teaql_runtime::ResolvedRepository::fetch_enhanced_entities_with_relation_aggregates(
+            self,
+            query,
+            relation_aggregates,
+        ).await
+    }
+
+    async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
+    where
+        T: teaql_core::Entity,
+    {
+        teaql_runtime::ResolvedRepository::save_entity_graph(self, entity).await
+    }
+}
+
+pub type TeaqlRepositoryError<R> = RepositoryError<<R as TeaqlRecordRepository>::Error>;
+
+pub trait TeaqlRuntime {
+    fn user_context(&self) -> &UserContext;
+
+    fn fetch_facet_smart_list(
+        &self,
+        entity: &str,
+        query: &SelectQuery,
+        relation_aggregates: &[RuntimeRelationAggregate],
+        trace_context: Vec<teaql_core::TraceNode>,
+    ) -> impl std::future::Future<Output = Result<SmartList<Record>, RuntimeError>> + Send;
+}
+
+/// Internal trait for repository access. Application code should not use this trait directly.
+#[doc(hidden)]
+pub trait AuditedSave<'a, C>
+where
+    C: TeaqlRepositoryProvider + ?Sized + 'a,
+{
+    type Error;
+    fn save(self, ctx: &'a C) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, Self::Error>> + '_>>;
+}
+
+
+
+pub trait TeaqlRepositoryProvider: TeaqlRuntime {
+{% for item in domain.objectDescriptors %}{{ runtimeRepositoryType(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+}
+
+#[allow(async_fn_in_trait)]
+pub trait TeaqlUserContextExt {
+    async fn commit_data(&self) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>;
+    
+    async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>>;
+}
+
+impl TeaqlUserContextExt for teaql_runtime::UserContext {
+    async fn commit_data(&self) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>> {
+        self.commit_changes::<crate::runtime::DataServiceExecutor>().await
+    }
+
+    async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>>,
+    {
+        let executor = self.require_resource::<crate::runtime::DataServiceExecutor>().map_err(|err| {
+            RepositoryError::Runtime(RuntimeError::Graph(format!(
+                "cannot start transaction without executor: {err}"
+            )))
+        })?;
+        let root = self.entity_root();
+
+        let tx = teaql_data_service::TransactionExecutor::begin(&*executor).await.map_err(RepositoryError::Executor)?;
+        root.push_change_set();
+
+        let result = f().await;
+        match result {
+            Ok(()) => {
+                root.pop_change_set();
+                teaql_data_service::Transaction::commit(tx).await.map_err(RepositoryError::Executor)?;
+                Ok(())
+            }
+            Err(err) => {
+                root.pop_change_set();
+                teaql_data_service::Transaction::rollback(tx).await.map_err(RepositoryError::Executor)?;
+                Err(err)
+            }
+        }
+    }
+}
+
+impl TeaqlRuntime for teaql_runtime::UserContext {
+    fn user_context(&self) -> &UserContext {
+        self
+    }
+
+    async fn fetch_facet_smart_list(
+        &self,
+        entity: &str,
+        query: &SelectQuery,
+        relation_aggregates: &[RuntimeRelationAggregate],
+        trace_context: Vec<teaql_core::TraceNode>,
+    ) -> Result<SmartList<Record>, RuntimeError> {
+        self.resolve_repository::<crate::runtime::DataServiceExecutor>(entity)
+            .map_err(|err| RuntimeError::Graph(err.to_string()))?
+            .with_trace_context(trace_context)
+            .fetch_smart_list_with_relation_aggregates(query, relation_aggregates)
+            .await
+            .map_err(|err| RuntimeError::Graph(err.to_string()))
+    }
+}
+
+impl TeaqlRepositoryProvider for teaql_runtime::UserContext {
+{% for item in domain.objectDescriptors %}{{ runtimeRepositoryImpl(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+}
+
+pub(crate) async fn execute_facets<C>(
+    ctx: &C,
+    outer_query: &SelectQuery,
+    options: &QueryOptions,
+) -> Result<BTreeMap<String, SmartList<Record>>, RuntimeError>
+where
+    C: TeaqlRuntime + ?Sized,
+{
+    let mut facets = BTreeMap::new();
+    for facet in &options.facets {
+        let mut selection = facet.query.clone();
+        merge_outer_filter_into_facet_aggregates(&mut selection, outer_query);
+        if !facet.include_all_facets {
+            selection = restrict_facet_to_outer_query(ctx, selection, outer_query, &facet.relation_name)?;
+        }
+        let relation_aggregates = runtime_relation_aggregates(&selection.query_options);
+        let query = apply_runtime_metadata(
+            selection.query,
+            &selection.query_options,
+            &selection.child_enhancements,
+        );
+        let mut chain = outer_query.trace_chain.clone();
+        chain.push(teaql_core::TraceNode { 
+            entity_type: query.entity.clone(),
+            entity_id: None,
+            comment: facet.facet_name.clone(),
+        });
+        
+        let facet_rows = ctx.fetch_facet_smart_list(&query.entity, &query, &relation_aggregates, chain).await?;
+        facets.insert(facet.facet_name.clone(), facet_rows);
+    }
+    Ok(facets)
+}
+
+pub(crate) fn restrict_facet_to_outer_query<C>(
+    ctx: &C,
+    mut selection: QuerySelection,
+    outer_query: &SelectQuery,
+    relation_name: &str,
+) -> Result<QuerySelection, RuntimeError>
+where
+    C: TeaqlRuntime + ?Sized,
+{
+    let descriptor = ctx
+        .user_context()
+        .entity(&outer_query.entity)
+        .cloned()
+        .ok_or_else(|| RuntimeError::Graph(format!("missing entity: {}", outer_query.entity)))?;
+    let relation = descriptor
+        .relation_by_name(relation_name)
+        .cloned()
+        .ok_or_else(|| RuntimeError::MissingRelation {
+            entity: outer_query.entity.clone(),
+            relation: relation_name.to_owned(),
+        })?;
+    let mut subquery = outer_query.clone();
+    subquery.projection.clear();
+    subquery.expr_projection.clear();
+    subquery.order_by.clear();
+    subquery.slice = None;
+    subquery.aggregates.clear();
+    subquery.group_by.clear();
+    subquery.relations.clear();
+    selection.query = selection.query.and_filter(Expr::in_subquery(
+        relation.foreign_key,
+        descriptor,
+        subquery,
+        relation.local_key,
+    ));
+    Ok(selection)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -118,6 +118,8 @@ pub fn generate_virtual_crate(
         rust_crate_version => rust_crate_version,
         has_sql_provider => has_sql_provider,
         rust_sql_provider_dependency => rust_sql_provider_dependency,
+            rust_sql_provider_name => "teaql_provider_sqlite",
+            rust_sql_provider_pascal => "Sqlite",
         data_service => data_service,
     };
 
@@ -192,7 +194,7 @@ pub fn generate_virtual_crate(
         });
         files.push(GeneratedFile {
             path: format!("lib/src/{}/expression.rs", entity.rust_module),
-            content: clean_whitespace(&env.render_str("{% from 'expression' import entityExpression %}{{ entityExpression(objectDescriptor) }}", context! { objectDescriptor => entity, domain => domain })?),
+            content: clean_whitespace(&env.render_str("{% from 'expression' import entityExpression, listExpression %}{{ entityExpression(objectDescriptor) }}{{ listExpression(objectDescriptor) }}", context! { objectDescriptor => entity, domain => domain })?),
         });
         files.push(GeneratedFile {
             path: format!("lib/src/{}/request.rs", entity.rust_module),
@@ -311,4 +313,98 @@ pub fn generate_all(domain: &Domain) -> Result<Vec<GeneratedFile>, Box<dyn std::
     }
 
     Ok(files)
+}
+
+pub fn render_preview(
+    domain: &RenderDomain,
+    template_name: &str,
+    target_entity: Option<String>,
+) -> Result<String, String> {
+    let mut env = Environment::new();
+    env.set_trim_blocks(true);
+    env.set_lstrip_blocks(true);
+
+    env.add_template(
+        "doc/model-view",
+        include_str!("../templates/doc/model-view.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "doc/data-design",
+        include_str!("../templates/doc/data-design.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "doc/data-design-react",
+        include_str!("../templates/doc/data-design-react.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-create",
+        include_str!("../templates/rust-assist-create/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-debug",
+        include_str!("../templates/rust-assist-debug/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-delete",
+        include_str!("../templates/rust-assist-delete/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-expression",
+        include_str!("../templates/rust-assist-expression/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-list-page",
+        include_str!("../templates/rust-assist-list-page/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-query",
+        include_str!("../templates/rust-assist-query/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-runtime-custom",
+        include_str!("../templates/rust-assist-runtime-custom/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-tool-api",
+        include_str!("../templates/rust-assist-tool-api/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-update",
+        include_str!("../templates/rust-assist-update/prompt.md.j2"),
+    )
+    .unwrap();
+
+    let template = env.get_template(template_name).map_err(|e| e.to_string())?;
+
+    let context = if let Some(entity_name) = target_entity {
+        let object_descriptor = domain
+            .entities
+            .iter()
+            .find(|e| e.rust_module == entity_name || e.name == entity_name)
+            .cloned();
+        if object_descriptor.is_none() {
+            return Err(format!("Entity {} not found", entity_name));
+        }
+        context! {
+            domain => domain,
+            objectDescriptor => object_descriptor.unwrap(),
+        }
+    } else {
+        context! {
+            domain => domain,
+        }
+    };
+
+    template.render(context).map_err(|e| e.to_string())
 }
