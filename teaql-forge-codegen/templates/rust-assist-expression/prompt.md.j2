@@ -3,22 +3,22 @@ Please help me complete the safe value extraction (E Expression) logic for the `
 To ensure absolute correctness of the API and prevent null pointer panics, please refer to and strictly imitate the following **real `E` expression code example for `{{ entity.rust_struct_name }}`**.
 
 ### Standard E Expression Example (Reference)
-Please carefully observe how `E::{{ entity.rustModuleName }}(entity)` is used to chain safe `.get_xxx()` method calls down the relation graph, ending with `.eval()`.
+Please carefully observe how `E::{{ entity.rust_module_name }}(entity)` is used to chain safe `.get_xxx()` method calls down the relation graph, ending with `.eval()`.
 
 ```rust
 use teaql_core::Entity;
-use {{ domain.rust_module_name }}::{E, {{ entity.rust_struct_name }}};
+use {{ domain.rustModuleName }}::{E, {{ entity.rust_struct_name }}};
 
 pub fn extract_value_example(entity: &{{ entity.rust_struct_name }}) -> Option\{{ String }} {
     // 1. Wrap the base entity in the E expression facade
     // Note: The module name is typically snake_case
-    let value_opt = E::{{ entity.rustModuleName }}(entity)
+    let value_opt = E::{{ entity.rust_module_name }}(entity)
         // --- Safe chainable getters (Uncomment and chain as needed) ---
 {% for f in entity.rustScalarFields %}
 {% if f.is_id %}
 {% elif f.is_version %}
 {% elif f.candidate_for_const %}
-        // .get_{{ f.rustMemberName }}()
+        // .get_{{ f.rustName }}()
 {% else %}
         // .get_{{ f.rustStorageMemberName }}()
 {% endif %}

@@ -7,40 +7,40 @@ Please carefully observe the `select_xxx()` methods and the strictly required `.
 
 ```rust
 use teaql_core::{Entity, SmartList};
-use {{ domain.rust_module_name }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider};
+use {{ domain.rustModuleName }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider};
 
 pub async fn query_example(
     ctx: &impl TeaqlRepositoryProvider, 
 ) -> Result<SmartList<{{ entity.rust_struct_name }}>, Box<dyn std::error::Error>>
 {
     // [BEST PRACTICE]: Always start with _minimal() to avoid over-fetching and ensure compliance.
-    let rows = Q::{{ entity.rustPluralName }}_minimal()
+    let rows = Q::{{ entity.rust_plural_name }}_minimal()
 {% for f in entity.rustScalarFields %}
-{% if f.is_id %}{% elif f.is_version %}{% else %}        .select_{{ f.rustMemberName }}()
+{% if f.is_id %}{% elif f.is_version %}{% else %}        .select_{{ f.rustName }}()
 {% endif %}
 {% endfor %}
         // --- Filter and Order Options (Uncomment and customize if needed) ---
 {% for f in entity.rustScalarFields %}
 {% if f.candidate_for_const %}
-        // .{{ f.rustMemberName }}_is_some_value()
+        // .{{ f.rustName }}_is_some_value()
 {% else %}
-        // .with_{{ f.rustMemberName }}_is(/* value */)
+        // .with_{{ f.rustName }}_is(/* value */)
 {% endif %}
         // .order_by_{{ f.rustStorageMemberName }}_desc() // or _asc()
 {% endfor %}
 {% for f in entity.relations %}
-        // .filter_by_{{ f.rust_member_name }}(/* entity or id */)
+        // .filter_by_{{ f.rustName }}(/* entity or id */)
 {% endfor %}
         // --------------------------------------------------------------------
 
         // --- Advanced Options: Fetch nested objects and tailor fields (uncomment and crop as needed) ---
 {% for f in entity.relations %}
-        // .select_{{ f.rust_member_name }}_with(
+        // .select_{{ f.rustName }}_with(
         //     Q::{{ f.target_plural }}_minimal()
         // )
 {% endfor %}
 {% for r in entity.reverse_relations %}
-        // .select_{{ r.rust_member_name }}_with(
+        // .select_{{ r.rustName }}_with(
         //     Q::{{ r.target_plural }}_minimal()
         // )
 {% endfor %}

@@ -7,7 +7,7 @@ Please carefully observe the querying mechanism, the `update_xxx()` property set
 
 ```rust
 use teaql_core::Entity;
-use {{ domain.rust_module_name }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider, AuditedSave};
+use {{ domain.rustModuleName }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider, AuditedSave};
 
 pub async fn update_example(
     ctx: &impl TeaqlRepositoryProvider, 
@@ -16,7 +16,7 @@ pub async fn update_example(
 ) -> Result<Option<{{ entity.rust_struct_name }}>, Box<dyn std::error::Error>>
 {
     // 1. Fetch the entity first (Use _minimal to avoid over-fetching during updates)
-    if let Some(mut existing_entity) = Q::{{ entity.rustPluralName }}_minimal()
+    if let Some(mut existing_entity) = Q::{{ entity.rust_plural_name }}_minimal()
         .with_id_is(entity_id)
         .purpose("what: Find entity for modification")
         .comment("why: Need to update properties")
@@ -30,7 +30,7 @@ pub async fn update_example(
 {% elif f.candidate_for_const %}
         // Enum constant field {{ f.name }}: optional assignment methods are as follows
 {% for c in f.candidates %}
-        // existing_entity.update_{{ f.rustMemberName }}_to_{{ c.rustCandidateMethodValue }}();
+        // existing_entity.update_{{ f.rustName }}_to_{{ c.rustCandidateMethodValue }}();
 {% endfor %}
 {% else %}
         // existing_entity.update_{{ f.rustStorageMemberName }}(/* input data */);

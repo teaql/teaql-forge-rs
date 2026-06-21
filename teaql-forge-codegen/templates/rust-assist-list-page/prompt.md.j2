@@ -7,7 +7,7 @@ Please carefully observe the `execute_for_page()` method with offset/limit param
 
 ```rust
 use teaql_core::Entity;
-use {{ domain.rust_module_name }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider};
+use {{ domain.rustModuleName }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider};
 use teaql_core::SmartList;
 use serde_json::Value as JsonValue;
 
@@ -19,21 +19,21 @@ pub async fn list_page_example(
 ) -> Result<SmartList<{{ entity.rust_struct_name }}>>
 {
     // [BEST PRACTICE]: Always start with _minimal() to avoid over-fetching
-    let page = Q::{{ entity.rustPluralName }}_minimal()
+    let page = Q::{{ entity.rust_plural_name }}_minimal()
 {% for f in entity.rustScalarFields %}
-{% if f.is_id %}{% elif f.is_version %}{% else %}        .select_{{ f.rustMemberName }}()
+{% if f.is_id %}{% elif f.is_version %}{% else %}        .select_{{ f.rustName }}()
 {% endif %}
 {% endfor %}
         .filter_with_json(ui_filters_json.clone()) // Dynamic UI Search Support
 
         // --- Drill-Down Options: Fetch nested objects and tailor fields (uncomment as needed) ---
 {% for f in entity.relations %}
-        // .select_{{ f.rust_member_name }}_with(
+        // .select_{{ f.rustName }}_with(
         //     Q::{{ f.target_plural }}()
         // )
 {% endfor %}
 {% for r in entity.reverse_relations %}
-        // .select_{{ r.rust_member_name }}_with(
+        // .select_{{ r.rustName }}_with(
         //     Q::{{ r.target_plural }}()
         // )
 {% endfor %}
@@ -41,8 +41,8 @@ pub async fn list_page_example(
 
         // --- Facet Options: Aggregate referenced objects directly (uncomment as needed) ---
 {% for f in entity.relations %}
-        // .facet_by_{{ f.rust_member_name }}_as(
-        //     "{{ f.rust_member_name }}_facet",
+        // .facet_by_{{ f.rustName }}_as(
+        //     "{{ f.rustName }}_facet",
         //     Q::{{ f.target_plural }}_minimal().aggregate_count("count")
         // )
 {% endfor %}

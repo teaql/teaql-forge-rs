@@ -7,13 +7,13 @@ Please carefully observe the initialization of the object, the `update_xxx()` pr
 
 ```rust
 use teaql_core::Entity;
-use {{ domain.rust_module_name }}::{Q, {{ entity.rust_struct_name }}, TeaqlRuntime, AuditedSave};
+use {{ domain.rustModuleName }}::{Q, {{ entity.rust_struct_name }}, TeaqlRuntime, AuditedSave};
 
 pub async fn create_example(
     ctx: &impl TeaqlRuntime,
 ) -> Result<{{ entity.rust_struct_name }}, Box<dyn std::error::Error>> {
     // 1. Initialize the new entity
-    let mut new_entity = Q::{{ entity.rustPluralName }}()
+    let mut new_entity = Q::{{ entity.rust_plural_name }}()
         .purpose("what: Create a new entity instance")
         .new_entity(ctx);
 
@@ -24,7 +24,7 @@ pub async fn create_example(
 {% elif f.candidate_for_const %}
     // Enum constant field {{ f.name }}: optional assignment methods are as follows
 {% for c in f.candidates %}
-    // new_entity.update_{{ f.rustMemberName }}_to_{{ c.rustCandidateMethodValue }}();
+    // new_entity.update_{{ f.rustName }}_to_{{ c.rustCandidateMethodValue }}();
 {% endfor %}
 {% else %}
     // new_entity.update_{{ f.rustStorageMemberName }}(/* input data */);

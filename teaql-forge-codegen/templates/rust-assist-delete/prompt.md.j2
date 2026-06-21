@@ -8,7 +8,7 @@ Please carefully observe the querying mechanism and the strictly required `.mark
 
 ```rust
 use teaql_core::Entity;
-use {{ domain.rust_module_name }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider, AuditedSave};
+use {{ domain.rustModuleName }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider, AuditedSave};
 
 pub async fn delete_example(
     ctx: &impl TeaqlRepositoryProvider, 
@@ -16,7 +16,7 @@ pub async fn delete_example(
 ) -> Result<bool, Box<dyn std::error::Error>>
 {
     // 1. Fetch the entity first (Use _minimal to avoid over-fetching during deletion checks)
-    if let Some(mut existing_entity) = Q::{{ entity.rustPluralName }}_minimal()
+    if let Some(mut existing_entity) = Q::{{ entity.rust_plural_name }}_minimal()
         .with_id_is(entity_id)
         .purpose("what: Find entity for soft deletion")
         .comment("why: Need to execute soft delete")
