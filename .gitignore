@@ -22,3 +22,5 @@ target
 
 server.log
 teaql-forge-server-bin
+*.py
+
