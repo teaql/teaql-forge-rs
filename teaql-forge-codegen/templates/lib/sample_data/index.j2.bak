@@ -1,0 +1,244 @@
+{% macro index(domain, businessObjectDescriptors, constantObjectDescriptors, rootObjectDescriptors) %}
+use std::collections::BTreeMap;
+use crate::TeaqlRuntime;
+use crate::Q;
+use teaql_core::Entity;
+use crate::request_support::TeaqlUserContextExt;
+use crate::request_support::AuditedSave;
+
+pub trait IntoU64 {
+    fn into_u64(self) -> u64;
+}
+
+impl IntoU64 for u64 {
+    fn into_u64(self) -> u64 {
+        self
+    }
+}
+
+impl IntoU64 for Option<&teaql_core::Value> {
+    fn into_u64(self) -> u64 {
+        self.and_then(|v| v.try_u64()).unwrap_or_default()
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum SampleDataScale {
+    Tiny,
+    Small,
+    Medium,
+}
+
+pub struct SampleDataPlan {
+    pub scale: SampleDataScale,
+    pub seed: u64,
+}
+
+impl SampleDataPlan {
+    pub fn small() -> Self {
+        Self {
+            scale: SampleDataScale::Small,
+            seed: 0,
+        }
+    }
+}
+
+pub struct SampleDataReport {
+    pub generated: BTreeMap<&'static str, usize>,
+    pub skipped: Vec<SampleDataSkipped>,
+}
+
+pub struct SampleDataSkipped {
+    pub entity: &'static str,
+    pub reason: String,
+}
+
+pub struct SampleDataState {
+    pub plan: SampleDataPlan,
+    pub references: BTreeMap<&'static str, Vec<u64>>,
+    pub generated: BTreeMap<&'static str, usize>,
+    pub skipped: Vec<SampleDataSkipped>,
+}
+
+impl SampleDataState {
+    pub fn new(plan: SampleDataPlan) -> Self {
+        Self {
+            plan,
+            references: BTreeMap::new(),
+            generated: BTreeMap::new(),
+            skipped: Vec::new(),
+        }
+    }
+
+    pub fn add_reference(&mut self, entity: &'static str, id: u64) {
+        self.references.entry(entity).or_default().push(id);
+    }
+
+    pub fn ids(&self, entity: &'static str) -> &[u64] {
+        self.references.get(entity).map(|v| v.as_slice()).unwrap_or(&[])
+    }
+
+    pub fn pick_id(&self, entity: &'static str, salt: usize) -> Option<u64> {
+        let ids = self.ids(entity);
+        if ids.is_empty() {
+            None
+        } else {
+            Some(ids[salt % ids.len()])
+        }
+    }
+
+    pub fn pick_unused_id(&self, entity: &'static str, salt: usize, used: &std::collections::HashSet<u64>) -> Option<u64> {
+        let ids = self.ids(entity);
+        if ids.is_empty() {
+            return None;
+        }
+
+        let best_id = ids[salt % ids.len()];
+        if !used.contains(&best_id) {
+            return Some(best_id);
+        }
+
+        for id in ids {
+            if !used.contains(id) {
+                return Some(*id);
+            }
+        }
+
+        Some(best_id)
+    }
+
+    pub fn record_generated(&mut self, entity: &'static str) {
+        *self.generated.entry(entity).or_default() += 1;
+    }
+
+    pub fn record_skipped(&mut self, entity: &'static str, reason: String) {
+        self.skipped.push(SampleDataSkipped { entity, reason });
+    }
+
+    pub fn into_report(self) -> SampleDataReport {
+        SampleDataReport {
+            generated: self.generated,
+            skipped: self.skipped,
+        }
+    }
+}
+
+pub async fn generate_sample_data<C>(
+    ctx: &C,
+    plan: SampleDataPlan,
+) -> Result<SampleDataReport, String>
+where
+    C: TeaqlRuntime + ?Sized + crate::TeaqlRepositoryProvider,
+{
+    log::info!("Starting sample data generation. Scale: {:?}, Seed: {}", plan.scale, plan.seed);
+    let mut state = SampleDataState::new(plan);
+
+{% for item in rootObjectDescriptors %}{{ loadRootCalls(item) }}{% if not loop.last %}{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+{% for item in constantObjectDescriptors %}{{ loadConstantCalls(item) }}{% if not loop.last %}{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+{% for item in businessObjectDescriptors %}{{ generateObjectCalls(item) }}{% if not loop.last %}{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+    let report = state.into_report();
+    log::info!("Sample data generation completed successfully. Generated: {} tables, Skipped: {} tables.", report.generated.len(), report.skipped.len());
+    Ok(report)
+}
+
+{% for item in rootObjectDescriptors %}{{ loadRootFunctions(item) }}{% if not loop.last %}{{ "" }}
+{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+{% for item in constantObjectDescriptors %}{{ loadConstantFunctions(item) }}{% if not loop.last %}{{ "" }}
+{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+{% for item in businessObjectDescriptors %}{{ generateObjectFunctions(item) }}{% if not loop.last %}{{ "" }}
+{{ "" }}
+{% endif %}{% endfor %}{{ "" }}{% endmacro %}
+
+{
+    {% for item in objectDescriptor.rust_object_fields %}{{ checkRequiredDependency(objectDescriptor, item) }}{% if not loop.last %}{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+    let object_fields_count = 0{% for _field in objectDescriptor.rust_object_fields %}+ 1{% endfor %}{{ "" }};
+    let base_fanout = std::cmp::max(1, object_fields_count) * 20;
+
+    let fanout = match state.plan.scale {
+        SampleDataScale::Tiny => base_fanout,
+        SampleDataScale::Small => base_fanout * 5,
+        SampleDataScale::Medium => base_fanout * 50,
+    };
+
+    log::info!("Generating sample data for {{ objectDescriptor.name }} (expected: {})...", fanout);
+
+    for i in 0..fanout {
+        let mut entity = Q::{{ objectDescriptor.rust_plural_name }}().purpose("Init Sample Data").new_entity(ctx);
+        let mut used_refs = std::collections::HashSet::new();
+
+        {% for item in objectDescriptor.rust_object_fields %}{{ fillObjectField(item) }}{% if not loop.last %}{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+        {% for item in objectDescriptor.rust_scalar_fields %}{{ fillScalarField(item) }}{% if not loop.last %}{{ "" }}
+{% endif %}{% endfor %}{{ "" }}
+
+        {% if objectDescriptor.reverse_relations %}let entity = {% endif %}entity.audit_as("Init Sample Data").save(ctx).await.map_err(|e| e.to_string())?;
+
+        state.record_generated("{{ objectDescriptor.name }}");
+
+        if i % 20 == 0 {
+            log::info!("Generating {{ objectDescriptor.name }}: {}/{}", i, fanout);
+        }
+
+        {% if objectDescriptor.reverse_relations %}
+        state.add_reference("{{ objectDescriptor.name }}", entity.id().into_u64());
+        {% endif %}
+    }
+
+    log::info!("Successfully generated sample records for {{ objectDescriptor.name }}.");
+    Ok(())
+}
+{% endif %}{% endmacro %}
+
+{% macro fillScalarField(fieldDescriptor) %}
+{% if fieldDescriptor.is_string %}
+        entity.update_{{ fieldDescriptor.rust_storage_member_name }}(format!("{} {}", "{{ fieldDescriptor.default_sample_value }}", i + 1));
+{% elif fieldDescriptor.is_number %}
+        {
+            let max_val: u64 = "{{ fieldDescriptor.default_sample_value }}".parse().unwrap_or(1000);
+            let rand_val = (i as u64 + state.plan.seed) % max_val.max(1) + 1;
+            entity.update_{{ fieldDescriptor.rust_storage_member_name }}(rand_val as i64);
+        }
+{% elif fieldDescriptor.is_date %}
+        {
+            let days = ((i as u64 + state.plan.seed) % (365 * 3)) as i64;
+            let past = chrono::Utc::now().naive_utc() - chrono::Duration::try_days(days).unwrap_or_default();
+            entity.update_{{ fieldDescriptor.rust_storage_member_name }}(past.format("%Y-%m-%d").to_string());
+        }
+{% elif fieldDescriptor.is_time %}
+        {
+            let days = ((i as u64 + state.plan.seed) % (365 * 3)) as i64;
+            let past = chrono::Utc::now().naive_utc() - chrono::Duration::try_days(days).unwrap_or_default();
+            entity.update_{{ fieldDescriptor.rust_storage_member_name }}(past.format("%Y-%m-%d %H:%M:%S").to_string());
+        }
+{% elif fieldDescriptor.is_boolean %}
+        entity.update_{{ fieldDescriptor.rust_storage_member_name }}(i % 2 == 0);
+{% endif %}{% endmacro %}
+
+{% macro fillObjectField(fieldDescriptor) %}
+        if let Some(ref_id) = state.pick_unused_id("{{ fieldDescriptor.field_type.refer.name }}", i as usize, &used_refs) {
+            entity.update_{{ fieldDescriptor.rust_storage_member_name }}(ref_id);
+            used_refs.insert(ref_id);
+        } else {
+            // Optional relation was missing in reference pool
+        }{% endmacro %}
+
+{% macro checkRequiredDependency(objectDescriptor, fieldDescriptor) %}
+{% if fieldDescriptor.required %}
+    if state.ids("{{ fieldDescriptor.field_type.refer.name }}").is_empty() {
+        state.record_skipped("{{ objectDescriptor.name }}", "Required dependency {{ fieldDescriptor.field_type.refer.name }} is missing in reference pool".to_string());
+        log::info!("Skipped generating {{ objectDescriptor.name }}: Required dependency {{ fieldDescriptor.field_type.refer.name }} is missing in reference pool.");
+        return Ok(());
+    }
+{% endif %}{% endmacro %}

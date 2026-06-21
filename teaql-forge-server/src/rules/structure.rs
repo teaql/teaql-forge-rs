@@ -65,7 +65,10 @@ pub fn evaluate_structure_rule(doc: &Document, response: &mut EvaluationResponse
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-STRUCTURE-003".to_string(),
                 title: "Non-standard object name".to_string(),
-                message: format!("Object name should be lowercase snake_case (e.g. stock_item), but found '{}'.", tag),
+                message: format!(
+                    "Object name should be lowercase snake_case (e.g. stock_item), but found '{}'.",
+                    tag
+                ),
                 path: path.clone(),
                 object_name: tag.to_string(),
                 field_name: None,

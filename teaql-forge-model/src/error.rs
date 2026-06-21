@@ -33,7 +33,7 @@ pub enum ParseError {
         #[label("invalid value here")]
         span: (usize, usize),
     },
-    
+
     #[error("Domain tag is missing")]
     #[diagnostic(code(teaql::missing_domain))]
     MissingDomain,

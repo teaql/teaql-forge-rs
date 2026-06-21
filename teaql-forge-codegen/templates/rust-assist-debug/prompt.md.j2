@@ -1,0 +1,75 @@
+# TeaQL Debugging & Logging Guide
+
+When you need to debug a TeaQL application, investigate slow queries, or verify the exact SQL being executed, use the built-in debugging features.
+
+## 1. Environment Variables
+
+The easiest way to enable SQL logging without changing the code is via environment variables:
+
+| Variable | Values | Description |
+|----------|--------|-------------|
+| `TEAQL_SQL_LOG` | `all`, `select`, `mutation`, `off` | Prints the generated SQL statements and arguments. |
+| `TEAQL_AUDIT` | `verbose`, `production`, `silent` | Controls the verbosity of audit event logs. |
+| `TEAQL_SCHEMA` | `execute`, `dry_run`, `verify` | Set to `dry_run` to safely print schema migration SQL without applying it. |
+
+*Example (Bash):*
+```bash
+TEAQL_SQL_LOG=all cargo run
+```
+
+## 2. Programmatic SQL Logging (Code Level)
+
+You can forcefully enable SQL logging inside your Rust code for specific operations or tests. Use the methods on the `UserContext`:
+
+```rust
+// Enable all SQL logging
+ctx.enable_all_sql_log();
+
+// Enable only mutation (INSERT/UPDATE/DELETE) logging
+ctx.enable_mutation_sql_log();
+
+// Enable only query (SELECT) logging
+ctx.enable_query_sql_log();
+
+// Disable SQL logging programmatically
+ctx.disable_sql_log();
+```
+
+## 3. Retrieving SQL Logs in Memory
+
+If you need to assert against the generated SQL in a unit test or return it in a debug API, you can capture the logs programmatically instead of just printing them to stdout:
+
+```rust
+// 1. Enable logging
+ctx.enable_all_sql_log();
+
+// 2. Perform your database operations
+// let rows = Q::...execute_for_list(&ctx).await?;
+
+// 3. Extract the captured SQL strings
+let logs: Vec<String> = ctx.sql_logs();
+
+for log in logs {
+    println!("Captured SQL: {}", log);
+}
+```
+
+## 4. Advanced: AuditConfig
+
+For fine-grained control over the runtime's tracing behavior:
+
+```rust
+use teaql_runtime::AuditConfig;
+use teaql_runtime::Module;
+
+// Focus logging on Mutations only
+let config = AuditConfig::focus_on(Module::Mutation);
+
+// Or run in completely silent mode
+let config = AuditConfig::silent_all();
+
+// You can apply this configuration to your context
+// ctx.apply_audit_config(config);
+```
+
+> **Remember:** Do not leave `.enable_all_sql_log()` permanently active in high-throughput production code, as it incurs logging overhead. Use environment variables for ops-level control.

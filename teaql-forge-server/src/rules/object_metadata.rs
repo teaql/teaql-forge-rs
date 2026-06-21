@@ -2,7 +2,11 @@ use crate::eval::{EvaluationItem, EvaluationResponse};
 use regex::Regex;
 use roxmltree::{Document, Node};
 
-pub fn evaluate_object_metadata_rule(doc: &Document, response: &mut EvaluationResponse, xml_path: &str) {
+pub fn evaluate_object_metadata_rule(
+    doc: &Document,
+    response: &mut EvaluationResponse,
+    xml_path: &str,
+) {
     let root = doc.root_element();
     if root.tag_name().name() != "root" && root.tag_name().name() != "_root" {
         return;
@@ -38,15 +42,25 @@ pub fn evaluate_object_metadata_rule(doc: &Document, response: &mut EvaluationRe
         let module_key = obj_el.attribute("_module_key");
 
         let mut missing = Vec::new();
-        if name.is_none() { missing.push("_name"); }
-        if module.is_none() { missing.push("_module"); }
-        if module_key.is_none() { missing.push("_module_key"); }
+        if name.is_none() {
+            missing.push("_name");
+        }
+        if module.is_none() {
+            missing.push("_module");
+        }
+        if module_key.is_none() {
+            missing.push("_module_key");
+        }
 
         if !missing.is_empty() {
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-OBJECT-001".to_string(),
                 title: "Missing object display metadata".to_string(),
-                message: format!("Object '{}' is missing display metadata: {}", tag, missing.join(", ")),
+                message: format!(
+                    "Object '{}' is missing display metadata: {}",
+                    tag,
+                    missing.join(", ")
+                ),
                 path: path.clone(),
                 object_name: tag.to_string(),
                 field_name: None,
@@ -60,7 +74,10 @@ pub fn evaluate_object_metadata_rule(doc: &Document, response: &mut EvaluationRe
                 response.warnings.push(EvaluationItem {
                     rule_id: "KSML-OBJECT-002".to_string(),
                     title: "Non-standard module key format".to_string(),
-                    message: format!("Module key '{}' on object '{}' should be lowercase kebab-case.", mk, tag),
+                    message: format!(
+                        "Module key '{}' on object '{}' should be lowercase kebab-case.",
+                        mk, tag
+                    ),
                     path: path.clone(),
                     object_name: tag.to_string(),
                     field_name: Some("_module_key".to_string()),

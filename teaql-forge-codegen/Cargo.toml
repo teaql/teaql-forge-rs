@@ -13,3 +13,7 @@ miette.workspace = true
 heck = "0.5.0"
 serde = { workspace = true, features = ["derive"] }
 Inflector = "0.11.4"
+regex = "1.12.4"
+
+[dev-dependencies]
+serde_json.workspace = true

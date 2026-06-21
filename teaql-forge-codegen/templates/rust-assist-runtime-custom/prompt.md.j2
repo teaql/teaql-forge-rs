@@ -1,0 +1,181 @@
+# TeaQL Runtime & Framework API Reference
+
+## 1. Runtime Setup
+
+Use the generated runtime helper as the default application entrypoint:
+
+```rust
+let ctx = {{ rust_module_name }}::service_runtime_from_env().await?;
+```
+
+This helper reads the generated database environment variables, connects to the
+data service, registers the generated module, repositories, behaviors, and
+checkers, and calls `ensure_schema().await?`. `ensure_schema()` is the standard
+schema and seed-data path; it applies the generated `initial_graph` entries for
+root and constant data. Do not hand-write duplicate seed `INSERT` statements for
+generated constants.
+
+If a connection pool already exists, use:
+
+```rust
+let ctx = {{ rust_module_name }}::service_runtime_from_pool(pool).await?;
+```
+
+Manual `UserContext` assembly is an advanced customization path only. Use it
+only when you deliberately need a custom runtime and understand which generated
+registries, behaviors, checkers, resources, schema setup, and initial graphs you
+are bypassing:
+
+```rust
+let ctx = teaql_runtime::UserContext::new()
+    .with_module({{ rust_module_name }}::module())
+    .with_repository_registry({{ rust_module_name }}::repository_registry())
+    .with_repository_behavior_registry({{ rust_module_name }}::behavior_registry());
+```
+
+### Key Methods
+| Method | Description |
+|--------|-------------|
+| `.user_context()` | Get the underlying `UserContext` (do not guess `.context()`) |
+| `.set_user_identifier(id)` | Set who is performing actions |
+| `.user_identifier()` | Get current user ID |
+| `.set_timezone(tz)` | Set timezone for date operations |
+| `.ensure_schema().await?` | Auto-create or migrate database tables |
+| `.entity(name)` | Get entity metadata by name |
+| `.all_entities()` | List all registered entity descriptors |
+| `.next_id(entity_name)` | Generate next ID for an entity |
+| `.commit_changes().await?` | Commit pending transactions |
+| `.put_local(key, value)` | Store request-scoped key-value |
+| `.local(key)` | Retrieve request-scoped value |
+| `.insert_resource(obj)` | Store a typed resource |
+| `.get_resource::<T>()` | Retrieve a typed resource |
+
+---
+
+## 2. Save Pipeline
+
+When `entity.audit_as("comment").save(&ctx).await?` is called:
+1. Enforces `audit_as()` is set (Triple-Intent)
+2. Runs checkers
+3. Diffs entity against database state
+4. Generates INSERT/UPDATE/DELETE SQL
+5. Writes audit log with comment
+6. Fires entity events
+
+> Never write raw SQL. Use the generated entity APIs.
+
+---
+
+## 3. SmartList — Collection with Metadata
+
+`SmartList<T>` wraps `Vec<T>` with pagination metadata.
+
+| Method | Description |
+|--------|-------------|
+| `.len()` | Number of items in current page |
+| `.total_count()` | Total matching records (for pagination) |
+| `.is_empty()` | Check if list is empty |
+| `.iter()` / `.iter_mut()` | Iterate items |
+| `.with_total_count(n)` | Set total count |
+| `.with_facet(name, list)` | Attach aggregation facet |
+| `.facet(name)` | Get a named facet |
+| `.facets()` | Get all facets |
+
+---
+
+## 4. WebResponse — HTTP Response Builder
+
+```rust
+// From single entity
+let response = WebResponse::from_entity(&task);
+
+// From list with pagination
+let response = WebResponse::from_smart_list(task_list);
+
+// Error response
+let response = WebResponse::fail("Invalid request");
+```
+
+---
+
+## 5. Value Types
+
+| Rust Type | Model Type | DB Mapping |
+|-----------|-----------|------------|
+| `String` | `string()` | VARCHAR |
+| `i64` | `number()` | BIGINT |
+| `f64` | `money()` / `decimal()` | DECIMAL |
+| `bool` | `boolean()` | BOOLEAN |
+| `chrono::NaiveDate` | `date()` | DATE |
+| `chrono::NaiveDateTime` | `dateTime()` / `createTime()` | DATETIME |
+| `serde_json::Value` | `json()` | TEXT (JSON) |
+| `u64` | `id()` | BIGINT (FK) |
+
+---
+
+## 6. DateRange — Time Period Filtering
+
+```rust
+use teaql_tool_std::DateRange;
+
+request.with_create_time_between_range(DateRange::today());
+request.with_create_time_between_range(DateRange::this_month());
+request.with_create_time_between_range(DateRange::last_n_days(7));
+```
+
+---
+
+## 7. XlsWorkbook — Excel Export
+
+```rust
+let page = XlsPage::new("orders")
+    .add_block(XlsBlock::new("orders", 0, 0, "Order Report").span(3, 1));
+let workbook = XlsWorkbook::new().add_page(page);
+let json = workbook.to_json_value();
+```
+
+---
+
+## 8. AuditConfig & SQL Debugging
+
+### Environment Variables
+| Variable | Values | Default |
+|----------|--------|---------|
+| `TEAQL_AUDIT` | `verbose`, `production`, `silent` | `production` |
+| `TEAQL_SCHEMA` | `execute`, `dry_run`, `verify` | `execute` |
+| `TEAQL_SQL_LOG` | `all`, `select`, `mutation`, `off` | `off` |
+
+### Programmatic Config
+```rust
+let config = AuditConfig::production();
+let config = AuditConfig::verbose_all();
+let config = AuditConfig::silent_all();
+let config = AuditConfig::focus_on(Module::Mutation);
+```
+
+### SQL Log Debugging
+```rust
+ctx.enable_all_sql_log();
+let logs = ctx.sql_logs();
+```
+
+---
+
+## 9. Schema Management
+
+```rust
+ctx.ensure_schema().await?;
+// Auto-creates tables and adds new columns. Never drops columns.
+```
+
+| SchemaMode | Behavior |
+|------------|----------|
+| `Execute` | Apply schema changes automatically |
+| `DryRun` | Log what would change, don't apply |
+| `Verify` | Fail if schema doesn't match |
+
+If a requested change requires new entities, fields, relations, constants, or
+modules, update the KSML model first and regenerate the crate.
+
+Do not manually edit generated entity/request/expression files. Treat generated
+files as disposable.

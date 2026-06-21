@@ -1,12 +1,12 @@
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-{% if has_sql_provider %}
-    let _runtime = {{ module_name }}::service_runtime_from_env().await?;
+    println!("[{}] Starting application...", chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"));
+{% if domain.hasSqlProvider %}    let _runtime = {{ rust_module_name }}::service_runtime_from_env().await?;
+    _runtime.ensure_schema().await?;
 
     // Uncomment the following line to generate sample data for testing:
-    // {{ module_name }}::sample_data::generate_sample_data(&_runtime, {{ module_name }}::sample_data::SampleDataPlan::small()).await?;
-{% else %}
-    let _module = {{ module_name }}::module_with_behaviors_and_checkers();
+    // {{ rust_module_name }}::sample_data::generate_sample_data(&_runtime, {{ rust_module_name }}::sample_data::SampleDataPlan::small()).await?;
+{% else %}    let _module = {{ rust_module_name }}::module_with_behaviors_and_checkers();
 {% endif %}
     Ok(())
 }

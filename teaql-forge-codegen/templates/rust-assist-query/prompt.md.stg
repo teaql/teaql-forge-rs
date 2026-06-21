@@ -1,0 +1,55 @@
+Please help me complete the query service business code for the `<entity.name>` object.
+
+To ensure absolute correctness of the API, please refer to and strictly imitate the following **real code example for `<entity.name>`**.
+
+### Standard Query Example (Reference)
+Please carefully observe the `select_xxx()` methods and the strictly required `.purpose()` and `.comment()` cascade in the example code:
+
+```rust
+use teaql_core::{Entity, SmartList};
+use <entity.domain.rustModuleName>::{Q, <entity.name>, TeaqlRepositoryProvider};
+
+pub async fn query_example(
+    ctx: &impl TeaqlRepositoryProvider, 
+) -> Result\<SmartList\<<entity.name>>, Box\<dyn std::error::Error>>
+{
+    // [BEST PRACTICE]: Always start with _minimal() to avoid over-fetching and ensure compliance.
+    let rows = Q::<entity.rustPluralName>_minimal()
+<entity.fields:{f | <if(f.id)><elseif(f.version)><else>        .select_<f.rustMemberName>()
+<endif>}>
+        // --- Filter and Order Options (Uncomment and customize if needed) ---
+<entity.fields:{f | <if(f.candidateForConst)>
+        // .<f.rustMemberName>_is_<first(f.candidateForConst).rustCandidateMethodValue>()
+<elseif(f.objectProperty)>
+        // .filter_by_<f.rustMemberName>(/* entity or id */)
+<else>
+        // .with_<f.rustMemberName>_is(/* value */)
+<endif>        // .order_by_<f.rustStorageMemberName>_desc() // or _asc()
+}>        // --------------------------------------------------------------------
+
+        // --- Advanced Options: Fetch nested objects and tailor fields (uncomment and crop as needed) ---
+<entity.fields:{f | <if(f.objectProperty)>
+        // .select_<f.rustMemberName>_with(
+        //     Q::<f.fieldType.refer.rustPluralName>_minimal()
+<f.fieldType.refer.fields:{rf | <if(rf.id)><elseif(rf.version)><else>        //         .select_<rf.rustMemberName>()
+<endif>}>        // )
+<endif>}><if(entity.reverseRelations)>
+<entity.reverseRelations:{r |         // .select_<r.rustMemberName>_with(
+        //     Q::<r.child.rustPluralName>_minimal()
+<r.child.fields:{cf | <if(cf.id)><elseif(cf.version)><else>        //         .select_<cf.rustMemberName>()
+<endif>}>        // )
+}><endif>        // -----------------------------------------------------------------------------------------------
+
+        .limit(20)
+        // [CRITICAL]: All execute_for_list / execute must cascade these two methods!
+        .comment("why: Please explain why this query is needed here")
+        .purpose("what: Please explain the action details of this query here")
+        .execute_for_list(ctx)
+        .await?;
+
+    Ok(rows)
+}
+```
+
+### Your Task
+Please completely imitate the framework, imports, and syntax features of the above code to implement the real query logic for `<entity.name>` based on my specific business needs. Please output the Rust source code directly.

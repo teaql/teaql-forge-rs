@@ -48,7 +48,13 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
 
     let domain = match parse_model(&xml, &xml_path) {
         Ok(d) => d,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("Parse error: {}", e)).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Parse error: {}", e),
+            )
+                .into_response()
+        }
     };
 
     let mut response = EvaluationResponse {
@@ -63,11 +69,230 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
         crate::rules::evaluate_module_rule(&doc, &mut response, &xml_path);
     }
 
-    let rust_kw: HashSet<&str> = ["as", "async", "await", "become", "box", "break", "const", "continue", "crate", "do", "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield", "try", "macro", "union"].into_iter().collect();
-    let java_kw: HashSet<&str> = ["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while", "true", "false", "var", "yield", "record", "sealed", "non-sealed", "permits"].into_iter().collect();
-    let go_kw: HashSet<&str> = ["break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"].into_iter().collect();
-    let swift_kw: HashSet<&str> = ["associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func", "import", "init", "inout", "internal", "let", "open", "operator", "private", "precedencegroup", "protocol", "public", "rethrows", "static", "struct", "subscript", "typealias", "var", "break", "case", "continue", "default", "defer", "do", "else", "fallthrough", "for", "guard", "if", "in", "repeat", "return", "switch", "where", "while", "as", "any", "false", "is", "nil", "self", "Self", "super", "true", "try"].into_iter().collect();
-    let dart_kw: HashSet<&str> = ["abstract", "as", "assert", "async", "await", "break", "case", "catch", "class", "const", "continue", "covariant", "default", "deferred", "do", "dynamic", "else", "enum", "export", "extends", "extension", "external", "factory", "false", "final", "finally", "for", "Function", "get", "hide", "if", "implements", "import", "in", "interface", "is", "late", "library", "mixin", "new", "null", "on", "operator", "part", "required", "rethrow", "return", "set", "show", "static", "super", "switch", "sync", "this", "throw", "true", "try", "typedef", "var", "void", "when", "while", "with", "yield"].into_iter().collect();
+    let rust_kw: HashSet<&str> = [
+        "as", "async", "await", "become", "box", "break", "const", "continue", "crate", "do",
+        "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop",
+        "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct",
+        "super", "trait", "true", "type", "typeof", "unsafe", "unsized", "use", "virtual", "where",
+        "while", "yield", "try", "macro", "union",
+    ]
+    .into_iter()
+    .collect();
+    let java_kw: HashSet<&str> = [
+        "abstract",
+        "assert",
+        "boolean",
+        "break",
+        "byte",
+        "case",
+        "catch",
+        "char",
+        "class",
+        "const",
+        "continue",
+        "default",
+        "do",
+        "double",
+        "else",
+        "enum",
+        "extends",
+        "final",
+        "finally",
+        "float",
+        "for",
+        "goto",
+        "if",
+        "implements",
+        "import",
+        "instanceof",
+        "int",
+        "interface",
+        "long",
+        "native",
+        "new",
+        "null",
+        "package",
+        "private",
+        "protected",
+        "public",
+        "return",
+        "short",
+        "static",
+        "strictfp",
+        "super",
+        "switch",
+        "synchronized",
+        "this",
+        "throw",
+        "throws",
+        "transient",
+        "try",
+        "void",
+        "volatile",
+        "while",
+        "true",
+        "false",
+        "var",
+        "yield",
+        "record",
+        "sealed",
+        "non-sealed",
+        "permits",
+    ]
+    .into_iter()
+    .collect();
+    let go_kw: HashSet<&str> = [
+        "break",
+        "default",
+        "func",
+        "interface",
+        "select",
+        "case",
+        "defer",
+        "go",
+        "map",
+        "struct",
+        "chan",
+        "else",
+        "goto",
+        "package",
+        "switch",
+        "const",
+        "fallthrough",
+        "if",
+        "range",
+        "type",
+        "continue",
+        "for",
+        "import",
+        "return",
+        "var",
+    ]
+    .into_iter()
+    .collect();
+    let swift_kw: HashSet<&str> = [
+        "associatedtype",
+        "class",
+        "deinit",
+        "enum",
+        "extension",
+        "fileprivate",
+        "func",
+        "import",
+        "init",
+        "inout",
+        "internal",
+        "let",
+        "open",
+        "operator",
+        "private",
+        "precedencegroup",
+        "protocol",
+        "public",
+        "rethrows",
+        "static",
+        "struct",
+        "subscript",
+        "typealias",
+        "var",
+        "break",
+        "case",
+        "continue",
+        "default",
+        "defer",
+        "do",
+        "else",
+        "fallthrough",
+        "for",
+        "guard",
+        "if",
+        "in",
+        "repeat",
+        "return",
+        "switch",
+        "where",
+        "while",
+        "as",
+        "any",
+        "false",
+        "is",
+        "nil",
+        "self",
+        "Self",
+        "super",
+        "true",
+        "try",
+    ]
+    .into_iter()
+    .collect();
+    let dart_kw: HashSet<&str> = [
+        "abstract",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "case",
+        "catch",
+        "class",
+        "const",
+        "continue",
+        "covariant",
+        "default",
+        "deferred",
+        "do",
+        "dynamic",
+        "else",
+        "enum",
+        "export",
+        "extends",
+        "extension",
+        "external",
+        "factory",
+        "false",
+        "final",
+        "finally",
+        "for",
+        "Function",
+        "get",
+        "hide",
+        "if",
+        "implements",
+        "import",
+        "in",
+        "interface",
+        "is",
+        "late",
+        "library",
+        "mixin",
+        "new",
+        "null",
+        "on",
+        "operator",
+        "part",
+        "required",
+        "rethrow",
+        "return",
+        "set",
+        "show",
+        "static",
+        "super",
+        "switch",
+        "sync",
+        "this",
+        "throw",
+        "true",
+        "try",
+        "typedef",
+        "var",
+        "void",
+        "when",
+        "while",
+        "with",
+        "yield",
+    ]
+    .into_iter()
+    .collect();
 
     let mut languages = HashMap::new();
     languages.insert("Rust", rust_kw);
@@ -103,8 +328,12 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
 
         for member in entity.members {
             let (name, line_number, field_xml_path) = match member {
-                teaql_forge_model::ir::EntityMember::Field(f) => (f.name, f.line_number, f.xml_path),
-                teaql_forge_model::ir::EntityMember::Relation(r) => (r.name, r.line_number, r.xml_path),
+                teaql_forge_model::ir::EntityMember::Field(f) => {
+                    (f.name, f.line_number, f.xml_path)
+                }
+                teaql_forge_model::ir::EntityMember::Relation(r) => {
+                    (r.name, r.line_number, r.xml_path)
+                }
             };
 
             let field_conflicts = get_conflicts(&name);

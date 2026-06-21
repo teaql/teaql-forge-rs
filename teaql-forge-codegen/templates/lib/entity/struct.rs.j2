@@ -1,0 +1,429 @@
+{% macro storageField(fieldDescriptor) %}
+{% if fieldDescriptor.xmlPath %}
+// @source {{ fieldDescriptor.xmlPath }}:{{ fieldDescriptor.lineNumber }}
+{% endif %}
+{% if fieldDescriptor.rustFieldAttr %}{{ fieldDescriptor.rustFieldAttr }}
+{% endif %}    {{ fieldDescriptor.rustStorageMemberName }}: {{ fieldDescriptor.rustStorageType }},
+
+{% endmacro %}
+
+{% macro defaultStorageField(fieldDescriptor) %}
+            {{ fieldDescriptor.rustStorageMemberName }}: {{ fieldDescriptor.rustDefaultValue }},
+
+{% endmacro %}
+
+{% macro objectRelationField(fieldDescriptor) %}
+{% if fieldDescriptor.xmlPath %}
+// @source {{ fieldDescriptor.xmlPath }}:{{ fieldDescriptor.lineNumber }}
+{% endif %}
+{{ fieldDescriptor.rustRelationAttr }}
+    {{ fieldDescriptor.rustMemberName }}: {{ fieldDescriptor.rustRelationType }},
+
+{% endmacro %}
+
+{% macro defaultObjectRelationField(fieldDescriptor) %}
+            {{ fieldDescriptor.rustMemberName }}: None,
+
+{% endmacro %}
+
+{% macro reverseRelationField(relation) %}
+{% if relation.xmlPath %}
+// @source {{ relation.xmlPath }}:{{ relation.lineNumber }}
+{% endif %}
+{{ relation.rustRelationAttr }}
+    {{ relation.rustMemberName }}: {{ relation.rustType }},
+
+{% endmacro %}
+
+{% macro defaultReverseRelationField(relation) %}
+            {{ relation.rustMemberName }}: Default::default(),
+
+{% endmacro %}
+
+{% macro attachObjectRoot(fieldDescriptor) %}
+        if let Some(entity) = &mut self.{{ fieldDescriptor.rustMemberName }} {
+            entity.attach_root_recursive(root.clone());
+        }
+
+{% endmacro %}
+
+{% macro attachReverseRoot(relation) %}
+        for entity in &mut self.{{ relation.rustMemberName }} {
+            entity.attach_root_recursive(root.clone());
+        }
+
+{% endmacro %}
+
+{% macro changeSetMethods(fieldDescriptor) %}
+    pub fn {{ fieldDescriptor.rustStorageMemberName }}(&self) -> {{ fieldDescriptor.rustStorageType }} {
+        {{ fieldDescriptor.rustGetterBody }}
+    }
+
+    pub fn update_{{ fieldDescriptor.rustStorageMemberName }}(&mut self, value: impl Into<teaql_core::Value>) -> &mut Self {
+        let value = value.into();
+        self.{{ fieldDescriptor.rustStorageMemberName }} = {{ fieldDescriptor.rustUpdateAssignment }};
+        self.root.set(self.entity_key(), "{{ fieldDescriptor.rustStorageFieldName }}", value);
+        self
+    }
+
+    pub fn changed_{{ fieldDescriptor.rustStorageMemberName }}(&self) -> Option<teaql_core::Value> {
+        self.root.get(&self.entity_key(), "{{ fieldDescriptor.rustStorageFieldName }}")
+    }
+
+    pub fn eval_{{ fieldDescriptor.rustStorageMemberName }}(&self) -> teaql_core::eval::EvalResult<{{ fieldDescriptor.rustType }}> {
+        {% if fieldDescriptor.required %}if !self.is_loaded("{{ fieldDescriptor.rustStorageFieldName }}") {
+                    teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ fieldDescriptor.rustStorageFieldName }}".to_string(), attempted_path: "{{ fieldDescriptor.rustStorageFieldName }}".to_string() }
+                } else {
+                    teaql_core::eval::EvalResult::Value(self.{{ fieldDescriptor.rustStorageMemberName }}())
+                }}
+{% else %}if !self.is_loaded("{{ fieldDescriptor.rustStorageFieldName }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ fieldDescriptor.rustStorageFieldName }}".to_string(), attempted_path: "{{ fieldDescriptor.rustStorageFieldName }}".to_string() }
+        } else {
+            match &self.{{ fieldDescriptor.rustStorageMemberName }} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v.clone()),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
+    }{% endif %}
+
+{% endmacro %}
+
+{% macro objectChangeSetMethods(fieldDescriptor) %}
+    pub fn {{ fieldDescriptor.rustStorageMemberName }}(&self) -> {{ fieldDescriptor.rustStorageType }} {
+        {{ fieldDescriptor.rustGetterBody }}
+    }
+
+    {% if fieldDescriptor.constantObjectField %}pub(crate) fn{% else %}pub fn{% endif %} update_{{ fieldDescriptor.rustStorageMemberName }}(&mut self, value: impl Into<teaql_core::Value>) -> &mut Self {
+        let value = value.into();
+        self.{{ fieldDescriptor.rustStorageMemberName }} = {{ fieldDescriptor.rustUpdateAssignment }};
+        self.root.set(self.entity_key(), "{{ fieldDescriptor.rustStorageFieldName }}", value);
+        self
+    }
+
+    pub fn changed_{{ fieldDescriptor.rustStorageMemberName }}(&self) -> Option<teaql_core::Value> {
+        self.root.get(&self.entity_key(), "{{ fieldDescriptor.rustStorageFieldName }}")
+    }
+
+    pub fn eval_{{ fieldDescriptor.rustStorageMemberName }}(&self) -> teaql_core::eval::EvalResult<{{ fieldDescriptor.rustStorageType }}> {
+        {% if fieldDescriptor.required %}if !self.is_loaded("{{ fieldDescriptor.rustStorageFieldName }}") {
+                    teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ fieldDescriptor.rustStorageFieldName }}".to_string(), attempted_path: "{{ fieldDescriptor.rustStorageFieldName }}".to_string() }
+                } else {
+                    teaql_core::eval::EvalResult::Value(self.{{ fieldDescriptor.rustStorageMemberName }}())
+                }}
+{% else %}if !self.is_loaded("{{ fieldDescriptor.rustStorageFieldName }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ fieldDescriptor.rustStorageFieldName }}".to_string(), attempted_path: "{{ fieldDescriptor.rustStorageFieldName }}".to_string() }
+        } else {
+            match &self.{{ fieldDescriptor.rustStorageMemberName }} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v.clone()),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
+    }{% endif %}
+
+{% endmacro %}
+
+{% macro constantObjectUpdateMethods(fieldDescriptor) %}
+{% for candidate in fieldDescriptor.candidateForConst %}{{ constantObjectUpdateMethod(fieldDescriptor, candidate) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+{% endmacro %}
+
+{% macro constantObjectUpdateMethod(fieldDescriptor, candidate) %}
+    pub fn update_{{ fieldDescriptor.rustMemberName }}_to_{{ candidate.rustCandidateMethodValue }}(&mut self) -> &mut Self {
+        self.update_{{ fieldDescriptor.rustStorageMemberName }}({{ candidate.id }}_u64)
+    }
+
+    pub fn {{ fieldDescriptor.rustMemberName }}_is_{{ candidate.rustCandidateMethodValue }}(&self) -> bool {
+        self.{{ fieldDescriptor.rustStorageMemberName }}() == {{ candidate.id }}_u64
+    }
+
+{% endmacro %}
+
+{% macro objectRelationMethods(fieldDescriptor) %}
+    pub fn {{ fieldDescriptor.rustMemberName }}(&self) -> Option<&{{ fieldDescriptor.rustRelationBorrowType }}> {
+        self.{{ fieldDescriptor.rustMemberName }}.as_ref()
+    }
+
+    pub fn eval_{{ fieldDescriptor.rustMemberName }}(&self) -> teaql_core::eval::EvalResult<&{{ fieldDescriptor.rustRelationBorrowType }}> {
+        if !self.is_loaded("{{ fieldDescriptor.rustMemberName }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ fieldDescriptor.rustMemberName }}".to_string(), attempted_path: "{{ fieldDescriptor.rustMemberName }}".to_string() }
+        } else {
+            match &self.{{ fieldDescriptor.rustMemberName }} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
+    }
+
+{% endmacro %}
+
+{% macro oneToOneReverseRelationMethods(relation) %}
+    pub fn {{ relation.rustMemberName }}(&self) -> &{{ relation.rustType }} {
+        &{% if objectDescriptor.boxedReverseRelations %}self._relations.{{ relation.rustMemberName }}{% else %}self.{{ relation.rustMemberName }}{% endif %}
+
+    }
+
+    pub fn {{ relation.rustMemberName }}_mut(&mut self) -> &mut {{ relation.rustType }} {
+        &mut {% if objectDescriptor.boxedReverseRelations %}self._relations.{{ relation.rustMemberName }}{% else %}self.{{ relation.rustMemberName }}{% endif %}
+
+    }
+
+    pub fn eval_{{ relation.rustMemberName }}(&self) -> teaql_core::eval::EvalResult<&crate::{{ relation.child.rustStructName }}> {
+        if !self.is_loaded("{{ relation.rustMemberName }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ relation.rustMemberName }}".to_string(), attempted_path: "{{ relation.rustMemberName }}".to_string() }
+        } else {
+            match &{% if objectDescriptor.boxedReverseRelations %}self._relations.{{ relation.rustMemberName }}{% else %}self.{{ relation.rustMemberName }}{% endif %} {
+                Some(v) => teaql_core::eval::EvalResult::Value(v),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }
+    }
+
+{% endmacro %}
+
+{% macro oneToManyReverseRelationMethods(relation) %}
+    pub fn {{ relation.rustMemberName }}(&self) -> &{{ relation.rustType }} {
+        &{% if objectDescriptor.boxedReverseRelations %}self._relations.{{ relation.rustMemberName }}{% else %}self.{{ relation.rustMemberName }}{% endif %}
+
+    }
+
+    pub fn {{ relation.rustMemberName }}_mut(&mut self) -> &mut {{ relation.rustType }} {
+        &mut {% if objectDescriptor.boxedReverseRelations %}self._relations.{{ relation.rustMemberName }}{% else %}self.{{ relation.rustMemberName }}{% endif %}
+
+    }
+
+    pub fn eval_{{ relation.rustMemberName }}(&self) -> teaql_core::eval::EvalResult<&{{ relation.rustType }}> {
+        if !self.is_loaded("{{ relation.rustMemberName }}") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "{{ relation.rustMemberName }}".to_string(), attempted_path: "{{ relation.rustMemberName }}".to_string() }
+        } else {
+            teaql_core::eval::EvalResult::Value(&{% if objectDescriptor.boxedReverseRelations %}self._relations.{{ relation.rustMemberName }}{% else %}self.{{ relation.rustMemberName }}{% endif %})
+        }
+    }
+{% endmacro %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ⛔ AI agents: DO NOT read this file for API discovery. Instead run: cargo teaql --input modeling/MODEL.xml rust-assist-query/{{ rust_module_name }}
+use std::collections::BTreeMap;
+
+{% if objectDescriptor.rustNeedsSmartList %}
+use teaql_core::SmartList;
+{% endif %}
+use teaql_macros::TeaqlEntity;
+
+/// [TEAQL AI WARNING]
+/// TeaQL was explicitly designed to PREVENT AI hallucinations and random guessing.
+/// DO NOT GUESS METHOD NAMES!
+/// The methods listed below are the ONLY valid ways to interact with this entity.
+/// If you encounter compilation errors (e.g., method not found), DO NOT guess another method name.
+/// Read the method signatures in this file before proceeding.
+#[derive(Clone, Debug, PartialEq, TeaqlEntity)]
+{% if objectDescriptor.dataService %}
+#[teaql(entity = "{{ rust_struct_name }}", table = "{{ rust_table_name }}", data_service = "{{ data_service }}"{% if objectDescriptor.audit_mask_fields %}, audit_mask_fields = "{{ audit_mask_fields }}"{% endif %}{% if objectDescriptor.audit_value_max_len %}, audit_value_max_len = {{ audit_value_max_len }}{% endif %})]
+{% else %}
+#[teaql(entity = "{{ rust_struct_name }}", table = "{{ rust_table_name }}"{% if objectDescriptor.audit_mask_fields %}, audit_mask_fields = "{{ audit_mask_fields }}"{% endif %}{% if objectDescriptor.audit_value_max_len %}, audit_value_max_len = {{ audit_value_max_len }}{% endif %})]
+{% endif %}
+pub struct {{ rust_struct_name }} {
+{% for item in objectDescriptor.rustScalarFields %}{{ storageField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ storageField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ objectRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% if objectDescriptor.boxedReverseRelations %}
+    #[teaql(boxed_relations)]
+    pub _relations: Box<{{ rust_struct_name }}ReverseRelations>,
+{% else %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ reverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ reverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% endif %}
+    #[teaql(dynamic)]
+    dynamic: BTreeMap<String, teaql_core::Value>,
+    #[teaql(skip)]
+    root: teaql_runtime::EntityRoot,
+    #[teaql(skip)]
+    pub __load_state: teaql_core::eval::LoadState,
+}
+
+impl {{ rust_struct_name }} {
+    pub fn with_id(id: u64) -> teaql_core::Value {
+        teaql_core::Value::U64(id)
+    }
+
+    pub(crate) fn runtime_new(root: teaql_runtime::EntityRoot) -> Self {
+        Self {
+{% for item in objectDescriptor.rustScalarFields %}{{ defaultStorageField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ defaultStorageField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ defaultObjectRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% if objectDescriptor.boxedReverseRelations %}
+            _relations: Box::new({{ rust_struct_name }}ReverseRelations::new()),
+{% else %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ defaultReverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ defaultReverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% endif %}
+            dynamic: BTreeMap::new(),
+            root,
+            __load_state: teaql_core::eval::LoadState::FullyLoaded,
+        }
+    }
+
+    pub fn entity_key(&self) -> teaql_runtime::EntityKey {
+        teaql_runtime::EntityKey::new("{{ rust_struct_name }}", self.id)
+    }
+
+    pub fn attach_root_recursive(&mut self, root: teaql_runtime::EntityRoot) {
+        self.root = root.clone();
+{% for item in objectDescriptor.rustObjectFields %}{{ attachObjectRoot(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% if objectDescriptor.boxedReverseRelations %}
+        self._relations.attach_root_recursive(root.clone());
+{% else %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ attachReverseRoot(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ attachReverseRoot(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% endif %}
+    }
+
+    pub fn is_loaded(&self, field_or_relation: &str) -> bool {
+        self.__load_state.is_loaded(field_or_relation)
+    }
+
+    pub fn set_load_state(&mut self, state: teaql_core::eval::LoadState) {
+        self.__load_state = state;
+    }
+
+{% for item in objectDescriptor.rustScalarFields %}{{ changeSetMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ objectChangeSetMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.constantObjectFields %}{{ constantObjectUpdateMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustObjectFields %}{{ objectRelationMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ oneToOneReverseRelationMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ oneToManyReverseRelationMethods(item) }}{% if not loop.last %}
+
+{% endif %}{% endfor %}
+
+    pub fn mark_as_delete(&mut self) -> &mut Self {
+        self.root.mark_as_delete(self.entity_key());
+        self
+    }
+
+    pub fn set_comment(&mut self, comment: impl Into<String>) -> &mut Self {
+        self.root.set_comment(comment);
+        self
+    }
+
+    pub(crate) async fn save<'a, C>(
+        &self,
+        ctx: &'a C,
+    ) -> Result<teaql_runtime::GraphNode, crate::TeaqlRepositoryError<C::{{ rust_struct_name }}Repository<'a>>>
+    where
+        C: crate::TeaqlRepositoryProvider + ?Sized,
+    {
+        let repository = ctx
+            .{{ rust_module_name }}_repository()
+            .map_err(|err| teaql_runtime::RepositoryError::Runtime(teaql_runtime::RuntimeError::Graph(err.to_string())))?;
+        crate::TeaqlEntityRepository::save_entity_graph(&repository, self.clone()).await
+    }
+}
+
+{% if objectDescriptor.boxedReverseRelations %}
+#[derive(Clone, Debug, PartialEq, teaql_macros::TeaqlReverseRelations)]
+pub struct {{ rust_struct_name }}ReverseRelations {
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ reverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ reverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+}
+
+impl {{ rust_struct_name }}ReverseRelations {
+    pub fn new() -> Self {
+        Self {
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ defaultReverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ defaultReverseRelationField(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+        }
+    }
+    
+    pub fn attach_root_recursive(&mut self, root: teaql_runtime::EntityRoot) {
+{% for item in objectDescriptor.rustOneToOneRelations %}{{ attachReverseRoot(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+{% for item in objectDescriptor.rustOneToManyRelations %}{{ attachReverseRoot(item) }}{% if not loop.last %}
+{% endif %}{% endfor %}
+    }
+}
+{% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
