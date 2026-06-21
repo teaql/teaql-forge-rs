@@ -288,10 +288,8 @@ async fn index_handler() -> impl IntoResponse {
           <code>cargo teaql --input model.xml [target]</code>
         </div>
         <div class="target-list">
-          <span class="target-tag">rust-lib</span>
-          <span class="target-tag">rust-workspace</span>
-          <span class="target-tag">doc/model-view</span>
-          <span class="target-tag">doc/data-design</span>
+          <span class="target-tag">rust-lib-core</span>
+          <span class="target-tag">rust-app-console</span>
         </div>
       </div>
     </div>
@@ -537,8 +535,10 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
         None => return (StatusCode::BAD_REQUEST, "Missing file part").into_response(),
     };
 
-    if scope != "rust-lib" && scope != "rust_lib" && scope != "rust-workspace" {
-        println!("Warning: unsupported scope {}, assuming rust-lib", scope);
+    if scope != "rust-lib" && scope != "rust_lib" && scope != "rust-lib-core"
+        && scope != "rust-workspace" && scope != "rust-app-console"
+    {
+        println!("Warning: unsupported scope {}, assuming rust-lib-core", scope);
     }
 
     let domain = match parse_model(&xml, &xml_path) {
@@ -553,7 +553,7 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
     };
 
     let render_domain = build_render_context(&domain);
-    let files = if scope == "rust-workspace" {
+    let files = if scope == "rust-workspace" || scope == "rust-app-console" {
         match teaql_forge_codegen::engine::generate_virtual_workspace(&render_domain) {
             Ok(f) => f,
             Err(e) => {
