@@ -1,19 +1,39 @@
 {% macro tableJson(od, i) %}
 {
-    "name": "{{ od.table_name }}",
+    "name": "{{ od.tableName }}",
+    "domainName": "{{ od.displayName }}",
     "relationCount": {{ od.relations|length }},
     "columns": [ {% for fd in od.rustScalarFields %}{{ columnJson(fd) }}{% if not loop.last %},{% endif %}{% endfor %} ],
-    "indexes": [ ],
-    "constraints": [ ]
+    "indexes": [ {% for idx in od.indexes %}{{ indexJson(idx) }}{% if not loop.last %},{% endif %}{% endfor %} ],
+    "constraints": [ {% for cst in od.constraints %}{{ constraintJson(cst) }}{% if not loop.last %},{% endif %}{% endfor %} ]
+}
+{% endmacro %}
+
+{% macro indexJson(idx) %}
+{
+    "name": "{{ idx.name }}",
+    "columns": "{{ idx.columns }}",
+    "type": "{{ idx.type }}",
+    "remark": "{{ idx.remark }}"
+}
+{% endmacro %}
+
+{% macro constraintJson(cst) %}
+{
+    "name": "{{ cst.name }}",
+    "columns": "{{ cst.columns }}",
+    "refTable": "{{ cst.refTable }}",
+    "refCols": "{{ cst.refCols }}",
+    "remark": "{{ cst.remark }}"
 }
 {% endmacro %}
 
 {% macro columnJson(fd) %}
 {
-    "sqlName": "{{ fd.column_name }}",
+    "sqlName": "{{ fd.columnName }}",
     "name": "{{ fd.name }}",
-    "type": "{{ fd.rustType }}",
-    "sample": "{{ fd.sample_value }}"
+    "type": "{{ fd.ksmlType }}",
+    "sample": "{{ fd.sampleValue }}"
 }
 {% endmacro %}
 
@@ -22,7 +42,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ domain.name }} Data Design (React)</title>
+    <title>{{ domain.name }} Data Design (React) v{{ domain.generatorVersion }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { padding: 40px; font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; }
@@ -71,7 +91,7 @@
                 const myChart = echarts.init(chartRef.current);
                 
                 const cloudData = tables.map(t => ({
-                    name: t.name,
+                    name: t.domainName,
                     value: t.relationCount > 0 ? t.relationCount * 20 : 10
                 }));
 

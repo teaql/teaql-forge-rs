@@ -20,25 +20,25 @@
 
 {% macro constantItemDesc(constantItem) %}
 {
-  "code": "{{ constantItem.id }}",
+  "code": "{{ constantItem.rustCandidateFilterValue }}",
   "name": "{{ constantItem.rustCandidateMethodValue }}"
 }
 {% endmacro %}
 
 {% macro fieldNode(field) %}
 {
-  "type": "{{ field.rustType }}",
+  "type": "{{ field.ksmlType }}",
   "required": "{{ field.required }}",
-  "name": "{{ field.column_name }}",
-  "localeName": "{{ field.column_name }}"
+  "name": "{{ field.name }}",
+  "localeName": "{{ field.name }}"
 }
 {% endmacro %}
 
 {% macro linkNode(entity, relation) %}
 {
   "source": "{{ entity.rust_module_name }}",
-  "type": "{{ relation.target_module }}",
-  "target": "{{ relation.target_module }}",
+  "type": "{{ relation.targetModule }}",
+  "target": "{{ relation.targetModule }}",
   "value": 1,
   "refBy": "{{ relation.rustMemberName }}"
 }
@@ -47,7 +47,7 @@
 <!DOCTYPE html>
 <head>
     <meta charset="utf-8">
-    <title>{{ domain.name }}</title>
+    <title>{{ domain.name }} (v{{ domain.generatorVersion }})</title>
     <style>
         .panel-wrap { position: fixed; top: 0; bottom: 0; right: 0; width: 25%; transform: translateX(0%); transition: .3s ease-out; z-index:1000; font-size: 12px; }
         .panel { position: absolute; top: 0; bottom: 0; left: 0; right: 0; background: #333; color: #eee; overflow: auto; padding: 1em; }
@@ -98,11 +98,12 @@
     }
 
     var data = {
+        "generatorVersion": "{{ domain.generatorVersion }}",
         "nodes": [{% for entity in domain.entities %}{{ odNode(entity) }}{% if not loop.last %},{% endif %}{% endfor %}],
         "links": [
 {% set ns = namespace(first=true) %}
 {% for entity in domain.entities %}
-  {% for relation in entity.rustObjectFields %}
+  {% for relation in entity.rustOneToManyRelations %}
     {% if not ns.first %},{% endif %}{{ linkNode(entity, relation) }}{% set ns.first = false %}
   {% endfor %}
 {% endfor %}

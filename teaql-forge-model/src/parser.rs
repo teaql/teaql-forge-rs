@@ -106,7 +106,7 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
                             } else {
                                 inside
                             };
-                            if target.is_empty() {
+                            if target.is_empty() || target == "context" {
                                 target = prefix;
                             }
                             (true, target, rel_type)

@@ -15,6 +15,8 @@ pub struct RenderDomain {
     pub rust_teaql_dependency_version: String,
     pub rust_env_prefix: String,
     pub rust_crate_version: String,
+    #[serde(rename = "generatorVersion")]
+    pub generator_version: String,
     pub rust_sql_provider_dependency: String,
     pub support_full_text_search: bool,
     pub object_descriptors: Vec<RenderEntity>,
@@ -44,6 +46,26 @@ pub struct RenderDataService {
     pub rust_sql_connect_pool_code: String,
     pub rust_sql_supports_transactions: bool,
     pub rust_sql_needs_credentials: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RenderIndex {
+    pub name: String,
+    pub columns: String,
+    #[serde(rename = "type")]
+    pub index_type: String,
+    pub remark: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RenderConstraint {
+    pub name: String,
+    pub columns: String,
+    pub ref_table: String,
+    pub ref_cols: String,
+    pub remark: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -84,12 +106,15 @@ pub struct RenderEntity {
     pub seed_values: Vec<teaql_forge_model::ir::SeedValue>,
     pub depth: usize,
     pub constant: bool,
+    pub candidates: Vec<RenderFieldCandidate>,
     #[serde(rename = "rustNeedsSmartList")]
     pub rust_needs_smart_list: bool,
     #[serde(rename = "rustHasSelectAllRelations")]
     pub rust_has_select_all_relations: bool,
     #[serde(rename = "rustHasSelectAnyRelations")]
     pub rust_has_select_any_relations: bool,
+    pub indexes: Vec<RenderIndex>,
+    pub constraints: Vec<RenderConstraint>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -111,6 +136,8 @@ pub struct RenderField {
     pub column_name: String,
     #[serde(rename = "rustType")]
     pub rust_type: String,
+    #[serde(rename = "ksmlType")]
+    pub ksml_type: String,
     pub is_id: bool,
     pub is_version: bool,
     pub is_string: bool,
@@ -306,6 +333,21 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 "".to_string()
             };
 
+            let ksml_type = match f.ty {
+                FieldType::Id => "id".to_string(),
+                FieldType::String => "string".to_string(),
+                FieldType::Text => "text".to_string(),
+                FieldType::Bool => "boolean".to_string(),
+                FieldType::I32 => "integer".to_string(),
+                FieldType::I64 => "long".to_string(),
+                FieldType::U64 => "u64".to_string(),
+                FieldType::Decimal => "decimal".to_string(),
+                FieldType::Date => "date".to_string(),
+                FieldType::DateTime => "datetime".to_string(),
+            };
+
+
+
             RenderField {
                 name: f.name.clone(),
                 line_number: f.line_number,
@@ -313,6 +355,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 rust_name: rust_name.clone(),
                 column_name,
                 rust_type: rust_type.clone(),
+                ksml_type,
                 is_id: f.name == "id",
                 is_version: f.name == "version",
                 is_string: f.ty == FieldType::String,
@@ -539,6 +582,66 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         let has_select_all = !object_fields.is_empty() || !one_to_one_relations.is_empty();
         let has_select_any = !one_to_many_relations.is_empty();
 
+        let mut indexes = Vec::new();
+        let mut constraints = Vec::new();
+        let e_name_upper = e.name.to_snake_case().to_uppercase();
+
+        indexes.push(RenderIndex {
+            name: format!("PK_{}_ID", e_name_upper),
+            columns: "ID".to_string(),
+            index_type: "PRIMARY KEY".to_string(),
+            remark: "".to_string(),
+        });
+
+        constraints.push(RenderConstraint {
+            name: format!("PK_{}_ID", e_name_upper),
+            columns: "ID".to_string(),
+            ref_table: "-".to_string(),
+            ref_cols: "-".to_string(),
+            remark: "PRIMARY KEY".to_string(),
+        });
+
+        if fields.iter().any(|f| f.name == "version") {
+            indexes.push(RenderIndex {
+                name: format!("PK_{}_ID_VERSION", e_name_upper),
+                columns: "ID,VERSION".to_string(),
+                index_type: "UNIQUE KEY".to_string(),
+                remark: "".to_string(),
+            });
+        }
+
+        for f in &fields {
+            let col_upper = f.name.to_snake_case().to_uppercase();
+            if f.name.ends_with("_time") || f.name.ends_with("Time") || f.name == "create_time" || f.name == "update_time" {
+                indexes.push(RenderIndex {
+                    name: format!("IDX_{}_{}", e_name_upper, col_upper),
+                    columns: col_upper,
+                    index_type: "INDEX".to_string(),
+                    remark: "".to_string(),
+                });
+            }
+        }
+
+        for r in &relations {
+            let r_name_upper = r.name.to_snake_case().to_uppercase();
+            let r_target_upper = r.target.to_snake_case().to_uppercase();
+            
+            indexes.push(RenderIndex {
+                name: format!("IDX_{}_{}", e_name_upper, r_name_upper),
+                columns: r_name_upper.clone(),
+                index_type: "INDEX".to_string(),
+                remark: "".to_string(),
+            });
+
+            constraints.push(RenderConstraint {
+                name: format!("FK_{}_{}", e_name_upper, r_name_upper),
+                columns: r_name_upper,
+                ref_table: format!("{}_DATA", r_target_upper),
+                ref_cols: "ID".to_string(),
+                remark: "CASCADE ON DELETE and UPDATE".to_string(),
+            });
+        }
+
         RenderEntity {
             name: e.metadata.get("name").cloned().unwrap_or(e.name.clone()),
             line_number: e.line_number,
@@ -565,9 +668,28 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             seed_values: e.seed_values.clone(),
             depth: 0,
             constant: e.metadata.get("constant").map(|s| s.as_str()) == Some("true"),
+            candidates: e.seed_values.iter().filter_map(|seed| {
+                let id_str = seed.properties.get("id")?;
+                let id = id_str.parse::<u64>().ok()?;
+                let code = seed.properties.get("code")
+                    .or_else(|| seed.properties.get("name"))
+                    .cloned()
+                    .unwrap_or_else(|| id_str.clone());
+                let name = seed.properties.get("name")
+                    .or_else(|| seed.properties.get("code"))
+                    .cloned()
+                    .unwrap_or_else(|| id_str.clone());
+                Some(RenderFieldCandidate {
+                    id,
+                    rust_candidate_method_value: name,
+                    rust_candidate_filter_value: code,
+                })
+            }).collect(),
             rust_needs_smart_list: !one_to_many_relations.is_empty(),
             rust_has_select_all_relations: has_select_all,
             rust_has_select_any_relations: has_select_any,
+            indexes,
+            constraints,
         }
     }).collect();
 
@@ -616,12 +738,12 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         let mut rust_one_to_one_relations = Vec::new();
         let mut rust_one_to_many_relations = Vec::new();
 
-        let target_name = render_entities[i].name.clone();
+        let target_name = render_entities[i].rust_module.clone();
         let target_snake = target_name.to_snake_case();
 
         for other_entity in &render_entities {
             for rel in &other_entity.relations {
-                if rel.target.to_snake_case() == target_snake || rel.target == target_name {
+                if rel.target_module == target_snake {
                     let reverse_is_many = !rel.many;
 
                     let rust_member_name = if reverse_is_many {
@@ -737,10 +859,11 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         rust_crate_name: format!("{}-core", domain.name),
         rust_workspace_crate_name: format!("{}-console", domain.name),
         rust_workspace_generated_lib_path: "../rust-lib-core/lib".to_string(),
-        rust_teaql_dependency_version: "4.0.5".to_string(),
+        rust_teaql_dependency_version: "4.0.6".to_string(),
         rust_env_prefix: format!("{}_CORE", domain.name.to_snake_case().to_uppercase()),
         rust_crate_version: "0.1.0".to_string(),
-        rust_sql_provider_dependency: "teaql-provider-sqlite = \"4.0.5\"".to_string(),
+        generator_version: env!("CARGO_PKG_VERSION").to_string(),
+        rust_sql_provider_dependency: "teaql-provider-sqlite = \"4.0.6\"".to_string(),
         support_full_text_search: false,
         object_descriptors: render_entities.clone(),
         root_descriptors,

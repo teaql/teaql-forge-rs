@@ -1,0 +1,23 @@
+
+
+
+# TeaQL Tool API Reference
+
+> [!WARNING]
+> **DO NOT GUESS TOOL APIS**
+> Do not guess how to use \`ctx.http()\` or other built-in tool integrations.
+
+To get the exact API usage and examples for TeaQL Tool APIs, execute the following command:
+
+```bash
+cargo teaql --input models/crm-erp-service.xml rust-assist-tool-api/[module]
+```
+
+Replace \`[module]\` with one of the following:
+
+| module | T:: Facade | Description |
+|--------|------------|-------------|
+| http   | \`ctx.http()\` | HTTP client for external service calls |
+
+Once the command succeeds, read its output. Use the printed code as a template to write your logic.
+

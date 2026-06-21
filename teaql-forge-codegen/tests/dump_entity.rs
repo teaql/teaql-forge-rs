@@ -28,6 +28,7 @@ fn dump() {
         seed_values: vec![],
         depth: 0,
         constant: false,
+        candidates: vec![],
         rust_needs_smart_list: false,
         rust_has_select_all_relations: false,
         rust_has_select_any_relations: false,
