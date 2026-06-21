@@ -16,7 +16,7 @@ The generated workspace is designed around context-bound execution and audit-rea
 The easiest way to run the local server is via Docker:
 
 ```bash
-docker run -d --name teaql-forge-server -p 8080:8080 teaql/teaql-forge-rs:latest
+docker run -d --name teaql-forge-server -p 8080:8080 teaql/teaql-forge-server:latest
 ```
 
 Once running, you can quickly test if the server is up:

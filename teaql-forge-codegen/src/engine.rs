@@ -398,7 +398,8 @@ pub fn render_preview(
         }
         context! {
             domain => domain,
-            objectDescriptor => object_descriptor.unwrap(),
+            objectDescriptor => object_descriptor.clone().unwrap(),
+            entity => object_descriptor.unwrap(),
         }
     } else {
         context! {

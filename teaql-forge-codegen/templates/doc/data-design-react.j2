@@ -1,58 +1,28 @@
 {% macro tableJson(od, i) %}
 {
-    "name": "{{ od.PresentTableName }}",
-    "relationCount": <length(od.reverseRelations)>,
-    "columns": [ {% for fd in od.fields %}{{ columnJson(fd) }}};separator=", "> ],
-    "indexes": [ {% for idx in od.indexes %}{{ indexJson(idx) }}};separator=", "> ],
-    "constraints": [ {% for c in od.constrains %}{{ constraintJson(c) }}};separator=", "> ]
+    "name": "{{ od.table_name }}",
+    "relationCount": {{ od.relations|length }},
+    "columns": [ {% for fd in od.rustScalarFields %}{{ columnJson(fd) }}{% if not loop.last %},{% endif %}{% endfor %} ],
+    "indexes": [ ],
+    "constraints": [ ]
 }
-
 {% endmacro %}
 
 {% macro columnJson(fd) %}
 {
-    "sqlName": "{{ fd.SQLPresentName }}",
-    "name": "{{ fd.PresentName }}",
-    "type": "{{ fd.sqlType }}",
-    "sample": "{{ fd.defaultSampleValue }}"
-}
-
-{% endmacro %}
-
-{% macro indexJson(idx) %}
-{
-    "name": "{{ idx.name }}",
-    "columns": "{{ idx.columns }}",
-    "type": "{{ idx.type }}",
-    "remark": "{{ idx.remark }}"
-}
-
-{% endmacro %}
-
-{% macro constraintJson(c) %}
-{
-    "name": "{{ c.name }}",
-    "columns": "{{ c.columns }}",
-    "refTable": "{{ c.tableName }}",
-    "refCols": "{{ c.referenceColumns }}",
-    "remark": "{{ c.remark }}"
+    "sqlName": "{{ fd.column_name }}",
+    "name": "{{ fd.name }}",
+    "type": "{{ fd.rustType }}",
+    "sample": "{{ fd.sample_value }}"
 }
 {% endmacro %}
-
-
-
-
-
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ name }} Data Design (React)</title>
+    <title>{{ domain.name }} Data Design (React)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { padding: 40px; font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; }
@@ -81,12 +51,10 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
 
     <script>
-        // --- STG INJECTED JSON DATA ---
         window.domainData = {
-            name: "{{ name }}",
+            name: "{{ domain.name }}",
             tables: [
-                {% for od in domain.objectDescriptors %}<tableJson(od, i)>{% if not loop.last %},
-{% endif %}{% endfor %}
+                {% for od in domain.entities %}{{ tableJson(od, loop.index) }}{% if not loop.last %},{% endif %}{% endfor %}
             ]
         };
     </script>
@@ -130,13 +98,7 @@
                                 ].join(',') + ')';
                             }
                         },
-                        emphasis: {
-                            focus: 'self',
-                            textStyle: {
-                                textShadowBlur: 10,
-                                textShadowColor: '#333'
-                            }
-                        },
+                        emphasis: { focus: 'self', textStyle: { textShadowBlur: 10, textShadowColor: '#333' } },
                         data: cloudData
                     }]
                 };
@@ -151,7 +113,7 @@
                 };
             }, [tables]);
 
-            return <div ref={chartRef} style={{ width: '100%', height: '400px' }}></div>;
+            return <div ref={chartRef} style={ { width: '100%', height: '400px' }}></div>;
         };
 
         const Sidebar = () => (
@@ -209,51 +171,6 @@
                         ))}
                     </tbody>
                 </table>
-
-                {t.indexes && t.indexes.length > 0 && (
-                    <React.Fragment>
-                        <h5 className="mt-4 text-secondary">Indexes</h5>
-                        <table className="table table-bordered table-sm">
-                            <thead>
-                                <tr><th width="5%">#</th><th>Index Name</th><th>Columns</th><th>Type</th><th>Remark</th></tr>
-                            </thead>
-                            <tbody>
-                                {t.indexes.map((idxObj, i) => (
-                                    <tr key={idxObj.name}>
-                                        <td>{i + 1}</td>
-                                        <td>{idxObj.name}</td>
-                                        <td>{idxObj.columns}</td>
-                                        <td>{idxObj.type}</td>
-                                        <td>{idxObj.remark}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </React.Fragment>
-                )}
-
-                {t.constraints && t.constraints.length > 0 && (
-                    <React.Fragment>
-                        <h5 className="mt-4 text-secondary">Constraints</h5>
-                        <table className="table table-bordered table-sm">
-                            <thead>
-                                <tr><th width="5%">#</th><th>Constraint</th><th>Column</th><th>Ref Table</th><th>Ref Column</th><th>Remark</th></tr>
-                            </thead>
-                            <tbody>
-                                {t.constraints.map((c, i) => (
-                                    <tr key={c.name}>
-                                        <td>{i + 1}</td>
-                                        <td>{c.name}</td>
-                                        <td>{c.columns}</td>
-                                        <td>{c.refTable}</td>
-                                        <td>{c.refCols}</td>
-                                        <td>{c.remark}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </React.Fragment>
-                )}
             </div>
         );
 
@@ -287,10 +204,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-

@@ -1,6 +1,6 @@
-Please help me complete the delete (Soft Delete) service business code for the `{{ entity.name }}` object.
+Please help me complete the delete (Soft Delete) service business code for the `{{ entity.rust_struct_name }}` object.
 
-To ensure absolute correctness of the API, please refer to and strictly imitate the following **real soft delete code example for `{{ entity.name }}`**.
+To ensure absolute correctness of the API, please refer to and strictly imitate the following **real soft delete code example for `{{ entity.rust_struct_name }}`**.
 
 ### Standard Delete Example (Reference)
 Please carefully observe the querying mechanism and the strictly required `.mark_as_delete()`, `.audit_as()`, and `.save()` cascade in the example code. 
@@ -8,7 +8,7 @@ Please carefully observe the querying mechanism and the strictly required `.mark
 
 ```rust
 use teaql_core::Entity;
-use {{ entity.domain.rustModuleName }}::{Q, {{ entity.name }}, TeaqlRepositoryProvider, AuditedSave};
+use {{ domain.rust_module_name }}::{Q, {{ entity.rust_struct_name }}, TeaqlRepositoryProvider, AuditedSave};
 
 pub async fn delete_example(
     ctx: &impl TeaqlRepositoryProvider, 
@@ -36,4 +36,4 @@ pub async fn delete_example(
 ```
 
 ### Your Task
-Please completely imitate the framework, imports, and syntax features of the above code to implement the real soft delete logic for `{{ entity.name }}` based on my specific business needs. Please output the Rust source code directly.
+Please completely imitate the framework, imports, and syntax features of the above code to implement the real soft delete logic for `{{ entity.rust_struct_name }}` based on my specific business needs. Please output the Rust source code directly.
