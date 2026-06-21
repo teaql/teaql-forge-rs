@@ -1,5 +1,7 @@
 # TeaQL Forge Rust Server
 
+[🇺🇸 English](README.md) | [🇨🇳 中文](README_zh.md)
+
 TeaQL Forge Server is a local-first code generation service for TeaQL, written entirely in Rust.
 
 It turns TeaQL `.xml` domain models into Rust libraries and fully configured workspace scaffolds. It provides a highly concurrent `axum`-based backend to process code generation, validate models, and serve AI-assist prompts for modern agentic workflows (e.g., Cursor, Claude, etc.).
