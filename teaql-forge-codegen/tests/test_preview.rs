@@ -6,7 +6,6 @@ fn test_platform_preview() {
     let xml = include_str!("../../teaql-forge-server/src/demo.xml");
     let domain = parse_model(xml, "demo.xml").unwrap();
     let render_domain = build_render_context(&domain);
-    std::fs::write("domain_output.json", serde_json::to_string_pretty(&render_domain).unwrap()).unwrap();
     let templates = vec![
         "rust-assist-create",
         "rust-assist-delete",

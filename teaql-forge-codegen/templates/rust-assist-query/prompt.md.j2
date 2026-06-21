@@ -16,7 +16,10 @@ pub async fn query_example(
     // [BEST PRACTICE]: Always start with _minimal() to avoid over-fetching and ensure compliance.
     let rows = Q::{{ entity.rust_plural_name }}_minimal()
 {% for f in entity.rustScalarFields %}
-{% if f.is_id %}{% elif f.is_version %}{% else %}        .select_{{ f.rustName }}()
+{% if f.is_id %}
+{% elif f.is_version %}
+{% else %}
+        .select_{{ f.rustName }}()
 {% endif %}
 {% endfor %}
         // --- Filter and Order Options (Uncomment and customize if needed) ---

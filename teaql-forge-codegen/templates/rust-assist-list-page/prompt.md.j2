@@ -16,12 +16,15 @@ pub async fn list_page_example(
     offset: u64, 
     limit: u64, 
     ui_filters_json: &JsonValue
-) -> Result<SmartList<{{ entity.rust_struct_name }}>>
+) -> Result<SmartList<{{ entity.rust_struct_name }}>, Box<dyn std::error::Error>>
 {
     // [BEST PRACTICE]: Always start with _minimal() to avoid over-fetching
     let page = Q::{{ entity.rust_plural_name }}_minimal()
 {% for f in entity.rustScalarFields %}
-{% if f.is_id %}{% elif f.is_version %}{% else %}        .select_{{ f.rustName }}()
+{% if f.is_id %}
+{% elif f.is_version %}
+{% else %}
+        .select_{{ f.rustName }}()
 {% endif %}
 {% endfor %}
         .filter_with_json(ui_filters_json.clone()) // Dynamic UI Search Support

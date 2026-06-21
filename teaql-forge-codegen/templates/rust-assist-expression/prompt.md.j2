@@ -23,7 +23,7 @@ pub fn extract_value_example(entity: &{{ entity.rust_struct_name }}) -> Option\{
         // .get_{{ f.rustStorageMemberName }}()
 {% endif %}
 {% endfor %}
-// --------------------------------------------------------------
+        // --------------------------------------------------------------
 
         // 2. Safely evaluate the entire chain. If any relation in the middle was not loaded, this returns None instead of panicking.
         .eval();

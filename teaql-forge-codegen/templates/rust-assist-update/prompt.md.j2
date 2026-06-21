@@ -36,7 +36,7 @@ pub async fn update_example(
         // existing_entity.update_{{ f.rustStorageMemberName }}(/* input data */);
 {% endif %}
 {% endfor %}
-// 3. CRITICAL: Security audit constraints must be attached before calling save()!
+        // 3. CRITICAL: Security audit constraints must be attached before calling save()!
         existing_entity.audit_as("Why this update operation was executed (audit record)")
             .save(ctx).await?;
 

@@ -8,7 +8,7 @@
 To get the exact API usage and examples for TeaQL Tool APIs, execute the following command:
 
 ```bash
-cargo teaql --input models/{{ name }}.xml rust-assist-tool-api/[module]
+cargo teaql --input models/{{ domain.name }}.xml rust-assist-tool-api/[module]
 ```
 
 Replace \`[module]\` with one of the following:
@@ -25,6 +25,5 @@ Once the command succeeds, read its output. Use the printed code as a template t
 {% if moduleContent %}
 {{ moduleContent }}
 {% else %}
-<indexContent(domain)>
+{{ indexContent(domain) }}
 {% endif %}
-
