@@ -11,6 +11,9 @@ version = "0.1.1"
 edition = "2021"
 authors = ["Philip <philip@example.com>"]
 license = "Apache-2.0"
+description = "TeaQL code generation engine and scaffolding tool for Rust."
+repository = "https://github.com/teaql/teaql-forge-rs"
+homepage = "https://github.com/teaql/teaql-forge-rs"
 
 [workspace.dependencies]
 thiserror = "1.0"
