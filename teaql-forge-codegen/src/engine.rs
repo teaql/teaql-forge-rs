@@ -243,6 +243,18 @@ pub fn generate_virtual_workspace(
         "README.md",
         include_str!("../templates/workspace/README.md.j2"),
     )?;
+    env.add_template(
+        "Dockerfile",
+        include_str!("../templates/rust-workspace/Dockerfile.j2"),
+    )?;
+    env.add_template(
+        ".dockerignore",
+        include_str!("../templates/rust-workspace/.dockerignore.j2"),
+    )?;
+    env.add_template(
+        ".github/workflows/rust.yml",
+        include_str!("../templates/rust-workspace/.github/workflows/rust.yml.j2"),
+    )?;
 
     env.add_template(
         "console_Cargo.toml",
@@ -275,6 +287,9 @@ pub fn generate_virtual_workspace(
         "RUNTIME_CUSTOM_GUIDE.md",
         "TOOL_API_GUIDE.md",
         "README.md",
+        "Dockerfile",
+        ".dockerignore",
+        ".github/workflows/rust.yml",
     ];
 
     let sub_crates = vec![

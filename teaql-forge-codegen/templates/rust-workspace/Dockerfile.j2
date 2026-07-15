@@ -1,0 +1,25 @@
+# Build stage
+FROM rust:1.80-slim as builder
+WORKDIR /usr/src/app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace members
+COPY . .
+
+# Build the axum web app
+RUN cargo build --release --bin {{ rust_crate_name }}-web-axum
+
+# Production stage
+FROM debian:bookworm-slim
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y libssl3 ca-certificates && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/src/app/target/release/{{ rust_crate_name }}-web-axum /app/server
+
+ENV {{ rust_crate_name|upper|replace('-', '_') }}_BIND_ADDR="0.0.0.0:3000"
+EXPOSE 3000
+
+CMD ["./server"]
