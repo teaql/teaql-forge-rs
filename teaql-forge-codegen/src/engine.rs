@@ -223,8 +223,6 @@ pub fn generate_virtual_workspace(
         "Makefile",
         include_str!("../templates/workspace/Makefile.j2"),
     )?;
-    env.add_template("main.rs", include_str!("../templates/workspace/main.rs.j2"))?;
-    env.add_template("lib.rs", include_str!("../templates/workspace/lib.rs.j2"))?;
     env.add_template(
         ".gitignore",
         include_str!("../templates/workspace/.gitignore.j2"),
@@ -246,12 +244,32 @@ pub fn generate_virtual_workspace(
         include_str!("../templates/workspace/README.md.j2"),
     )?;
 
+    env.add_template(
+        "console_Cargo.toml",
+        include_str!("../templates/rust-app-console/cargo/Cargo.toml.j2"),
+    )?;
+    env.add_template(
+        "console_main.rs",
+        include_str!("../templates/rust-app-console/src/main.rs.j2"),
+    )?;
+    env.add_template(
+        "console_lib.rs",
+        include_str!("../templates/rust-app-console/src/lib.rs.j2"),
+    )?;
+
+    env.add_template(
+        "axum_Cargo.toml",
+        include_str!("../templates/rust-web-axum/cargo/Cargo.toml.j2"),
+    )?;
+    env.add_template(
+        "axum_main.rs",
+        include_str!("../templates/rust-web-axum/src/main.rs.j2"),
+    )?;
+
     let mut files = Vec::new();
-    let templates = [
+    let root_templates = [
         "Cargo.toml",
         "Makefile",
-        "main.rs",
-        "lib.rs",
         ".gitignore",
         "AGENTS.md",
         "RUNTIME_CUSTOM_GUIDE.md",
@@ -259,11 +277,31 @@ pub fn generate_virtual_workspace(
         "README.md",
     ];
 
+    let sub_crates = vec![
+        (
+            "rust-app-console",
+            vec![
+                ("console_Cargo.toml", "Cargo.toml"),
+                ("console_main.rs", "src/main.rs"),
+                ("console_lib.rs", "src/lib.rs"),
+            ],
+        ),
+        (
+            "rust-web-axum",
+            vec![
+                ("axum_Cargo.toml", "Cargo.toml"),
+                ("axum_main.rs", "src/main.rs"),
+            ],
+        ),
+    ];
+
     let rust_crate_name = domain.rust_crate_name.clone();
     let rust_workspace_crate_name = domain.workspace_crate_name.clone();
     let rust_workspace_generated_lib_path = "lib";
     let rust_module_name = rust_crate_name.replace('-', "_");
     let rust_teaql_dependency_version = "4.1.0";
+
+    let has_sql_provider = domain.has_sql_provider;
 
     let ctx = context! {
         domain => domain,
@@ -276,21 +314,31 @@ pub fn generate_virtual_workspace(
         rust_workspace_generated_lib_path => rust_workspace_generated_lib_path,
         rust_module_name => rust_module_name,
         rust_teaql_dependency_version => rust_teaql_dependency_version,
+        has_sql_provider => has_sql_provider,
     };
 
-    for tmpl in templates {
-        let path = if tmpl == "main.rs" || tmpl == "lib.rs" {
-            format!("src/{}", tmpl)
-        } else {
-            tmpl.to_string()
-        };
-
+    for tmpl in root_templates {
         let template = env.get_template(tmpl).map_err(|e| {
             minijinja::Error::new(minijinja::ErrorKind::TemplateNotFound, e.to_string())
         })?;
         let content = template.render(ctx.clone())?;
+        files.push(GeneratedFile {
+            path: tmpl.to_string(),
+            content,
+        });
+    }
 
-        files.push(GeneratedFile { path, content });
+    for (crate_dir, crate_templates) in sub_crates {
+        for (tmpl_name, file_path) in crate_templates {
+            let template = env.get_template(tmpl_name).map_err(|e| {
+                minijinja::Error::new(minijinja::ErrorKind::TemplateNotFound, e.to_string())
+            })?;
+            let content = template.render(ctx.clone())?;
+            files.push(GeneratedFile {
+                path: format!("{}/{}", crate_dir, file_path),
+                content,
+            });
+        }
     }
 
     Ok(files)

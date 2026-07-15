@@ -31,11 +31,11 @@ fn test_perfectly_valid_alignment() {
         "tests/expected/01_perfectly_valid/rust-lib-core",
     );
 
-    // 2. Test rust-app-console (workspace)
+    // 2. Test rust-workspace (workspace)
     let workspace_files = generate_virtual_workspace(&render_domain).unwrap();
     assert_matches_expected(
         &workspace_files,
-        "tests/expected/01_perfectly_valid/rust-app-console",
+        "tests/expected/01_perfectly_valid/rust-workspace",
     );
 }
 
@@ -43,11 +43,13 @@ fn assert_matches_expected(generated_files: &[GeneratedFile], expected_dir: &str
     let expected_dir_path = Path::new(expected_dir);
     for file in generated_files {
         let expected_path = expected_dir_path.join(&file.path);
-        assert!(
-            expected_path.exists(),
-            "Expected file not found: {:?}",
-            expected_path
-        );
+        if std::env::var("UPDATE_EXPECTED").is_err() {
+            assert!(
+                expected_path.exists(),
+                "Expected file not found: {:?}",
+                expected_path
+            );
+        }
         let generated_content = {
             let lines: Vec<&str> = file.content.lines().collect();
             let cleaned_lines: Vec<String> = lines
@@ -60,7 +62,10 @@ fn assert_matches_expected(generated_files: &[GeneratedFile], expected_dir: &str
             out = out.trim_end_matches('\n').to_string();
             out
         };
-        let expected_content = fs::read_to_string(expected_path).unwrap();
+        let expected_content = match fs::read_to_string(&expected_path) {
+            Ok(c) => c,
+            Err(_) => String::new(),
+        };
         let expected_content = {
             let lines: Vec<&str> = expected_content.lines().collect();
             let cleaned_lines: Vec<String> = lines
@@ -74,9 +79,18 @@ fn assert_matches_expected(generated_files: &[GeneratedFile], expected_dir: &str
             out
         };
         if generated_content != expected_content {
-            println!("Writing left.rs for {:?}", file.path);
-            std::fs::write("left.rs", &generated_content).unwrap();
-            std::fs::write("right.rs", &expected_content).unwrap();
+            if std::env::var("UPDATE_EXPECTED").is_ok() {
+                println!("Updating {:?}", expected_path);
+                if let Some(p) = expected_path.parent() {
+                    let _ = std::fs::create_dir_all(p);
+                }
+                std::fs::write(&expected_path, &generated_content).unwrap();
+                continue;
+            } else {
+                println!("Writing left.rs for {:?}", file.path);
+                std::fs::write("left.rs", &generated_content).unwrap();
+                std::fs::write("right.rs", &expected_content).unwrap();
+            }
         }
         assert_eq!(
             generated_content, expected_content,
@@ -88,14 +102,7 @@ fn assert_matches_expected(generated_files: &[GeneratedFile], expected_dir: &str
     // Also assert that there are no extra files in the expected directory that were not generated
     let mut expected_paths = vec![];
     visit_dirs(expected_dir_path, &mut expected_paths);
-    expected_paths.retain(|p| {
-        let rel_path = p.strip_prefix(expected_dir_path).unwrap();
-        if expected_dir_path.ends_with("rust-app-console") {
-            !rel_path.starts_with("lib")
-        } else {
-            true
-        }
-    });
+    expected_paths.retain(|_p| true);
 
     let mut generated_paths = generated_files
         .iter()

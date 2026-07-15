@@ -1,0 +1,17 @@
+# TEAQL WARNING: This project uses TeaQL. TeaQL was explicitly designed to PREVENT AI hallucinations and random guessing.
+# Do NOT apply traditional ORM logic here. You must strictly follow the generated API.
+[package]
+name = "{{ rust_crate_name }}-web-axum"
+version = "0.1.0"
+edition = "2021"
+description = "Axum web workspace for the TeaQL domain crate {{ rust_crate_name }}"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+{{ rust_module_name }} = { package = "{{ rust_crate_name }}", path = "../{{ rust_workspace_generated_lib_path }}" }
+axum = { version = "0.7", features = ["macros"] }
+serde_json = "1"
+teaql-runtime = "{{ rust_teaql_dependency_version }}"
+teaql-web-integration-axum = "{{ rust_teaql_dependency_version }}"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+{% if has_sql_provider %}futures = "0.3"{% endif %}
