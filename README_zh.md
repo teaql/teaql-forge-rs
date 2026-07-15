@@ -1,5 +1,7 @@
 # TeaQL Forge Rust Server
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13621/badge)](https://www.bestpractices.dev/projects/13621)
+
 [🇺🇸 English](README.md) | [🇨🇳 中文](README_zh.md)
 
 TeaQL Forge Server 是完全使用 Rust 编写的 TeaQL 本地代码生成服务。

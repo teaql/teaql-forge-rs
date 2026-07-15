@@ -1,5 +1,6 @@
 # TeaQL Forge Rust Server
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13621/badge)](https://www.bestpractices.dev/projects/13621)
 [🇺🇸 English](README.md) | [🇨🇳 中文](README_zh.md)
 
 TeaQL Forge Server is a local-first code generation service for TeaQL, written entirely in Rust.
