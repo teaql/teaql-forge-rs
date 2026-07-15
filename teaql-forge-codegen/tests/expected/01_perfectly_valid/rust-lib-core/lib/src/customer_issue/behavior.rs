@@ -1,6 +1,4 @@
-use teaql_runtime::RepositoryBehavior;
-
+use teaql_runtime::EntityDataServiceBehavior;
 #[derive(Clone, Debug, Default)]
 pub struct CustomerIssueBehavior;
-
-impl RepositoryBehavior for CustomerIssueBehavior {}
+impl EntityDataServiceBehavior for CustomerIssueBehavior {}

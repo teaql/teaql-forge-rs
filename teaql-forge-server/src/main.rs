@@ -34,7 +34,10 @@ async fn main() {
         .route("/version", get(version_handler))
         .route("/generate", post(generate_handler))
         .route("/evaluate", post(eval::evaluate_handler))
-        .route("/*path", get(preview_get_handler).post(preview_post_handler));
+        .route(
+            "/*path",
+            get(preview_get_handler).post(preview_post_handler),
+        );
 
     if args.host == "0.0.0.0" {
         println!("Warning: You are exposing TeaQL Local Server to the network.");
@@ -455,7 +458,11 @@ async fn preview_post_handler(
     render_preview_internal(path, &xml, &xml_path).await
 }
 
-async fn render_preview_internal(path: String, xml: &str, xml_path: &str) -> axum::response::Response {
+async fn render_preview_internal(
+    path: String,
+    xml: &str,
+    xml_path: &str,
+) -> axum::response::Response {
     let lower_path = path.to_lowercase();
     let template_name;
     let mut target_entity = None;
@@ -535,10 +542,16 @@ async fn generate_handler(mut multipart: Multipart) -> impl IntoResponse {
         None => return (StatusCode::BAD_REQUEST, "Missing file part").into_response(),
     };
 
-    if scope != "rust-lib" && scope != "rust_lib" && scope != "rust-lib-core"
-        && scope != "rust-workspace" && scope != "rust-app-console"
+    if scope != "rust-lib"
+        && scope != "rust_lib"
+        && scope != "rust-lib-core"
+        && scope != "rust-workspace"
+        && scope != "rust-app-console"
     {
-        println!("Warning: unsupported scope {}, assuming rust-lib-core", scope);
+        println!(
+            "Warning: unsupported scope {}, assuming rust-lib-core",
+            scope
+        );
     }
 
     let domain = match parse_model(&xml, &xml_path) {

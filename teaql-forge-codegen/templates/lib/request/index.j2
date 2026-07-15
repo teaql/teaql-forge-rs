@@ -90,7 +90,7 @@ impl EntityReference for &crate::{{ objectDescriptor.rust_struct_name }} {
 use std::marker::PhantomData;
 use serde_json::Value as JsonValue;
 use teaql_core::{Aggregate, AggregateFunction, EntityDescriptor, Expr, Record, SelectQuery, SmartList};
-use teaql_runtime::{RepositoryError, RuntimeError};
+use teaql_runtime::{DataServiceError, RuntimeError};
 use crate::request_support::*;
 
 {{ entityReferenceImpl(objectDescriptor) }}
@@ -174,14 +174,14 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_list<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<SmartList<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<SmartList<R>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
     {
         let repository = ctx
             .{{ objectDescriptor.rust_module_name }}_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let relation_aggregates = runtime_relation_aggregates(&query_options);
         let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
@@ -191,7 +191,7 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
         ).await?;
         let facets = execute_facets(ctx, &query, &query_options)
             .await
-            .map_err(RepositoryError::Runtime)?;
+            .map_err(DataServiceError::Runtime)?;
         attach_facets(&mut rows, facets);
         Ok(rows)
     }
@@ -199,13 +199,13 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_stream<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Vec<teaql_data_service::StreamChunk>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<Vec<teaql_data_service::StreamChunk>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .{{ objectDescriptor.rust_module_name }}_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
         let chunks = repository.fetch_stream(&query)
@@ -216,7 +216,7 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_first<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Option<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<Option<R>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
@@ -228,7 +228,7 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_one<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Option<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<Option<R>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
@@ -242,7 +242,7 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
         ctx: &'a C,
         offset: u64,
         limit: u64,
-    ) -> Result<SmartList<R>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<SmartList<R>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
@@ -256,13 +256,13 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_count<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<u64, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<u64, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .{{ objectDescriptor.rust_module_name }}_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let mut query = self.query;
         query.projection.clear();
         query.expr_projection.clear();
@@ -274,19 +274,19 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
         rows.first()
             .and_then(|row| row.get(COUNT_ALIAS))
             .and_then(teaql_core::Value::try_u64)
-            .ok_or_else(|| RepositoryError::Runtime(RuntimeError::Graph(format!("count result for {{ objectDescriptor.rust_struct_name }} is missing or not numeric"))))
+            .ok_or_else(|| DataServiceError::Runtime(RuntimeError::Graph(format!("count result for {{ objectDescriptor.rust_struct_name }} is missing or not numeric"))))
     }
 
     pub(crate) async fn _execute_for_exists<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<bool, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<bool, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .{{ objectDescriptor.rust_module_name }}_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let mut query = self.query.limit(1);
         query.relations.clear();
         let rows = repository.fetch_all(&query).await?;
@@ -296,13 +296,13 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_records<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<SmartList<Record>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<SmartList<Record>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .{{ objectDescriptor.rust_module_name }}_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let outer_query = self.query.clone();
         let relation_aggregates = runtime_relation_aggregates(&query_options);
@@ -310,7 +310,7 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
         let mut rows = repository.fetch_smart_list_with_relation_aggregates(&query, &relation_aggregates).await?;
         let facets = execute_facets(ctx, &outer_query, &query_options)
             .await
-            .map_err(RepositoryError::Runtime)?;
+            .map_err(DataServiceError::Runtime)?;
         attach_facets(&mut rows, facets);
         Ok(rows)
     }
@@ -318,7 +318,7 @@ impl<R> {{ objectDescriptor.rust_struct_name }}Request<R> {
     pub(crate) async fn _execute_for_record<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Option<Record>, TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<Option<Record>, TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
@@ -826,7 +826,7 @@ impl<R> From< {{ objectDescriptor.rust_struct_name }}Request<R> > for QuerySelec
 impl<'a, C> crate::request_support::AuditedSave<'a, C> for teaql_core::Audited<crate::{{ objectDescriptor.rust_struct_name }}> 
 where C: crate::request_support::TeaqlRepositoryProvider + ?Sized + 'a
 {
-    type Error = crate::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>;
+    type Error = crate::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>;
     fn save(self, ctx: &'a C) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, Self::Error>> + '_>> {
         Box::pin(async move { self.into_entity().save(ctx).await })
     }
@@ -854,7 +854,7 @@ impl<R: teaql_core::Entity> crate::PurposedQuery<{{ objectDescriptor.rust_struct
         ctx: &'a C,
         offset: u64,
         limit: u64,
-    ) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
@@ -864,14 +864,14 @@ impl<R: teaql_core::Entity> crate::PurposedQuery<{{ objectDescriptor.rust_struct
     pub async fn execute_for_exists<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<bool, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    ) -> Result<bool, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_exists(ctx).await
     }
 
-    pub async fn execute_for_list<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_list<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
@@ -881,21 +881,21 @@ impl<R: teaql_core::Entity> crate::PurposedQuery<{{ objectDescriptor.rust_struct
     /// Execute query in streaming mode (chunked).
     /// Returns a Vec of StreamChunk, each containing up to chunk_size rows.
     /// Set chunk size via .stream(chunk_size) or .stream_default() on the query.
-    pub async fn execute_for_stream<'a, C>(self, ctx: &'a C) -> Result<Vec<teaql_data_service::StreamChunk>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_stream<'a, C>(self, ctx: &'a C) -> Result<Vec<teaql_data_service::StreamChunk>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_stream(ctx).await
     }
 
-    pub async fn execute_for_first<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_first<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_first(ctx).await
     }
 
-    pub async fn execute_for_one<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_one<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
@@ -903,21 +903,21 @@ impl<R: teaql_core::Entity> crate::PurposedQuery<{{ objectDescriptor.rust_struct
     }
 
 
-    pub async fn execute_for_records<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<teaql_core::Record>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_records<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<teaql_core::Record>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_records(ctx).await
     }
 
-    pub async fn execute_for_record<'a, C>(self, ctx: &'a C) -> Result<Option<teaql_core::Record>, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_record<'a, C>(self, ctx: &'a C) -> Result<Option<teaql_core::Record>, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_record(ctx).await
     }
 
-    pub async fn execute_for_count<'a, C>(self, ctx: &'a C) -> Result<u64, crate::request_support::TeaqlRepositoryError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
+    pub async fn execute_for_count<'a, C>(self, ctx: &'a C) -> Result<u64, crate::request_support::TeaqlDataServiceError<C::{{ objectDescriptor.rust_struct_name }}Repository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
@@ -1717,7 +1717,7 @@ use teaql_core::{
     BinaryOp, Expr, Record,
     RelationAggregate as RuntimeRelationAggregate, SelectQuery, SmartList,
 };
-use teaql_runtime::{ContextError, GraphNode, RepositoryBehavior, RepositoryError, RuntimeError, UserContext};
+use teaql_runtime::{ContextError, GraphNode, EntityDataServiceBehavior, DataServiceError, RuntimeError, UserContext};
 
 // Re-export query builder types from teaql_core::request
 pub use teaql_core::request::{
@@ -1741,21 +1741,21 @@ pub use teaql_core::request::{
 pub trait TeaqlRecordRepository {
     type Error: std::error::Error + Send + Sync + 'static;
 
-    async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>>;
+    async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, DataServiceError<Self::Error>>;
 
-    async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>>;
+    async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, DataServiceError<Self::Error>>;
 
     async fn fetch_smart_list_with_relation_aggregates(
         &self,
         query: &SelectQuery,
         relation_aggregates: &[RuntimeRelationAggregate],
-    ) -> Result<SmartList<Record>, RepositoryError<Self::Error>>;
+    ) -> Result<SmartList<Record>, DataServiceError<Self::Error>>;
 
-    async fn fetch_stream(&self, query: &SelectQuery) -> Result<Vec<teaql_data_service::StreamChunk>, RepositoryError<Self::Error>>;
+    async fn fetch_stream(&self, query: &SelectQuery) -> Result<Vec<teaql_data_service::StreamChunk>, DataServiceError<Self::Error>>;
 }
 
 pub trait TeaqlEntityRepository: TeaqlRecordRepository {
-    async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, DataServiceError<Self::Error>>
     where
         T: teaql_core::Entity;
 
@@ -1763,11 +1763,11 @@ pub trait TeaqlEntityRepository: TeaqlRecordRepository {
         &self,
         query: &SelectQuery,
         relation_aggregates: &[RuntimeRelationAggregate],
-    ) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    ) -> Result<SmartList<T>, DataServiceError<Self::Error>>
     where
         T: teaql_core::Entity;
 
-    async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
+    async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, DataServiceError<Self::Error>>
     where
         T: teaql_core::Entity;
 }
@@ -1778,11 +1778,11 @@ where
 {
     type Error = E::Error;
 
-    async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, RepositoryError<Self::Error>> {
+    async fn fetch_all(&self, query: &SelectQuery) -> Result<Vec<Record>, DataServiceError<Self::Error>> {
         teaql_runtime::ResolvedRepository::fetch_all(self, query).await
     }
 
-    async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, RepositoryError<Self::Error>> {
+    async fn fetch_smart_list(&self, query: &SelectQuery) -> Result<SmartList<Record>, DataServiceError<Self::Error>> {
         teaql_runtime::ResolvedRepository::fetch_smart_list(self, query).await
     }
 
@@ -1790,7 +1790,7 @@ where
         &self,
         query: &SelectQuery,
         relation_aggregates: &[RuntimeRelationAggregate],
-    ) -> Result<SmartList<Record>, RepositoryError<Self::Error>> {
+    ) -> Result<SmartList<Record>, DataServiceError<Self::Error>> {
         teaql_runtime::ResolvedRepository::fetch_smart_list_with_relation_aggregates(
             self,
             query,
@@ -1798,7 +1798,7 @@ where
         ).await
     }
 
-    async fn fetch_stream(&self, query: &SelectQuery) -> Result<Vec<teaql_data_service::StreamChunk>, RepositoryError<Self::Error>> {
+    async fn fetch_stream(&self, query: &SelectQuery) -> Result<Vec<teaql_data_service::StreamChunk>, DataServiceError<Self::Error>> {
         teaql_runtime::ResolvedRepository::fetch_stream(self, query).await
     }
 }
@@ -1807,7 +1807,7 @@ impl<'a, E> TeaqlEntityRepository for teaql_runtime::ResolvedRepository<'a, E>
 where
     E: teaql_data_service::QueryExecutor + teaql_data_service::MutationExecutor + teaql_data_service::StreamQueryExecutor + Send + Sync + 'static,
 {
-    async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    async fn fetch_enhanced_entities<T>(&self, query: &SelectQuery) -> Result<SmartList<T>, DataServiceError<Self::Error>>
     where
         T: teaql_core::Entity,
     {
@@ -1818,7 +1818,7 @@ where
         &self,
         query: &SelectQuery,
         relation_aggregates: &[RuntimeRelationAggregate],
-    ) -> Result<SmartList<T>, RepositoryError<Self::Error>>
+    ) -> Result<SmartList<T>, DataServiceError<Self::Error>>
     where
         T: teaql_core::Entity,
     {
@@ -1829,7 +1829,7 @@ where
         ).await
     }
 
-    async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, RepositoryError<Self::Error>>
+    async fn save_entity_graph<T>(&self, entity: T) -> Result<GraphNode, DataServiceError<Self::Error>>
     where
         T: teaql_core::Entity,
     {
@@ -1837,7 +1837,7 @@ where
     }
 }
 
-pub type TeaqlRepositoryError<R> = RepositoryError<<R as TeaqlRecordRepository>::Error>;
+pub type TeaqlDataServiceError<R> = DataServiceError<<R as TeaqlRecordRepository>::Error>;
 
 pub trait TeaqlRuntime {
     fn user_context(&self) -> &UserContext;
@@ -1870,44 +1870,44 @@ pub trait TeaqlRepositoryProvider: TeaqlRuntime {
 
 #[allow(async_fn_in_trait)]
 pub trait TeaqlUserContextExt {
-    async fn commit_data(&self) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>;
+    async fn commit_data(&self) -> Result<(), DataServiceError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>;
     
-    async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>
+    async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), DataServiceError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>
     where
         F: FnOnce() -> Fut,
-        Fut: Future<Output = Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>>;
+        Fut: Future<Output = Result<(), DataServiceError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>>;
 }
 
 impl TeaqlUserContextExt for teaql_runtime::UserContext {
-    async fn commit_data(&self) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>> {
+    async fn commit_data(&self) -> Result<(), DataServiceError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>> {
         self.commit_changes::<crate::runtime::DataServiceExecutor>().await
     }
 
-    async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>
+    async fn transaction_data<F, Fut>(&self, f: F) -> Result<(), DataServiceError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>
     where
         F: FnOnce() -> Fut,
-        Fut: Future<Output = Result<(), RepositoryError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>>,
+        Fut: Future<Output = Result<(), DataServiceError<<crate::runtime::DataServiceExecutor as teaql_data_service::DataServiceExecutor>::Error>>>,
     {
         let executor = self.require_resource::<crate::runtime::DataServiceExecutor>().map_err(|err| {
-            RepositoryError::Runtime(RuntimeError::Graph(format!(
+            DataServiceError::Runtime(RuntimeError::Graph(format!(
                 "cannot start transaction without executor: {err}"
             )))
         })?;
         let root = self.entity_root();
 
-        let tx = teaql_data_service::TransactionExecutor::begin(&*executor).await.map_err(RepositoryError::Executor)?;
+        let tx = teaql_data_service::TransactionExecutor::begin(&*executor).await.map_err(DataServiceError::Executor)?;
         root.push_change_set();
 
         let result = f().await;
         match result {
             Ok(()) => {
                 root.pop_change_set();
-                teaql_data_service::Transaction::commit(tx).await.map_err(RepositoryError::Executor)?;
+                teaql_data_service::Transaction::commit(tx).await.map_err(DataServiceError::Executor)?;
                 Ok(())
             }
             Err(err) => {
                 root.pop_change_set();
-                teaql_data_service::Transaction::rollback(tx).await.map_err(RepositoryError::Executor)?;
+                teaql_data_service::Transaction::rollback(tx).await.map_err(DataServiceError::Executor)?;
                 Err(err)
             }
         }

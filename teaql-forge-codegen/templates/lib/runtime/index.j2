@@ -198,13 +198,13 @@ fn env_value(name: &'static str) -> Result<String, ServiceRuntimeError> {
 }
 {% endif %}
 
-pub fn repository_registry() -> teaql_runtime::InMemoryRepositoryRegistry {
-    teaql_runtime::InMemoryRepositoryRegistry::new()
+pub fn repository_registry() -> teaql_runtime::InMemoryEntityRegistry {
+    teaql_runtime::InMemoryEntityRegistry::new()
 {% for item in domain.objectDescriptors %}        .with_entity("{{ item.rust_struct_name }}")
 {% endfor %}}
 
-pub fn behavior_registry() -> teaql_runtime::InMemoryRepositoryBehaviorRegistry {
-    teaql_runtime::InMemoryRepositoryBehaviorRegistry::new()
+pub fn behavior_registry() -> teaql_runtime::InMemoryEntityDataServiceBehaviorRegistry {
+    teaql_runtime::InMemoryEntityDataServiceBehaviorRegistry::new()
 {% for item in domain.objectDescriptors %}        .with_behavior("{{ item.rust_struct_name }}", {{ item.rust_struct_name }}Behavior::default())
 {% endfor %}}
 

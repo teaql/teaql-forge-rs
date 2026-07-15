@@ -1,23 +1,18 @@
 use std::marker::PhantomData;
-
 use serde_json::Value as JsonValue;
 use teaql_core::{Aggregate, AggregateFunction, EntityDescriptor, Expr, Record, SelectQuery, SmartList};
-use teaql_runtime::{RepositoryError, RuntimeError};
-
+use teaql_runtime::{DataServiceError, RuntimeError};
 use crate::request_support::*;
-
 impl EntityReference for crate::SupportTicket {
     fn entity_id_value(self) -> teaql_core::Value {
         teaql_core::IdentifiableEntity::id_value(&self)
     }
 }
-
 impl EntityReference for &crate::SupportTicket {
     fn entity_id_value(self) -> teaql_core::Value {
         teaql_core::IdentifiableEntity::id_value(self)
     }
 }
-
 // ⛔ AI agents: DO NOT read this file for API discovery. Instead run: cargo teaql --input modeling/MODEL.xml rust-assist-query/support_ticket
 #[derive(Debug)]
 pub struct SupportTicketRequest<R = crate::SupportTicket> {
@@ -28,7 +23,6 @@ pub struct SupportTicketRequest<R = crate::SupportTicket> {
     query_options: QueryOptions,
     marker: PhantomData<R>,
 }
-
 impl<R> Clone for SupportTicketRequest<R> {
     fn clone(&self) -> Self {
         Self {
@@ -41,7 +35,6 @@ impl<R> Clone for SupportTicketRequest<R> {
         }
     }
 }
-
 impl<R> SupportTicketRequest<R> {
     pub(crate) fn new() -> Self {
         Self {
@@ -55,7 +48,6 @@ impl<R> SupportTicketRequest<R> {
             marker: PhantomData,
         }
     }
-
     pub fn return_type<T>(self) -> SupportTicketRequest<T> {
         SupportTicketRequest {
             query: self.query,
@@ -66,47 +58,38 @@ impl<R> SupportTicketRequest<R> {
             marker: PhantomData,
         }
     }
-
     pub fn query(&self) -> &SelectQuery {
         &self.query
     }
-
     pub fn relation_selections(&self) -> &[RelationSelection] {
         &self.relation_selections
     }
-
     pub fn relation_filters(&self) -> &[RelationFilter] {
         &self.relation_filters
     }
-
     pub fn child_enhancements(&self) -> &[QuerySelection] {
         &self.child_enhancements
     }
-
     pub fn query_options(&self) -> &QueryOptions {
         &self.query_options
     }
-
     pub fn into_query(self) -> SelectQuery {
         self.query
     }
-
-
     pub fn purpose(self, purpose: impl Into<String>) -> crate::PurposedQuery<Self> {
         crate::PurposedQuery::new(self, purpose)
     }
-
     pub(crate) async fn _execute_for_list<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<SmartList<R>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<SmartList<R>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
     {
         let repository = ctx
             .support_ticket_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let relation_aggregates = runtime_relation_aggregates(&query_options);
         let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
@@ -116,32 +99,30 @@ impl<R> SupportTicketRequest<R> {
         ).await?;
         let facets = execute_facets(ctx, &query, &query_options)
             .await
-            .map_err(RepositoryError::Runtime)?;
+            .map_err(DataServiceError::Runtime)?;
         attach_facets(&mut rows, facets);
         Ok(rows)
     }
-
     pub(crate) async fn _execute_for_stream<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Vec<teaql_data_service::StreamChunk>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<Vec<teaql_data_service::StreamChunk>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .support_ticket_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
         let chunks = repository.fetch_stream(&query)
             .await?;
         Ok(chunks)
     }
-
     pub(crate) async fn _execute_for_first<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Option<R>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<Option<R>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
@@ -149,25 +130,22 @@ impl<R> SupportTicketRequest<R> {
         let rows = self.limit(1)._execute_for_list(ctx).await?;
         Ok(rows.into_iter().next())
     }
-
     pub(crate) async fn _execute_for_one<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Option<R>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<Option<R>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
     {
         self._execute_for_first(ctx).await
     }
-
-
     pub(crate) async fn _execute_for_page<'a, C>(
         self,
         ctx: &'a C,
         offset: u64,
         limit: u64,
-    ) -> Result<SmartList<R>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<SmartList<R>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
         R: teaql_core::Entity,
@@ -177,17 +155,16 @@ impl<R> SupportTicketRequest<R> {
         rows.total_count = Some(total_count);
         Ok(rows)
     }
-
     pub(crate) async fn _execute_for_count<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<u64, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<u64, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .support_ticket_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let mut query = self.query;
         query.projection.clear();
         query.expr_projection.clear();
@@ -199,35 +176,33 @@ impl<R> SupportTicketRequest<R> {
         rows.first()
             .and_then(|row| row.get(COUNT_ALIAS))
             .and_then(teaql_core::Value::try_u64)
-            .ok_or_else(|| RepositoryError::Runtime(RuntimeError::Graph(format!("count result for SupportTicket is missing or not numeric"))))
+            .ok_or_else(|| DataServiceError::Runtime(RuntimeError::Graph(format!("count result for SupportTicket is missing or not numeric"))))
     }
-
     pub(crate) async fn _execute_for_exists<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<bool, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<bool, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .support_ticket_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let mut query = self.query.limit(1);
         query.relations.clear();
         let rows = repository.fetch_all(&query).await?;
         Ok(!rows.is_empty())
     }
-
     pub(crate) async fn _execute_for_records<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<SmartList<Record>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<SmartList<Record>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let repository = ctx
             .support_ticket_repository()
-            .map_err(|err| RepositoryError::Runtime(RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let outer_query = self.query.clone();
         let relation_aggregates = runtime_relation_aggregates(&query_options);
@@ -235,46 +210,39 @@ impl<R> SupportTicketRequest<R> {
         let mut rows = repository.fetch_smart_list_with_relation_aggregates(&query, &relation_aggregates).await?;
         let facets = execute_facets(ctx, &outer_query, &query_options)
             .await
-            .map_err(RepositoryError::Runtime)?;
+            .map_err(DataServiceError::Runtime)?;
         attach_facets(&mut rows, facets);
         Ok(rows)
     }
-
     pub(crate) async fn _execute_for_record<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<Option<Record>, TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<Option<Record>, TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: TeaqlRepositoryProvider + ?Sized,
     {
         let records = self.limit(1)._execute_for_records(ctx).await?;
         Ok(records.into_iter().next())
     }
-
     pub fn search_with_text(mut self, text: impl Into<String>) -> Self {
         self.query = self.query.search_with_text(text);
         self
     }
-
     pub fn filter(mut self, filter: Expr) -> Self {
         self.query = self.query.filter(filter);
         self
     }
-
     pub fn and_filter(mut self, filter: Expr) -> Self {
         self.query = self.query.and_filter(filter);
         self
     }
-
     pub fn or_filter(mut self, filter: Expr) -> Self {
         self.query = self.query.or_filter(filter);
         self
     }
-
     pub fn append_search_criteria(self, criteria: Expr) -> Self {
         self.and_filter(criteria)
     }
-
     pub fn filter_property(
         mut self,
         property1: impl AsRef<str>,
@@ -288,18 +256,15 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_deleted_rows(mut self) -> Self {
         self.query.filter = remove_default_live_filter(self.query.filter);
         self
     }
-
     pub fn deleted_rows_only(mut self) -> Self {
         self.query.filter = remove_default_live_filter(self.query.filter);
         self.query = self.query.and_filter(Expr::lte("version", 0_i64));
         self
     }
-
     pub fn match_types(
         mut self,
         types: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -307,53 +272,41 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.and_filter(Expr::in_list(TYPE_FIELD, types.into_iter().map(Into::into)));
         self
     }
-
-
     pub fn with_type_group(mut self) -> Self {
         self.query = self.query.project(TYPE_GROUP_FIELD);
         self
     }
-
     pub fn matching_any_of(mut self, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         let entity = EntityDescriptor::new(selection.query.entity.clone());
         self.query = self.query.and_filter(Expr::in_subquery("id", entity, selection.query.clone(), "id"));
         self
     }
-
     pub fn match_any_of(self, request: impl Into<QuerySelection>) -> Self {
         self.matching_any_of(request)
     }
-
     pub fn enhance_child(mut self, request: impl Into<QuerySelection>) -> Self {
         self.child_enhancements.push(request.into());
         self
     }
-
     pub fn enhance_children_if_needed(self) -> Self {
         let request = self;
         request
     }
-
-
     pub fn comment(mut self, comment: impl Into<String>) -> Self {
         self.query_options.comment = Some(comment.into());
         self
     }
-
     pub fn raw_sql(self, raw_sql: impl Into<String>) -> Self {
         self.unsafe_raw_sql(UnsafeRawSqlSegment::trusted(raw_sql))
     }
-
     pub fn unsafe_raw_sql(mut self, raw_sql: UnsafeRawSqlSegment) -> Self {
         self.query_options.raw_sql = Some(raw_sql.into_sql());
         self
     }
-
     pub fn raw_sql_filter(self, raw_sql: impl Into<String>) -> Self {
         self.unsafe_raw_sql_filter(UnsafeRawSqlSegment::trusted(raw_sql))
     }
-
     pub fn unsafe_raw_sql_filter(mut self, raw_sql: UnsafeRawSqlSegment) -> Self {
         self.query_options.raw_sql_search_criteria.push(raw_sql.into_sql());
         self
@@ -361,34 +314,28 @@ impl<R> SupportTicketRequest<R> {
     pub fn filter_with_json(self, json_expr: impl Into<String>) -> Self {
         self.merge_dynamic_json_expr(json_expr.into())
     }
-
     fn merge_dynamic_json_expr(self, json_expr: String) -> Self {
         let json = serde_json::from_str::<JsonValue>(&json_expr)
             .unwrap_or_else(|_| panic!("Input JSON format error: {json_expr}"));
         self.merge_dynamic_json(&json)
     }
-
     fn merge_dynamic_json(mut self, json: &JsonValue) -> Self {
         let Some(object) = json.as_object() else {
             return self;
         };
-
         for (field, value) in object {
             if field.starts_with('_') {
                 continue;
             }
             self = self.apply_dynamic_json_filter(field, value);
         }
-
         self = self.apply_dynamic_json_order_by(object.get("_orderBy"));
-
         if let Some(offset) = dynamic_json_u64_field(object, "_start") {
             self = self.skip(offset);
         }
         if let Some(size) = dynamic_json_u64_field(object, "_size") {
             self = self.limit(size);
         }
-
         if let Some(page_size) = dynamic_json_u64_field(object, "_pageSize") {
             self = self.limit(page_size);
         }
@@ -401,10 +348,8 @@ impl<R> SupportTicketRequest<R> {
                 self = self.page_offset(offset, size);
             }
         }
-
         self
     }
-
     pub(crate) fn apply_dynamic_json_filter(self, field: &str, value: &JsonValue) -> Self {
         if let Some((head, tail)) = field.split_once('.') {
             self.apply_dynamic_json_chain_filter(head, tail, value)
@@ -414,7 +359,6 @@ impl<R> SupportTicketRequest<R> {
             self
         }
     }
-
     fn apply_dynamic_json_order_by(mut self, order_by: Option<&JsonValue>) -> Self {
         match order_by {
             Some(JsonValue::String(field)) => {
@@ -436,7 +380,6 @@ impl<R> SupportTicketRequest<R> {
         }
         self
     }
-
     fn apply_dynamic_json_single_order_by(
         mut self,
         order_by: &serde_json::Map<String, JsonValue>,
@@ -458,7 +401,6 @@ impl<R> SupportTicketRequest<R> {
         }
         self
     }
-
     fn dynamic_json_self_field(field: &str) -> Option<&'static str> {
         match field {
             "id" => Some("id"),
@@ -470,7 +412,6 @@ impl<R> SupportTicketRequest<R> {
             _ => None,
         }
     }
-
     fn apply_dynamic_json_chain_filter(self, head: &str, tail: &str, value: &JsonValue) -> Self {
         let _ = (tail, value);
         match head {
@@ -489,7 +430,6 @@ impl<R> SupportTicketRequest<R> {
             _ => self,
         }
     }
-
     pub fn create_property_as(
         self,
         property_name: impl Into<String>,
@@ -497,7 +437,6 @@ impl<R> SupportTicketRequest<R> {
     ) -> Self {
         self.unsafe_create_property_as(property_name, UnsafeRawSqlSegment::trusted(raw_sql_segment))
     }
-
     pub fn unsafe_create_property_as(
         mut self,
         property_name: impl Into<String>,
@@ -508,60 +447,47 @@ impl<R> SupportTicketRequest<R> {
             .push(RawDynamicProperty::new(property_name, raw_sql_segment));
         self
     }
-
     pub fn limit(mut self, limit: u64) -> Self {
         self.query = self.query.limit(limit);
         self
     }
-
     pub fn skip(mut self, offset: u64) -> Self {
         self.query = self.query.offset(offset);
         self
     }
-
     pub fn offset_only(self, offset: u64) -> Self {
         self.skip(offset)
     }
-
     pub fn offset(self, offset: u64, size: u64) -> Self {
         self.page_offset(offset, size)
     }
-
     pub fn page_offset(mut self, offset: u64, limit: u64) -> Self {
         self.query = self.query.page(offset, limit);
         self
     }
-
     pub fn top(self, top_n: u64) -> Self {
         self.limit(top_n)
     }
-
     pub fn offset_size(self, offset: u64, size: u64) -> Self {
         self.offset(offset, size)
     }
-
     pub fn unlimited(mut self) -> Self {
         self.query.slice = None;
         self
     }
-
     pub fn page_number(self, page_number: u64, page_size: u64) -> Self {
         let offset = page_number.saturating_sub(1).saturating_mul(page_size);
         self.page_offset(offset, page_size)
     }
-
     pub fn page_number_default(self, page_number: u64) -> Self {
         self.page_number(page_number, 10)
     }
-
     pub fn page(self, page_number: u64, page_size: u64) -> Self {
         self.page_number(page_number, page_size)
     }
-
     pub fn page_default(self, page_number: u64) -> Self {
         self.page_number_default(page_number)
     }
-
     pub fn select_self(mut self) -> Self {
         self.query = self.query.project("id");
         self.query = self.query.project("title");
@@ -571,46 +497,37 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.project("status_id");
         self
     }
-
     pub fn select_self_fields(self) -> Self {
         self.select_self()
     }
-
     pub fn select_self_without_parent(self) -> Self {
         self.select_self_fields()
     }
-
     pub fn select_all(self) -> Self {
         let mut request = self.select_self();
         request = request.select_status();
         request
     }
-
     pub fn select_children(self) -> Self {
         let mut request = self.select_all();
         request = request.select_customer_issue_list();
         request
     }
-
     pub fn select_any(self) -> Self {
         self.select_children()
     }
-
     pub fn group_by(mut self, field: impl Into<String>) -> Self {
         self.query = self.query.group_by(field);
         self
     }
-
     pub fn aggregate_count(mut self, alias: impl Into<String>) -> Self {
         self.query = self.query.count(alias);
         self
     }
-
     pub fn aggregate_count_field(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.count_field(field, alias);
         self
     }
-
     pub fn aggregate_with_function(
         mut self,
         field: impl Into<String>,
@@ -620,81 +537,65 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.aggregate(Aggregate::new(function, field, alias));
         self
     }
-
     pub fn aggregate_sum(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.sum(field, alias);
         self
     }
-
     pub fn aggregate_avg(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.avg(field, alias);
         self
     }
-
     pub fn aggregate_min(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.min(field, alias);
         self
     }
-
     pub fn aggregate_max(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.max(field, alias);
         self
     }
-
     pub fn aggregate_stddev(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.stddev(field, alias);
         self
     }
-
     pub fn aggregate_stddev_pop(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.stddev_pop(field, alias);
         self
     }
-
     pub fn aggregate_var_samp(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.var_samp(field, alias);
         self
     }
-
     pub fn aggregate_var_pop(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.var_pop(field, alias);
         self
     }
-
     pub fn aggregate_bit_and(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.bit_and(field, alias);
         self
     }
-
     pub fn aggregate_bit_or(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.bit_or(field, alias);
         self
     }
-
     pub fn aggregate_bit_xor(mut self, field: impl Into<String>, alias: impl Into<String>) -> Self {
         self.query = self.query.bit_xor(field, alias);
         self
     }
-
     pub fn enable_aggregation_cache(mut self) -> Self {
         self.query = self.query.enable_aggregation_cache();
         self
     }
-
     pub fn enable_aggregation_cache_for(mut self, cache_expired_millis: u64) -> Self {
         self.query = self.query.enable_aggregation_cache_for(cache_expired_millis);
         self
     }
-
     pub fn propagate_aggregation_cache(mut self, cache_expired_millis: u64) -> Self {
         self.query = self.query.propagate_aggregation_cache(cache_expired_millis);
         self
     }
-
     pub fn group_by_id(self) -> Self {
         self.group_by("id")
     }
-
     pub fn group_by_id_as(self, alias: impl Into<String>) -> Self {
         let alias = alias.into();
         let mut request = self.group_by("id");
@@ -703,7 +604,6 @@ impl<R> SupportTicketRequest<R> {
             .project_expr(alias, Expr::column("id"));
         request
     }
-
     pub fn group_by_id_with_function(
         self,
         alias: impl Into<String>,
@@ -712,48 +612,36 @@ impl<R> SupportTicketRequest<R> {
         self.group_by("id")
             .aggregate_with_function("id", alias, function)
     }
-
     pub fn count_id(self) -> Self {
         self.count_id_as("id_count")
     }
-
     pub fn count_id_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_count_field("id", alias)
     }
-
     pub fn sum_id(self) -> Self {
         self.sum_id_as("sum_id")
     }
-
     pub fn sum_id_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_sum("id", alias)
     }
-
     pub fn avg_id(self) -> Self {
         self.avg_id_as("avg_id")
     }
-
     pub fn avg_id_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_avg("id", alias)
     }
-
     pub fn min_id(self) -> Self {
         self.min_id_as("min_id")
     }
-
     pub fn min_id_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_min("id", alias)
     }
-
     pub fn max_id(self) -> Self {
         self.max_id_as("max_id")
     }
-
     pub fn max_id_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("id", alias)
     }
-
-
     pub fn with_id(
         mut self,
         operator: FieldOperator,
@@ -766,7 +654,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn create_id_criteria(
         operator: FieldOperator,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -777,19 +664,14 @@ impl<R> SupportTicketRequest<R> {
             values.into_iter().map(Into::into).collect(),
         )
     }
-
     pub fn with_id_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::eq("id", value));
         self
     }
-
-
-
     pub fn with_id_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::ne("id", value));
         self
     }
-
     pub fn with_id_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -800,7 +682,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_id_not_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -811,52 +692,41 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn order_by_id_asc(mut self) -> Self {
         self.query = self.query.order_asc("id");
         self
     }
-
     pub fn order_by_id_desc(mut self) -> Self {
         self.query = self.query.order_desc("id");
         self
     }
-
     pub fn order_by_id_asc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_asc("id");
         self
     }
-
     pub fn order_by_id_desc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_desc("id");
         self
     }
-
-
     pub fn select_title(mut self) -> Self {
         self.query = self.query.project("title");
         self
     }
-
     pub fn project_title(self) -> Self {
         self.select_title()
     }
-
     pub fn select_title_raw(self, raw_sql_segment: impl Into<String>) -> Self {
         self.select_title_unsafe_raw(UnsafeRawSqlSegment::trusted(raw_sql_segment))
     }
-
     pub fn select_title_unsafe_raw(mut self, raw_sql_segment: UnsafeRawSqlSegment) -> Self {
         self.query_options
             .raw_projections
             .push(RawProjection::new("title", raw_sql_segment));
         self
     }
-
     pub fn group_by_title(self) -> Self {
         self.group_by("title")
     }
-
     pub fn group_by_title_as(self, alias: impl Into<String>) -> Self {
         let alias = alias.into();
         let mut request = self.group_by("title");
@@ -865,7 +735,6 @@ impl<R> SupportTicketRequest<R> {
             .project_expr(alias, Expr::column("title"));
         request
     }
-
     pub fn group_by_title_with_function(
         self,
         alias: impl Into<String>,
@@ -874,54 +743,41 @@ impl<R> SupportTicketRequest<R> {
         self.group_by("title")
             .aggregate_with_function("title", alias, function)
     }
-
     pub fn count_title(self) -> Self {
         self.count_title_as("title_count")
     }
-
     pub fn count_title_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_count_field("title", alias)
     }
-
     pub fn sum_title(self) -> Self {
         self.sum_title_as("sum_title")
     }
-
     pub fn sum_title_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_sum("title", alias)
     }
-
     pub fn avg_title(self) -> Self {
         self.avg_title_as("avg_title")
     }
-
     pub fn avg_title_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_avg("title", alias)
     }
-
     pub fn min_title(self) -> Self {
         self.min_title_as("min_title")
     }
-
     pub fn min_title_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_min("title", alias)
     }
-
     pub fn max_title(self) -> Self {
         self.max_title_as("max_title")
     }
-
     pub fn max_title_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("title", alias)
     }
-
     pub fn unselect_title(mut self) -> Self {
         self.query.projection.retain(|field| field != "title");
         self.query_options.raw_projections.retain(|projection| projection.property_name != "title");
         self
     }
-
-
     pub fn with_title(
         mut self,
         operator: FieldOperator,
@@ -934,7 +790,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn create_title_criteria(
         operator: FieldOperator,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -945,39 +800,30 @@ impl<R> SupportTicketRequest<R> {
             values.into_iter().map(Into::into).collect(),
         )
     }
-
     pub fn with_title_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::eq("title", value));
         self
     }
-
-
-
     pub fn with_title_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::ne("title", value));
         self
     }
-
     pub fn with_title_greater_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("title", value));
         self
     }
-
     pub fn with_title_greater_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gte("title", value));
         self
     }
-
     pub fn with_title_less_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("title", value));
         self
     }
-
     pub fn with_title_less_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lte("title", value));
         self
     }
-
     pub fn with_title_between(
         mut self,
         lower: impl Into<teaql_core::Value>,
@@ -986,7 +832,6 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.and_filter(Expr::between("title", lower, upper));
         self
     }
-
     pub fn with_title_between_range<T>(mut self, range: DateRange<T>) -> Self
     where
         T: Into<teaql_core::Value>,
@@ -998,7 +843,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_title_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1009,7 +853,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_title_not_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1020,37 +863,30 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_title_containing(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::contain("title", value));
         self
     }
-
     pub fn with_title_not_containing(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::not_contain("title", value));
         self
     }
-
     pub fn with_title_starting_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::begin_with("title", value));
         self
     }
-
     pub fn with_title_not_starting_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::not_begin_with("title", value));
         self
     }
-
     pub fn with_title_ending_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::end_with("title", value));
         self
     }
-
     pub fn with_title_not_ending_with(mut self, value: impl Into<String>) -> Self {
         self.query = self.query.and_filter(Expr::not_end_with("title", value));
         self
     }
-
     pub fn with_title_sounding_like(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::sound_like("title", value));
         self
@@ -1059,70 +895,53 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.and_filter(Expr::lt("title", value));
         self
     }
-
     pub fn with_title_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("title", value));
         self
     }
-
     pub fn with_title_is_unknown(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_null("title"));
         self
     }
-
-
-
     pub fn with_title_is_known(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_not_null("title"));
         self
     }
-
-
     pub fn order_by_title_asc(mut self) -> Self {
         self.query = self.query.order_asc("title");
         self
     }
-
     pub fn order_by_title_desc(mut self) -> Self {
         self.query = self.query.order_desc("title");
         self
     }
-
     pub fn order_by_title_asc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_asc("title");
         self
     }
-
     pub fn order_by_title_desc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_desc("title");
         self
     }
-
-
     pub fn select_create_time(mut self) -> Self {
         self.query = self.query.project("create_time");
         self
     }
-
     pub fn project_create_time(self) -> Self {
         self.select_create_time()
     }
-
     pub fn select_create_time_raw(self, raw_sql_segment: impl Into<String>) -> Self {
         self.select_create_time_unsafe_raw(UnsafeRawSqlSegment::trusted(raw_sql_segment))
     }
-
     pub fn select_create_time_unsafe_raw(mut self, raw_sql_segment: UnsafeRawSqlSegment) -> Self {
         self.query_options
             .raw_projections
             .push(RawProjection::new("create_time", raw_sql_segment));
         self
     }
-
     pub fn group_by_create_time(self) -> Self {
         self.group_by("create_time")
     }
-
     pub fn group_by_create_time_as(self, alias: impl Into<String>) -> Self {
         let alias = alias.into();
         let mut request = self.group_by("create_time");
@@ -1131,7 +950,6 @@ impl<R> SupportTicketRequest<R> {
             .project_expr(alias, Expr::column("create_time"));
         request
     }
-
     pub fn group_by_create_time_with_function(
         self,
         alias: impl Into<String>,
@@ -1140,54 +958,41 @@ impl<R> SupportTicketRequest<R> {
         self.group_by("create_time")
             .aggregate_with_function("create_time", alias, function)
     }
-
     pub fn count_create_time(self) -> Self {
         self.count_create_time_as("create_time_count")
     }
-
     pub fn count_create_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_count_field("create_time", alias)
     }
-
     pub fn sum_create_time(self) -> Self {
         self.sum_create_time_as("sum_create_time")
     }
-
     pub fn sum_create_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_sum("create_time", alias)
     }
-
     pub fn avg_create_time(self) -> Self {
         self.avg_create_time_as("avg_create_time")
     }
-
     pub fn avg_create_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_avg("create_time", alias)
     }
-
     pub fn min_create_time(self) -> Self {
         self.min_create_time_as("min_create_time")
     }
-
     pub fn min_create_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_min("create_time", alias)
     }
-
     pub fn max_create_time(self) -> Self {
         self.max_create_time_as("max_create_time")
     }
-
     pub fn max_create_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("create_time", alias)
     }
-
     pub fn unselect_create_time(mut self) -> Self {
         self.query.projection.retain(|field| field != "create_time");
         self.query_options.raw_projections.retain(|projection| projection.property_name != "create_time");
         self
     }
-
-
     pub fn with_create_time(
         mut self,
         operator: FieldOperator,
@@ -1200,7 +1005,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn create_create_time_criteria(
         operator: FieldOperator,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1211,39 +1015,30 @@ impl<R> SupportTicketRequest<R> {
             values.into_iter().map(Into::into).collect(),
         )
     }
-
     pub fn with_create_time_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::eq("create_time", value));
         self
     }
-
-
-
     pub fn with_create_time_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::ne("create_time", value));
         self
     }
-
     pub fn with_create_time_greater_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("create_time", value));
         self
     }
-
     pub fn with_create_time_greater_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gte("create_time", value));
         self
     }
-
     pub fn with_create_time_less_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("create_time", value));
         self
     }
-
     pub fn with_create_time_less_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lte("create_time", value));
         self
     }
-
     pub fn with_create_time_between(
         mut self,
         lower: impl Into<teaql_core::Value>,
@@ -1252,7 +1047,6 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.and_filter(Expr::between("create_time", lower, upper));
         self
     }
-
     pub fn with_create_time_between_range<T>(mut self, range: DateRange<T>) -> Self
     where
         T: Into<teaql_core::Value>,
@@ -1264,7 +1058,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_create_time_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1275,7 +1068,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_create_time_not_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1286,75 +1078,57 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_create_time_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("create_time", value));
         self
     }
-
     pub fn with_create_time_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("create_time", value));
         self
     }
-
     pub fn with_create_time_is_unknown(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_null("create_time"));
         self
     }
-
-
-
     pub fn with_create_time_is_known(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_not_null("create_time"));
         self
     }
-
-
     pub fn order_by_create_time_asc(mut self) -> Self {
         self.query = self.query.order_asc("create_time");
         self
     }
-
     pub fn order_by_create_time_desc(mut self) -> Self {
         self.query = self.query.order_desc("create_time");
         self
     }
-
     pub fn order_by_create_time_asc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_asc("create_time");
         self
     }
-
     pub fn order_by_create_time_desc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_desc("create_time");
         self
     }
-
-
     pub fn select_update_time(mut self) -> Self {
         self.query = self.query.project("update_time");
         self
     }
-
     pub fn project_update_time(self) -> Self {
         self.select_update_time()
     }
-
     pub fn select_update_time_raw(self, raw_sql_segment: impl Into<String>) -> Self {
         self.select_update_time_unsafe_raw(UnsafeRawSqlSegment::trusted(raw_sql_segment))
     }
-
     pub fn select_update_time_unsafe_raw(mut self, raw_sql_segment: UnsafeRawSqlSegment) -> Self {
         self.query_options
             .raw_projections
             .push(RawProjection::new("update_time", raw_sql_segment));
         self
     }
-
     pub fn group_by_update_time(self) -> Self {
         self.group_by("update_time")
     }
-
     pub fn group_by_update_time_as(self, alias: impl Into<String>) -> Self {
         let alias = alias.into();
         let mut request = self.group_by("update_time");
@@ -1363,7 +1137,6 @@ impl<R> SupportTicketRequest<R> {
             .project_expr(alias, Expr::column("update_time"));
         request
     }
-
     pub fn group_by_update_time_with_function(
         self,
         alias: impl Into<String>,
@@ -1372,54 +1145,41 @@ impl<R> SupportTicketRequest<R> {
         self.group_by("update_time")
             .aggregate_with_function("update_time", alias, function)
     }
-
     pub fn count_update_time(self) -> Self {
         self.count_update_time_as("update_time_count")
     }
-
     pub fn count_update_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_count_field("update_time", alias)
     }
-
     pub fn sum_update_time(self) -> Self {
         self.sum_update_time_as("sum_update_time")
     }
-
     pub fn sum_update_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_sum("update_time", alias)
     }
-
     pub fn avg_update_time(self) -> Self {
         self.avg_update_time_as("avg_update_time")
     }
-
     pub fn avg_update_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_avg("update_time", alias)
     }
-
     pub fn min_update_time(self) -> Self {
         self.min_update_time_as("min_update_time")
     }
-
     pub fn min_update_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_min("update_time", alias)
     }
-
     pub fn max_update_time(self) -> Self {
         self.max_update_time_as("max_update_time")
     }
-
     pub fn max_update_time_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("update_time", alias)
     }
-
     pub fn unselect_update_time(mut self) -> Self {
         self.query.projection.retain(|field| field != "update_time");
         self.query_options.raw_projections.retain(|projection| projection.property_name != "update_time");
         self
     }
-
-
     pub fn with_update_time(
         mut self,
         operator: FieldOperator,
@@ -1432,7 +1192,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn create_update_time_criteria(
         operator: FieldOperator,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1443,39 +1202,30 @@ impl<R> SupportTicketRequest<R> {
             values.into_iter().map(Into::into).collect(),
         )
     }
-
     pub fn with_update_time_is(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::eq("update_time", value));
         self
     }
-
-
-
     pub fn with_update_time_is_not(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::ne("update_time", value));
         self
     }
-
     pub fn with_update_time_greater_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("update_time", value));
         self
     }
-
     pub fn with_update_time_greater_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gte("update_time", value));
         self
     }
-
     pub fn with_update_time_less_than(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("update_time", value));
         self
     }
-
     pub fn with_update_time_less_than_or_equal_to(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lte("update_time", value));
         self
     }
-
     pub fn with_update_time_between(
         mut self,
         lower: impl Into<teaql_core::Value>,
@@ -1484,7 +1234,6 @@ impl<R> SupportTicketRequest<R> {
         self.query = self.query.and_filter(Expr::between("update_time", lower, upper));
         self
     }
-
     pub fn with_update_time_between_range<T>(mut self, range: DateRange<T>) -> Self
     where
         T: Into<teaql_core::Value>,
@@ -1496,7 +1245,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_update_time_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1507,7 +1255,6 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_update_time_not_in(
         mut self,
         values: impl IntoIterator<Item = impl Into<teaql_core::Value>>,
@@ -1518,54 +1265,41 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn with_update_time_before(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::lt("update_time", value));
         self
     }
-
     pub fn with_update_time_after(mut self, value: impl Into<teaql_core::Value>) -> Self {
         self.query = self.query.and_filter(Expr::gt("update_time", value));
         self
     }
-
     pub fn with_update_time_is_unknown(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_null("update_time"));
         self
     }
-
-
-
     pub fn with_update_time_is_known(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_not_null("update_time"));
         self
     }
-
-
     pub fn order_by_update_time_asc(mut self) -> Self {
         self.query = self.query.order_asc("update_time");
         self
     }
-
     pub fn order_by_update_time_desc(mut self) -> Self {
         self.query = self.query.order_desc("update_time");
         self
     }
-
     pub fn order_by_update_time_asc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_asc("update_time");
         self
     }
-
     pub fn order_by_update_time_desc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_desc("update_time");
         self
     }
-
     pub fn group_by_version(self) -> Self {
         self.group_by("version")
     }
-
     pub fn group_by_version_as(self, alias: impl Into<String>) -> Self {
         let alias = alias.into();
         let mut request = self.group_by("version");
@@ -1574,7 +1308,6 @@ impl<R> SupportTicketRequest<R> {
             .project_expr(alias, Expr::column("version"));
         request
     }
-
     pub fn group_by_version_with_function(
         self,
         alias: impl Into<String>,
@@ -1583,62 +1316,48 @@ impl<R> SupportTicketRequest<R> {
         self.group_by("version")
             .aggregate_with_function("version", alias, function)
     }
-
     pub fn count_version(self) -> Self {
         self.count_version_as("version_count")
     }
-
     pub fn count_version_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_count_field("version", alias)
     }
-
     pub fn sum_version(self) -> Self {
         self.sum_version_as("sum_version")
     }
-
     pub fn sum_version_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_sum("version", alias)
     }
-
     pub fn avg_version(self) -> Self {
         self.avg_version_as("avg_version")
     }
-
     pub fn avg_version_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_avg("version", alias)
     }
-
     pub fn min_version(self) -> Self {
         self.min_version_as("min_version")
     }
-
     pub fn min_version_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_min("version", alias)
     }
-
     pub fn max_version(self) -> Self {
         self.max_version_as("max_version")
     }
-
     pub fn max_version_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_max("version", alias)
     }
-
     pub fn order_by_version_asc(mut self) -> Self {
         self.query = self.query.order_asc("version");
         self
     }
-
     pub fn order_by_version_desc(mut self) -> Self {
         self.query = self.query.order_desc("version");
         self
     }
-
     pub fn order_by_version_asc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_asc("version");
         self
     }
-
     pub fn order_by_version_desc_using_gbk(mut self) -> Self {
         self.query = self.query.order_gbk_desc("version");
         self
@@ -1676,8 +1395,6 @@ impl<R> SupportTicketRequest<R> {
         self.relation_filters.push(RelationFilter::new("status", selection));
         self
     }
-
-
     /// Complex relation filter for `status`.
     ///
     /// **Usage Priority:**
@@ -1706,23 +1423,17 @@ impl<R> SupportTicketRequest<R> {
         self.relation_filters.push(RelationFilter::new("status", selection));
         self
     }
-
-
     pub fn have_status(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_not_null("status_id"));
         self
     }
-
     pub fn have_no_status(mut self) -> Self {
         self.query = self.query.and_filter(Expr::is_null("status_id"));
         self
     }
-
-
     pub fn group_by_status(self) -> Self {
         self.group_by("status_id")
     }
-
     pub fn group_by_status_as(self, alias: impl Into<String>) -> Self {
         let alias = alias.into();
         let mut request = self.group_by("status_id");
@@ -1731,7 +1442,6 @@ impl<R> SupportTicketRequest<R> {
             .project_expr(alias, Expr::column("status_id"));
         request
     }
-
     pub fn group_by_status_with_function(
         self,
         alias: impl Into<String>,
@@ -1740,7 +1450,6 @@ impl<R> SupportTicketRequest<R> {
         self.group_by("status_id")
             .aggregate_with_function("status_id", alias, function)
     }
-
     pub fn group_by_status_with(mut self, request: impl Into<QuerySelection>) -> Self {
         self.query = self.query.group_by("status_id");
         self.query_options.object_group_bys.push(ObjectGroupBy::new(
@@ -1750,34 +1459,26 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn group_by_status_with_details(self) -> Self {
         self.group_by_status_with_details_from(crate::Q::ticket_statuses().unlimited())
     }
-
     pub fn group_by_status_with_details_from(self, request: impl Into<QuerySelection>) -> Self {
         self.group_by_status_with(request)
     }
-
-
     pub fn roll_up_to_status(self) -> Self {
         self.roll_up_to_status_with(crate::Q::ticket_statuses().unlimited())
     }
-
     pub fn roll_up_to_status_with(self, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.with_status_matching(selection.clone())
             .group_by_status_with(selection)
     }
-
     pub fn count_status(self) -> Self {
         self.count_status_as("status_count")
     }
-
     pub fn count_status_as(self, alias: impl Into<String>) -> Self {
         self.aggregate_count_field("status_id", alias)
     }
-
     pub fn unselect_status(mut self) -> Self {
         self.query.projection.retain(|field| field != "status_id");
         self.query.relations.retain(|relation| relation.name != "status");
@@ -1786,51 +1487,36 @@ impl<R> SupportTicketRequest<R> {
     pub fn status_is_pending(self) -> Self {
         self.filter_by_status(1001_u64)
     }
-
     pub fn with_status_is_pending(self) -> Self {
         self.filter_by_status(1001_u64)
     }
-
-
-
     pub fn with_status_is_not_pending(mut self) -> Self {
         self.query = self.query.and_filter(Expr::ne("status_id", 1001_u64));
         self
     }
-
-
     pub fn status_is_resolved(self) -> Self {
         self.filter_by_status(1002_u64)
     }
-
     pub fn with_status_is_resolved(self) -> Self {
         self.filter_by_status(1002_u64)
     }
-
-
-
     pub fn with_status_is_not_resolved(mut self) -> Self {
         self.query = self.query.and_filter(Expr::ne("status_id", 1002_u64));
         self
     }
-
-
     pub fn select_status(mut self) -> Self {
         self.query = self.query.relation("status");
         self
     }
-
     pub fn select_status_with(mut self, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.query = self.query.relation_query("status", selection.clone().into_query());
         self.relation_selections.push(RelationSelection::new("status", selection));
         self
 }
-
     pub fn facet_by_status_as(self, facet_name: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         self.facet_by_status_as_with_options(facet_name, request, true)
     }
-
     pub fn facet_by_status_as_with_options(
         mut self,
         facet_name: impl Into<String>,
@@ -1848,11 +1534,9 @@ impl<R> SupportTicketRequest<R> {
     pub fn have_customer_issues(self) -> Self {
         self.with_customer_issue_list_matching(SelectQuery::new("CustomerIssue"))
     }
-
     pub fn have_no_customer_issues(self) -> Self {
         self.without_customer_issue_list_matching(SelectQuery::new("CustomerIssue"))
     }
-
     pub fn with_customer_issue_list_matching(mut self, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.query = self.query.and_filter(Expr::in_subquery(
@@ -1864,7 +1548,6 @@ impl<R> SupportTicketRequest<R> {
         self.relation_filters.push(RelationFilter::new("customer_issue_list", selection));
         self
     }
-
     pub fn without_customer_issue_list_matching(mut self, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.query = self.query.and_filter(Expr::not_in_subquery(
@@ -1876,12 +1559,10 @@ impl<R> SupportTicketRequest<R> {
         self.relation_filters.push(RelationFilter::new("customer_issue_list", selection));
         self
     }
-
     pub fn select_customer_issue_list(mut self) -> Self {
         self.query = self.query.relation("customer_issue_list");
         self
     }
-
     pub fn select_customer_issue_list_with(mut self, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.query = self.query.relation_query("customer_issue_list", selection.clone().into_query());
@@ -1891,11 +1572,9 @@ impl<R> SupportTicketRequest<R> {
     pub fn count_customer_issues(self) -> Self {
         self.count_customer_issues_as("count_customer_issues")
     }
-
     pub fn count_customer_issues_as(self, alias: impl Into<String>) -> Self {
         self.count_customer_issues_with(alias, crate::Q::customer_issues().unlimited())
     }
-
     pub fn count_customer_issues_with(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.query_options.relation_aggregates.push(RelationAggregate::new(
@@ -1906,11 +1585,9 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn stats_from_customer_issues(self, request: impl Into<QuerySelection>) -> Self {
         self.stats_from_customer_issues_as("refinements", request)
     }
-
     pub fn stats_from_customer_issues_as(mut self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         let selection = request.into();
         self.query_options.relation_aggregates.push(RelationAggregate::new(
@@ -1921,54 +1598,44 @@ impl<R> SupportTicketRequest<R> {
         ));
         self
     }
-
     pub fn group_by_customer_issues_with_details(self, request: impl Into<QuerySelection>) -> Self {
         self.stats_from_customer_issues(request)
     }
-
-
     pub fn min_create_time_of_customer_issues(self) -> Self {
         self.min_create_time_of_customer_issues_as("min_create_time_of_customer_issues", crate::Q::customer_issues().unlimited())
     }
-
     pub fn min_create_time_of_customer_issues_as(self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         self.stats_from_customer_issues_as(alias, request.into().into_query().min("create_time", "min_create_time"))
     }
     pub fn max_create_time_of_customer_issues(self) -> Self {
         self.max_create_time_of_customer_issues_as("max_create_time_of_customer_issues", crate::Q::customer_issues().unlimited())
     }
-
     pub fn max_create_time_of_customer_issues_as(self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         self.stats_from_customer_issues_as(alias, request.into().into_query().max("create_time", "max_create_time"))
     }
     pub fn min_update_time_of_customer_issues(self) -> Self {
         self.min_update_time_of_customer_issues_as("min_update_time_of_customer_issues", crate::Q::customer_issues().unlimited())
     }
-
     pub fn min_update_time_of_customer_issues_as(self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         self.stats_from_customer_issues_as(alias, request.into().into_query().min("update_time", "min_update_time"))
     }
     pub fn max_update_time_of_customer_issues(self) -> Self {
         self.max_update_time_of_customer_issues_as("max_update_time_of_customer_issues", crate::Q::customer_issues().unlimited())
     }
-
     pub fn max_update_time_of_customer_issues_as(self, alias: impl Into<String>, request: impl Into<QuerySelection>) -> Self {
         self.stats_from_customer_issues_as(alias, request.into().into_query().max("update_time", "max_update_time"))
     }
 }
-
 impl<R> Default for SupportTicketRequest<R> {
     fn default() -> Self {
         Self::new()
     }
 }
-
 impl<R> From< SupportTicketRequest<R> > for SelectQuery {
     fn from(request: SupportTicketRequest<R>) -> Self {
         QuerySelection::from(request).into_query()
     }
 }
-
 impl<R> From< SupportTicketRequest<R> > for QuerySelection {
     fn from(request: SupportTicketRequest<R>) -> Self {
         Self {
@@ -1980,17 +1647,14 @@ impl<R> From< SupportTicketRequest<R> > for QuerySelection {
         }
     }
 }
-
-
-impl<'a, C> crate::request_support::AuditedSave<'a, C> for teaql_core::Audited<crate::SupportTicket> 
+impl<'a, C> crate::request_support::AuditedSave<'a, C> for teaql_core::Audited<crate::SupportTicket>
 where C: crate::request_support::TeaqlRepositoryProvider + ?Sized + 'a
 {
-    type Error = crate::TeaqlRepositoryError<C::SupportTicketRepository<'a>>;
+    type Error = crate::TeaqlDataServiceError<C::SupportTicketRepository<'a>>;
     fn save(self, ctx: &'a C) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, Self::Error>> + '_>> {
         Box::pin(async move { self.into_entity().save(ctx).await })
     }
 }
-
 impl<R: teaql_core::Entity> crate::PurposedQuery<SupportTicketRequest<R>> {
     pub fn new_entity<C>(&self, ctx: &C) -> crate::SupportTicket
     where
@@ -1998,7 +1662,6 @@ impl<R: teaql_core::Entity> crate::PurposedQuery<SupportTicketRequest<R>> {
     {
         crate::SupportTicket::runtime_new(ctx.user_context().entity_root())
     }
-
     fn into_inner_with_trace(mut self) -> SupportTicketRequest<R> {
         self.inner.query.trace_chain.push(teaql_core::TraceNode {
             entity_type: self.inner.query.entity.clone(),
@@ -2007,76 +1670,66 @@ impl<R: teaql_core::Entity> crate::PurposedQuery<SupportTicketRequest<R>> {
         });
         self.inner
     }
-
     pub async fn execute_for_page<'a, C>(
         self,
         ctx: &'a C,
         offset: u64,
         limit: u64,
-    ) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_page(ctx, offset, limit).await
     }
-
     pub async fn execute_for_exists<'a, C>(
         self,
         ctx: &'a C,
-    ) -> Result<bool, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    ) -> Result<bool, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_exists(ctx).await
     }
-
-    pub async fn execute_for_list<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_list<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<R>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_list(ctx).await
     }
-
     /// Execute query in streaming mode (chunked).
     /// Returns a Vec of StreamChunk, each containing up to chunk_size rows.
     /// Set chunk size via .stream(chunk_size) or .stream_default() on the query.
-    pub async fn execute_for_stream<'a, C>(self, ctx: &'a C) -> Result<Vec<teaql_data_service::StreamChunk>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_stream<'a, C>(self, ctx: &'a C) -> Result<Vec<teaql_data_service::StreamChunk>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_stream(ctx).await
     }
-
-    pub async fn execute_for_first<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_first<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_first(ctx).await
     }
-
-    pub async fn execute_for_one<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_one<'a, C>(self, ctx: &'a C) -> Result<Option<R>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_one(ctx).await
     }
-
-
-    pub async fn execute_for_records<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<teaql_core::Record>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_records<'a, C>(self, ctx: &'a C) -> Result<teaql_core::SmartList<teaql_core::Record>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_records(ctx).await
     }
-
-    pub async fn execute_for_record<'a, C>(self, ctx: &'a C) -> Result<Option<teaql_core::Record>, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_record<'a, C>(self, ctx: &'a C) -> Result<Option<teaql_core::Record>, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {
         self.into_inner_with_trace()._execute_for_record(ctx).await
     }
-
-    pub async fn execute_for_count<'a, C>(self, ctx: &'a C) -> Result<u64, crate::request_support::TeaqlRepositoryError<C::SupportTicketRepository<'a>>>
+    pub async fn execute_for_count<'a, C>(self, ctx: &'a C) -> Result<u64, crate::request_support::TeaqlDataServiceError<C::SupportTicketRepository<'a>>>
     where
         C: crate::request_support::TeaqlRepositoryProvider + ?Sized,
     {

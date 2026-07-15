@@ -18,7 +18,12 @@ fn test_platform_preview() {
     ];
 
     for tpl in templates {
-        let output = teaql_forge_codegen::engine::render_preview(&render_domain, tpl, Some("platform".to_string())).unwrap();
+        let output = teaql_forge_codegen::engine::render_preview(
+            &render_domain,
+            tpl,
+            Some("platform".to_string()),
+        )
+        .unwrap();
         std::fs::write(format!("{}_output.md", tpl), output).unwrap();
     }
 }

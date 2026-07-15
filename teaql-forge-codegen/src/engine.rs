@@ -100,10 +100,10 @@ pub fn generate_virtual_crate(
 
     let rust_crate_name = domain.rust_crate_name.clone();
     let name = domain.name.clone();
-    let rust_teaql_dependency_version = "4.0.6";
+    let rust_teaql_dependency_version = "4.1.0";
     let rust_crate_version = "0.1.0";
     let has_sql_provider = domain.has_sql_provider;
-    let rust_sql_provider_dependency = "teaql-provider-sqlite = \"4.0.6\"";
+    let rust_sql_provider_dependency = "teaql-provider-sqlite = \"4.1.0\"";
     let data_service = "rusqlite = { version = \"0.32\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }";
 
     let ctx = context! {
@@ -263,7 +263,7 @@ pub fn generate_virtual_workspace(
     let rust_workspace_crate_name = domain.workspace_crate_name.clone();
     let rust_workspace_generated_lib_path = "lib";
     let rust_module_name = rust_crate_name.replace('-', "_");
-    let rust_teaql_dependency_version = "4.0.6";
+    let rust_teaql_dependency_version = "4.1.0";
 
     let ctx = context! {
         domain => domain,

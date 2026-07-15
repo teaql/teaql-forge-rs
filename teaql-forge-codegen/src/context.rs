@@ -625,7 +625,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         for r in &relations {
             let r_name_upper = r.name.to_snake_case().to_uppercase();
             let r_target_upper = r.target.to_snake_case().to_uppercase();
-            
+
             indexes.push(RenderIndex {
                 name: format!("IDX_{}_{}", e_name_upper, r_name_upper),
                 columns: r_name_upper.clone(),

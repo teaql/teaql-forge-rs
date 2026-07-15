@@ -360,13 +360,23 @@ impl {{ rust_struct_name }} {
     pub(crate) async fn save<'a, C>(
         &self,
         ctx: &'a C,
-    ) -> Result<teaql_runtime::GraphNode, crate::TeaqlRepositoryError<C::{{ rust_struct_name }}Repository<'a>>>
+    ) -> Result<teaql_runtime::GraphNode, crate::TeaqlDataServiceError<C::{{ rust_struct_name }}Repository<'a>>>
     where
         C: crate::TeaqlRepositoryProvider + ?Sized,
     {
+        let root = ctx.user_context().entity_root();
+        let key = self.entity_key();
+        let has_ledger_change = (self.id != 0)
+            && (root.current_change_set().changes().contains_key(&key)
+                || root.is_marked_as_delete(&key)
+                || root.is_new(&key));
         let repository = ctx
             .{{ rust_module_name }}_repository()
-            .map_err(|err| teaql_runtime::RepositoryError::Runtime(teaql_runtime::RuntimeError::Graph(err.to_string())))?;
+            .map_err(|err| teaql_runtime::DataServiceError::Runtime(teaql_runtime::RuntimeError::Graph(err.to_string())))?;
+        if has_ledger_change {
+            crate::TeaqlEntityRepository::save_entity_ledger(&repository, root.clone()).await?;
+            return Ok(teaql_runtime::GraphNode::new("{{ rust_struct_name }}"));
+        }
         crate::TeaqlEntityRepository::save_entity_graph(&repository, self.clone()).await
     }
 }

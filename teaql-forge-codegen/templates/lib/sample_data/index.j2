@@ -130,7 +130,7 @@ impl SampleDataState {
 
     ctx.user_context().transaction_data(|| async {
         Box::pin(generate_{{ objectDescriptor.rust_plural_name }}(ctx, &mut state)).await.map_err(|e| {
-            teaql_runtime::RepositoryError::Runtime(teaql_runtime::RuntimeError::Graph(e))
+            teaql_runtime::DataServiceError::Runtime(teaql_runtime::RuntimeError::Graph(e))
         })
     }).await.map_err(|e| e.to_string())?;
 {% endif %}
