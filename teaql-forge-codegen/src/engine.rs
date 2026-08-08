@@ -104,7 +104,7 @@ pub fn generate_virtual_crate(
     let rust_crate_version = "0.1.0";
     let has_sql_provider = domain.has_sql_provider;
     let rust_sql_provider_dependency = "teaql-provider-sqlite = \"4.2.5\"";
-    let data_service = "rusqlite = { version = \"0.32\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }";
+    let data_service = "rusqlite = { version = \"0.40\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }";
 
     let ctx = context! {
         domain => domain,

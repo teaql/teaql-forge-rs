@@ -77,9 +77,9 @@ pub struct LocalSchemaProvider;
 impl teaql_data_service::SchemaProvider for LocalSchemaProvider {
     fn get_entity(&self, name: &str) -> Option<std::sync::Arc<teaql_core::EntityDescriptor>> {
         match name {
-            "TicketStatus" => Some(std::sync::Arc::new(crate::TicketStatus::entity_descriptor())),
-            "SupportTicket" => Some(std::sync::Arc::new(crate::SupportTicket::entity_descriptor())),
-            "CustomerIssue" => Some(std::sync::Arc::new(crate::CustomerIssue::entity_descriptor())),
+{% for entity in entities %}
+            "{{ entity.name }}" => Some(std::sync::Arc::new(crate::{{ entity.rust_struct_name }}::entity_descriptor())),
+{% endfor %}
             _ => None,
         }
     }

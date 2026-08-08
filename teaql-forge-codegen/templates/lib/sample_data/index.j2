@@ -3,7 +3,7 @@ use crate::TeaqlRuntime;
 use crate::Q;
 use teaql_core::Entity;
 use crate::request_support::TeaqlUserContextExt;
-use crate::request_support::AuditedSave;
+use teaql_runtime::AuditedSaveExt;
 
 pub trait IntoU64 {
     fn into_u64(self) -> u64;
@@ -125,6 +125,11 @@ impl SampleDataState {
     load_root_{{ objectDescriptor.rust_plural_name }}(ctx, &mut state).await?; //depth: {{ objectDescriptor.depth }}
 {% endmacro %}
 
+{% macro loadConstantCalls(objectDescriptor) %}
+    load_constant_{{ objectDescriptor.rust_plural_name }}(ctx, &mut state).await?;
+{% endmacro %}
+
+
 {% macro generateObjectCalls(objectDescriptor) %}
 {% if not objectDescriptor.constant %}
 
@@ -152,6 +157,23 @@ where
 }
 {% endmacro %}
 
+{% macro loadConstantFunctions(objectDescriptor) %}
+async fn load_constant_{{ objectDescriptor.rust_plural_name }}<C>(
+    ctx: &C,
+    state: &mut SampleDataState,
+) -> Result<(), String>
+where
+    C: TeaqlRuntime + ?Sized + crate::TeaqlRepositoryProvider,
+{
+    let list = Q::{{ objectDescriptor.rust_plural_name }}().purpose("Init Sample Data").execute_for_list(ctx).await.unwrap_or_default();
+    for item in list {
+        state.add_reference("{{ objectDescriptor.displayName }}", item.id().into_u64());
+    }
+    Ok(())
+}
+{% endmacro %}
+
+
 {% macro checkRequiredDependency(objectDescriptor, fieldDescriptor) %}
 {% if fieldDescriptor.required %}
         if state.ids("{{ fieldDescriptor.target }}").is_empty() {
@@ -163,7 +185,7 @@ where
 {% endmacro %}
 
 {% macro generateMethod(objectDescriptor) %}
-        let mut used_refs = std::collections::HashSet::new();
+        let mut used_refs: std::collections::HashSet<u64> = std::collections::HashSet::new();
 
 {% for fieldDescriptor in objectDescriptor.rustObjectFields %}
                 if let Some(ref_id) = state.pick_unused_id("{{ fieldDescriptor.target }}", i as usize, &used_refs) {
@@ -234,7 +256,7 @@ where
 {{ generateMethod(objectDescriptor) }}
 
 {% if objectDescriptor.reverseRelations %}
-        let entity = entity.audit_as("Init Sample Data").save(ctx).await.map_err(|e| e.to_string())?;
+        let entity = entity.audit_as("Init Sample Data").save(ctx.user_context()).await.map_err(|e| e.to_string())?;
 
         state.record_generated("{{ objectDescriptor.displayName }}");
 
@@ -246,7 +268,7 @@ where
 {% else %}
 
 
-entity.audit_as("Init Sample Data").save(ctx).await.map_err(|e| e.to_string())?;
+entity.audit_as("Init Sample Data").save(ctx.user_context()).await.map_err(|e| e.to_string())?;
 
         state.record_generated("{{ objectDescriptor.displayName }}");
 
@@ -274,6 +296,8 @@ where
 
 {% for item in domain.rootDescriptors %}{{ loadRootCalls(item) }}{% endfor %}
 
+{% for item in domain.constantDescriptors %}{{ loadConstantCalls(item) }}{% endfor %}
+
 {% for item in domain.businessDescriptors %}{{ generateObjectCalls(item) }}{% endfor %}
 
     let report = state.into_report();
@@ -282,5 +306,7 @@ where
 }
 
 {% for item in domain.rootDescriptors %}{{ loadRootFunctions(item) }}{% endfor %}
+
+{% for item in domain.constantDescriptors %}{{ loadConstantFunctions(item) }}{% endfor %}
 
 {% for item in domain.businessDescriptors %}{{ generateObjectFunctions(item) }}{% endfor %}

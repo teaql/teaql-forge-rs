@@ -2,6 +2,14 @@ use heck::{ToPascalCase, ToSnakeCase};
 use serde::Serialize;
 use teaql_forge_model::ir::{Cardinality, Domain, FieldType};
 
+fn sanitize_rust_identifier(name: &str) -> String {
+    let name = name.to_snake_case();
+    match name.as_str() {
+        "type" | "match" | "fn" | "let" | "mut" | "ref" | "const" | "static" | "if" | "else" | "while" | "for" | "loop" | "move" | "box" | "trait" | "struct" | "enum" | "impl" | "pub" | "use" | "super" | "self" | "crate" | "where" | "continue" | "break" | "return" | "as" | "in" | "unsafe" | "async" | "await" | "dyn" => format!("{}_", name),
+        _ => name,
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RenderDomain {
@@ -72,6 +80,7 @@ pub struct RenderConstraint {
 #[serde(rename_all = "camelCase")]
 pub struct RenderEntity {
     #[serde(rename = "displayName")]
+    pub display_name: String,
     pub name: String,
     pub line_number: usize,
     pub xml_path: String,
@@ -196,6 +205,8 @@ pub struct RenderRelation {
     pub rust_storage_type: String,
     #[serde(rename = "rustDefaultValue")]
     pub rust_default_value: String,
+    #[serde(rename = "rustRootSeedValue")]
+    pub rust_root_seed_value: String,
     #[serde(rename = "rustFieldAttr")]
     pub rust_field_attr: String,
     #[serde(rename = "rustMemberName")]
@@ -275,7 +286,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             teaql_forge_model::ir::EntityMember::Field(f) => Some(f),
             _ => None,
         }).map(|f| {
-            let rust_name = f.name.to_snake_case();
+            let rust_name = sanitize_rust_identifier(&f.name);
             let column_name = f.name.to_snake_case();
             let mut rust_type = match f.ty {
                 FieldType::Id => "u64",
@@ -304,31 +315,51 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
 
             if !f.required && f.ty != FieldType::Id {
                 rust_type = format!("Option<{}>", rust_type);
-                rust_default_value = "None".to_string();
+                rust_default_value = format!("None::<{}>", match f.ty {
+                    FieldType::String | FieldType::Text => "String",
+                    FieldType::I32 => "i32",
+                    FieldType::I64 => "i64",
+                    FieldType::U64 => "u64",
+                    FieldType::Bool => "bool",
+                    FieldType::Decimal => "f64",
+                    FieldType::Date => "chrono::NaiveDate",
+                    FieldType::DateTime => "teaql_core::time::Timestamp",
+                    FieldType::Id => "u64",
+                });
             }
 
-            let rust_getter_body = format!("self.changed_{name}().and_then(|value| value.{getter_method}).unwrap_or{else_suffix}{self_name}", name=rust_name, getter_method=match f.ty {
+            let unwrap_method = if !f.required && f.ty != FieldType::Id { "or" } else { "unwrap_or" };
+
+            let rust_getter_body = format!("self.changed_{name}().and_then(|value| value.{getter_method}).{unwrap_method}{else_suffix}{self_name}", name=rust_name, getter_method=match f.ty {
                 FieldType::Id | FieldType::U64 => "try_u64()",
-                FieldType::I32 | FieldType::I64 => "try_i64()",
+                FieldType::I32 => "try_i64().map(|v| v as i32)",
+                FieldType::I64 => "try_i64()",
                 FieldType::Bool => "try_bool()",
                 FieldType::String | FieldType::Text => "try_text().map(|value| value.to_owned())",
                 FieldType::DateTime => "try_timestamp()",
+                FieldType::Decimal => "try_f64()",
+                FieldType::Date => "try_date()",
                 _ => "try_text()",
-            }, else_suffix=if f.ty == FieldType::String || f.ty == FieldType::Text { "_else(|| self." } else { "(self." }, self_name=if f.ty == FieldType::String || f.ty == FieldType::Text { format!("{}.clone())", rust_name) } else { format!("{})", rust_name) });
+            }, unwrap_method=unwrap_method, else_suffix=if f.ty == FieldType::String || f.ty == FieldType::Text { "_else(|| self." } else { "(self." }, self_name=if f.ty == FieldType::String || f.ty == FieldType::Text { format!("{}.clone())", rust_name) } else { format!("{})", rust_name) });
 
-            let rust_update_assignment = format!("value.{getter_method}.unwrap_or{else_suffix}{rust_name}.clone())", getter_method=match f.ty {
+            let rust_update_assignment = format!("value.{getter_method}.{unwrap_method}{else_suffix}{rust_name}.clone())", getter_method=match f.ty {
                 FieldType::Id | FieldType::U64 => "try_u64()",
-                FieldType::I32 | FieldType::I64 => "try_i64()",
+                FieldType::I32 => "try_i64().map(|v| v as i32)",
+                FieldType::I64 => "try_i64()",
                 FieldType::Bool => "try_bool()",
                 FieldType::String | FieldType::Text => "try_text().map(|value| value.trim().to_owned())",
                 FieldType::DateTime => "try_timestamp()",
+                FieldType::Decimal => "try_f64()",
+                FieldType::Date => "try_date()",
                 _ => "try_text()",
-            }, else_suffix=if f.ty == FieldType::String || f.ty == FieldType::Text { "_else(|| self." } else { "(self." }, rust_name=rust_name);
+            }, unwrap_method=unwrap_method, else_suffix=if f.ty == FieldType::String || f.ty == FieldType::Text { "_else(|| self." } else { "(self." }, rust_name=rust_name);
 
             let rust_attr = if f.ty == FieldType::Id {
                 "#[teaql(id)]".to_string()
             } else if f.name == "version" {
                 "#[teaql(version)]".to_string()
+            } else if rust_name != column_name {
+                format!("#[teaql(column = \"{}\")]", column_name)
             } else {
                 "".to_string()
             };
@@ -365,7 +396,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 is_time: f.ty == FieldType::DateTime,
                 is_boolean: f.ty == FieldType::Bool,
                 required: f.required,
-                rust_default_value,
+                rust_default_value: rust_default_value.clone(),
                 rust_getter_body,
                 rust_update_assignment,
                 rust_attr,
@@ -411,8 +442,10 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                         "1_i64".to_string()
                     } else if rust_type == "String" {
                         format!("\"{}\"", e.seed_values.first().and_then(|s| s.properties.get(&f.name)).cloned().unwrap_or_else(|| "Pending".to_string()))
+                    } else if !f.required {
+                        "teaql_core::Value::Null".to_string()
                     } else {
-                        "Default::default()".to_string()
+                        rust_default_value.clone()
                     }
                 },
                 rust_attribute_predicate_prefix_expr: {
@@ -424,7 +457,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                     }
                 },
                 rust_attribute_predicate_suffix_expr: attr_pred_suffix.clone(),
-                rust_storage_member_name: f.name.clone(),
+                rust_storage_member_name: rust_name.clone(),
                 rust_storage_type: rust_type.clone(),
             }
         }).collect();
@@ -445,7 +478,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 name: r.name.clone(),
                 line_number: r.line_number,
                 xml_path: r.xml_path.clone(),
-                rust_name: r.name.to_snake_case(),
+                rust_name: sanitize_rust_identifier(&r.name),
                 target_method: inflector::string::pluralize::to_plural(&r.target.to_snake_case()),
                 target_struct: target_struct.clone(),
                 target_plural: inflector::string::pluralize::to_plural(&r.target.to_snake_case()),
@@ -493,10 +526,11 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 count_method: format!("count_{}", inflector::string::pluralize::to_plural(&r.target.to_snake_case())),
                 rust_storage_member_name: local_key.clone(),
                 rust_storage_type: if r.required { "u64".to_string() } else { "Option<u64>".to_string() },
-                rust_default_value: if r.required { "0_u64".to_string() } else { "None".to_string() },
+                rust_default_value: if r.required { "0_u64".to_string() } else { "None::<u64>".to_string() },
+                rust_root_seed_value: if r.required { "0_u64".to_string() } else { "teaql_core::Value::Null".to_string() },
                 rust_field_attr: format!("#[teaql(column = \"{}\")]", r.name.to_snake_case()),
 
-                rust_member_name: r.name.to_snake_case(),
+                rust_member_name: sanitize_rust_identifier(&r.name),
                 rust_relation_type: format!("Option<crate::{}>", target_struct),
                 rust_relation_borrow_type: format!("crate::{}", target_struct),
                 rust_getter_body: format!("self.changed_{}().and_then(|value| value.try_u64()).unwrap_or(self.{})", local_key, local_key),
@@ -643,7 +677,8 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         }
 
         RenderEntity {
-            name: e.metadata.get("name").cloned().unwrap_or(e.name.clone()),
+            display_name: e.metadata.get("name").cloned().unwrap_or(e.name.clone()),
+            name: e.name.clone(),
             line_number: e.line_number,
             xml_path: e.xml_path.clone(),
             rust_struct,
@@ -696,7 +731,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
     let ds = RenderDataService {
         name: "sqlite".to_string(),
         rust_has_sql_provider: true,
-        rust_sqlx_dependency: "rusqlite = { version = \"0.32\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }".to_string(),
+        rust_sqlx_dependency: "rusqlite = { version = \"0.40\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }".to_string(),
         rust_sql_provider_ext_trait: "teaql_provider_sqlite::SqliteProviderExt".to_string(),
         rust_sql_dialect_type: "teaql_provider_sqlite::SqliteDialect".to_string(),
         rust_sql_mutation_executor_type: "teaql_provider_sqlite::SqliteMutationExecutor".to_string(),
