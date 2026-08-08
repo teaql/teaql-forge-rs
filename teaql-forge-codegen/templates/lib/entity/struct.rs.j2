@@ -247,9 +247,9 @@ use teaql_macros::TeaqlEntity;
 /// Read the method signatures in this file before proceeding.
 #[derive(Clone, Debug, PartialEq, TeaqlEntity)]
 {% if objectDescriptor.dataService %}
-#[teaql(entity = "{{ rust_struct_name }}", table = "{{ rust_table_name }}", data_service = "{{ data_service }}"{% if objectDescriptor.audit_mask_fields %}, audit_mask_fields = "{{ audit_mask_fields }}"{% endif %}{% if objectDescriptor.audit_value_max_len %}, audit_value_max_len = {{ audit_value_max_len }}{% endif %})]
+#[teaql(entity = "{{ rust_struct_name }}", table = "{{ rust_table_name }}", data_service = "{{ data_service }}"{% if audit_mask_fields != "" %}, audit_mask_fields = "{{ audit_mask_fields }}"{% endif %}{% if objectDescriptor.audit_value_max_len %}, audit_value_max_len = {{ objectDescriptor.audit_value_max_len }}{% endif %})]
 {% else %}
-#[teaql(entity = "{{ rust_struct_name }}", table = "{{ rust_table_name }}"{% if objectDescriptor.audit_mask_fields %}, audit_mask_fields = "{{ audit_mask_fields }}"{% endif %}{% if objectDescriptor.audit_value_max_len %}, audit_value_max_len = {{ audit_value_max_len }}{% endif %})]
+#[teaql(entity = "{{ rust_struct_name }}", table = "{{ rust_table_name }}"{% if audit_mask_fields != "" %}, audit_mask_fields = "{{ audit_mask_fields }}"{% endif %}{% if objectDescriptor.audit_value_max_len %}, audit_value_max_len = {{ objectDescriptor.audit_value_max_len }}{% endif %})]
 {% endif %}
 pub struct {{ rust_struct_name }} {
 {% for item in objectDescriptor.rustScalarFields %}{{ storageField(item) }}{% if not loop.last %}

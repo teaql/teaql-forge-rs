@@ -26,6 +26,9 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
     // Iterate over children of root. Each child is an Entity.
     for node in root_node.children().filter(|n| n.is_element()) {
         let entity_name = node.tag_name().name().to_string();
+        if entity_name.starts_with('_') {
+            continue;
+        }
 
         let mut members = Vec::new();
         let mut has_id = false;

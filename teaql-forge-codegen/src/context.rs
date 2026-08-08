@@ -610,6 +610,15 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                     graph.push_str(&format!("\n            .value(\"{}\", {})", f.column_name, rust_val));
                 }
             }
+            
+            for rel in &relations {
+                let k = rel.name.clone();
+                if let Some(v) = seed.properties.get(&k) {
+                    graph.push_str(&format!("\n            .value(\"{}\", {}_u64)", rel.local_key, v));
+                } else if rel.required {
+                    graph.push_str(&format!("\n            .value(\"{}\", 1_u64)", rel.local_key));
+                }
+            }
             constant_seed_graphs.push(graph);
         }
 
@@ -694,7 +703,11 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
             reverse_relations,
             is_human: e.is_human,
             data_service: e.data_service.clone(),
-            audit_mask_fields: e.audit_mask_fields.as_ref().map(|s| s.split(',').map(|s| s.trim().to_string()).collect()).unwrap_or_default(),
+            audit_mask_fields: {
+                let m = e.audit_mask_fields.as_ref().map(|s| s.split(',').map(|s| s.trim().to_string()).collect()).unwrap_or_default();
+                println!("Entity {} audit_mask_fields: {:?}", e.name, m);
+                m
+            },
             audit_value_max_len: e.audit_value_max_len,
             attribute_predicate_prefix: attr_pred_prefix,
             attribute_predicate_suffix: attr_pred_suffix,

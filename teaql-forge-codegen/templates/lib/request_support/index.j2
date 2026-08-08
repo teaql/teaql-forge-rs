@@ -231,7 +231,7 @@ impl TeaqlRepositoryProvider for teaql_runtime::UserContext {
         Self: 'a;
 
     fn {{ entity.rust_module_name }}_repository(&self) -> Result<Self::{{ entity.rust_struct_name }}Repository<'_>, ContextError> {
-        self.entity_data_service::<crate::runtime::DataServiceExecutor>("{{ entity.name }}")
+        self.entity_data_service::<crate::runtime::DataServiceExecutor>("{{ entity.rust_struct_name }}")
     }
 {% endfor %}
 }
