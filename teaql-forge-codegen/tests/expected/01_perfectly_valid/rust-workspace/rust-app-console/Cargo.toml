@@ -9,5 +9,5 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 perfect_service_core = { package = "perfect-service-core", path = "../lib" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-teaql-core = "4.1.0"
+teaql-core = "4.2.5"
 chrono = "0.4"

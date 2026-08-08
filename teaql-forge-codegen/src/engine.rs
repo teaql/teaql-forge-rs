@@ -100,10 +100,10 @@ pub fn generate_virtual_crate(
 
     let rust_crate_name = domain.rust_crate_name.clone();
     let name = domain.name.clone();
-    let rust_teaql_dependency_version = "4.1.0";
+    let rust_teaql_dependency_version = "4.2.5";
     let rust_crate_version = "0.1.0";
     let has_sql_provider = domain.has_sql_provider;
-    let rust_sql_provider_dependency = "teaql-provider-sqlite = \"4.1.0\"";
+    let rust_sql_provider_dependency = "teaql-provider-sqlite = \"4.2.5\"";
     let data_service = "rusqlite = { version = \"0.32\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }";
 
     let ctx = context! {
@@ -278,6 +278,43 @@ pub fn generate_virtual_workspace(
         include_str!("../templates/rust-web-axum/src/main.rs.j2"),
     )?;
 
+    env.add_template(
+        "topcoat_Cargo.toml",
+        include_str!("../templates/rust-web-topcoat/Cargo.toml.j2"),
+    )?;
+    env.add_template(
+        "topcoat_Makefile",
+        include_str!("../templates/rust-web-topcoat/Makefile.j2"),
+    )?;
+    env.add_template(
+        "topcoat_gitignore",
+        include_str!("../templates/rust-web-topcoat/.gitignore.j2"),
+    )?;
+    env.add_template(
+        "topcoat_AGENTS.md",
+        include_str!("../templates/rust-web-topcoat/AGENTS.md.j2"),
+    )?;
+    env.add_template(
+        "topcoat_RUNTIME_CUSTOM_GUIDE.md",
+        include_str!("../templates/rust-web-topcoat/RUNTIME_CUSTOM_GUIDE.md.j2"),
+    )?;
+    env.add_template(
+        "topcoat_TOOL_API_GUIDE.md",
+        include_str!("../templates/rust-web-topcoat/TOOL_API_GUIDE.md.j2"),
+    )?;
+    env.add_template(
+        "topcoat_README.md",
+        include_str!("../templates/rust-web-topcoat/README.md.j2"),
+    )?;
+    env.add_template(
+        "topcoat_main.rs",
+        include_str!("../templates/rust-web-topcoat/main.rs.j2"),
+    )?;
+    env.add_template(
+        "topcoat_lib.rs",
+        include_str!("../templates/rust-web-topcoat/lib.rs.j2"),
+    )?;
+
     let mut files = Vec::new();
     let root_templates = [
         "Cargo.toml",
@@ -308,13 +345,27 @@ pub fn generate_virtual_workspace(
                 ("axum_main.rs", "src/main.rs"),
             ],
         ),
+        (
+            "rust-web-topcoat",
+            vec![
+                ("topcoat_Cargo.toml", "Cargo.toml"),
+                ("topcoat_Makefile", "Makefile"),
+                ("topcoat_gitignore", ".gitignore"),
+                ("topcoat_AGENTS.md", "AGENTS.md"),
+                ("topcoat_RUNTIME_CUSTOM_GUIDE.md", "RUNTIME_CUSTOM_GUIDE.md"),
+                ("topcoat_TOOL_API_GUIDE.md", "TOOL_API_GUIDE.md"),
+                ("topcoat_README.md", "README.md"),
+                ("topcoat_main.rs", "src/main.rs"),
+                ("topcoat_lib.rs", "src/lib.rs"),
+            ],
+        ),
     ];
 
     let rust_crate_name = domain.rust_crate_name.clone();
     let rust_workspace_crate_name = domain.workspace_crate_name.clone();
     let rust_workspace_generated_lib_path = "lib";
     let rust_module_name = rust_crate_name.replace('-', "_");
-    let rust_teaql_dependency_version = "4.1.0";
+    let rust_teaql_dependency_version = "4.2.5";
 
     let has_sql_provider = domain.has_sql_provider;
 
@@ -326,6 +377,7 @@ pub fn generate_virtual_workspace(
         rootObjectDescriptors => &domain.root_descriptors,
         rust_crate_name => rust_crate_name,
         rust_workspace_crate_name => rust_workspace_crate_name,
+        rust_web_topcoat_crate_name => format!("{}-topcoat", domain.name),
         rust_workspace_generated_lib_path => rust_workspace_generated_lib_path,
         rust_module_name => rust_module_name,
         rust_teaql_dependency_version => rust_teaql_dependency_version,

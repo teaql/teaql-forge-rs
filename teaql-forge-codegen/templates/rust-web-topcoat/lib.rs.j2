@@ -1,0 +1,184 @@
+//! # {{ rust_struct_name }} Topcoat Web Workspace
+//!
+//! **Before writing queries or components**, read the generated `AGENTS.md` at the workspace root.
+//! It contains the entity list and exact `cargo teaql` commands to fetch API prompts.
+
+pub use {{ rust_module_name }}::{teaql_core, E, Q};
+pub use teaql_runtime::UserContext;
+
+use serde_json::{Value, json};
+use topcoat::{
+    Result,
+    context::{Cx, CxBuilder, request_context},
+    router::{
+        Body, HeaderMap, Next, Response, Router, RouterBuilderDiscoverExt,
+        content::Json,
+        error::internal_server_error,
+        headers, layer, method, page, route, uri,
+    },
+    view::view,
+};
+
+/// HTTP request information stored as a typed resource inside `UserContext`.
+#[derive(Debug, Clone)]
+pub struct WebRequestInfo {
+    pub remote_ip: Option<String>,
+    pub user_agent: Option<String>,
+    pub request_uri: String,
+    pub method: String,
+    pub headers: HeaderMap,
+}
+
+/// Access HTTP request information exclusively through `UserContext`.
+pub trait WebContextExt {
+    fn web_info(&self) -> Option<&WebRequestInfo>;
+    fn remote_ip(&self) -> Option<&str>;
+    fn client_ip(&self) -> Option<&str>;
+    fn user_agent(&self) -> Option<&str>;
+    fn request_uri(&self) -> Option<&str>;
+    fn request_method(&self) -> Option<&str>;
+    fn request_header(&self, name: &str) -> Option<&str>;
+}
+
+impl WebContextExt for UserContext {
+    fn web_info(&self) -> Option<&WebRequestInfo> {
+        self.get_resource::<WebRequestInfo>()
+    }
+
+    fn remote_ip(&self) -> Option<&str> {
+        self.web_info().and_then(|info| info.remote_ip.as_deref())
+    }
+
+    fn client_ip(&self) -> Option<&str> {
+        self.remote_ip()
+    }
+
+    fn user_agent(&self) -> Option<&str> {
+        self.web_info().and_then(|info| info.user_agent.as_deref())
+    }
+
+    fn request_uri(&self) -> Option<&str> {
+        self.web_info().map(|info| info.request_uri.as_str())
+    }
+
+    fn request_method(&self) -> Option<&str> {
+        self.web_info().map(|info| info.method.as_str())
+    }
+
+    fn request_header(&self, name: &str) -> Option<&str> {
+        self.web_info()?.headers.get(name)?.to_str().ok()
+    }
+}
+
+/// Returns the TeaQL context created for the current request.
+///
+/// TeaQL resources must be accessed through this `UserContext`; they are never
+/// registered in Topcoat's application context.
+pub fn user_context(cx: &Cx) -> &UserContext {
+    request_context::<UserContext>(cx)
+}
+
+pub fn generated_domain_crate() -> &'static str {
+    "{{ rust_crate_name }}"
+}
+
+pub fn router() -> Router {
+    Router::builder().discover().build()
+}
+
+fn header_value(headers: &HeaderMap, name: &str) -> Option<String> {
+    headers
+        .get(name)
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_owned)
+}
+
+fn remote_ip(headers: &HeaderMap) -> Option<String> {
+    header_value(headers, "x-forwarded-for")
+        .and_then(|value| {
+            value
+                .split(',')
+                .map(str::trim)
+                .find(|candidate| !candidate.is_empty())
+                .map(str::to_owned)
+        })
+        .or_else(|| header_value(headers, "x-real-ip"))
+}
+
+#[layer("/")]
+async fn teaql_user_context(
+    cx: &mut CxBuilder,
+    body: Body,
+    next: Next<'_>,
+) -> Result<Response> {
+    let request_headers = headers(cx).clone();
+    let web_info = WebRequestInfo {
+        remote_ip: remote_ip(&request_headers),
+        user_agent: header_value(&request_headers, "user-agent"),
+        request_uri: uri(cx).to_string(),
+        method: method(cx).as_str().to_owned(),
+        headers: request_headers,
+    };
+
+{% if has_sql_provider %}    let mut user_context = {{ rust_module_name }}::service_runtime_from_env()
+        .await
+        .map_err(internal_server_error)?;
+{% else %}    let mut user_context =
+        {{ rust_module_name }}::module_with_behaviors_and_checkers().into_context();
+{% endif %}
+    if let Some(user_identifier) = web_info
+        .headers
+        .get("x-user-id")
+        .and_then(|value| value.to_str().ok())
+    {
+        user_context.set_user_identifier(user_identifier);
+    }
+    if let Some(trace_id) = web_info
+        .headers
+        .get("x-trace-id")
+        .and_then(|value| value.to_str().ok())
+    {
+        user_context.set_trace_id(trace_id);
+    }
+    if let Some(timezone) = web_info
+        .headers
+        .get("x-timezone")
+        .and_then(|value| value.to_str().ok())
+    {
+        user_context.set_timezone(timezone);
+    }
+    user_context.insert_resource(web_info);
+
+    cx.insert(user_context);
+    next.run(cx, body).await
+}
+
+#[page("/")]
+async fn home(cx: &Cx) -> Result {
+    let trace_id = user_context(cx).trace_id();
+    view! {
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="utf-8">
+                <title>"{{ rust_struct_name }} · TeaQL + Topcoat"</title>
+            </head>
+            <body>
+                <main>
+                    <h1>"{{ rust_struct_name }}"</h1>
+                    <p>"TeaQL + Topcoat workspace is running."</p>
+                    <p>"Trace ID: " (trace_id)</p>
+                </main>
+            </body>
+        </html>
+    }
+}
+
+#[route(GET "/health")]
+async fn health(cx: &Cx) -> Result<Json<Value>> {
+    Ok(Json(json!({
+        "status": "ok",
+        "service": "{{ rust_web_topcoat_crate_name }}",
+        "traceId": user_context(cx).trace_id()
+    })))
+}

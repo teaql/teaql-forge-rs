@@ -1,0 +1,15 @@
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+{% if has_sql_provider %}    let bootstrap_context = {{ rust_module_name }}::service_runtime_from_env().await?;
+    bootstrap_context.ensure_schema().await?;
+{% else %}{% if false %}    let _bootstrap_context = {{ rust_module_name }}::service_runtime_from_env().await?;
+{% else %}    let _module = {{ rust_module_name }}::module_with_behaviors_and_checkers();
+{% endif %}{% endif %}
+    let bind_addr = std::env::var("{{ rust_env_prefix }}_BIND_ADDR")
+        .unwrap_or_else(|_| "127.0.0.1:3000".to_owned());
+    let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
+
+    println!("listening on http://{bind_addr}");
+    topcoat::serve(listener, {{ rust_module_name }}_topcoat::router()).await?;
+    Ok(())
+}

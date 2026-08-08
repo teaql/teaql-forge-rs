@@ -287,7 +287,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 FieldType::U64 => "u64",
                 FieldType::Decimal => "f64",
                 FieldType::Date => "chrono::NaiveDate",
-                FieldType::DateTime => "chrono::DateTime<chrono::Utc>",
+                FieldType::DateTime => "teaql_core::time::Timestamp",
             }.to_string();
 
             let mut rust_default_value = match f.ty {
@@ -299,7 +299,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 FieldType::U64 => "0_u64",
                 FieldType::Decimal => "0.0",
                 FieldType::Date => "chrono::NaiveDate::from_ymd_opt(1970, 1, 1).unwrap()",
-                FieldType::DateTime => "chrono::Utc::now()",
+                FieldType::DateTime => "teaql_core::time::Timestamp::now()",
             }.to_string();
 
             if !f.required && f.ty != FieldType::Id {
@@ -728,6 +728,13 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                 entities[i].depth = new_depth;
                 changed = true;
             }
+            
+            if entities[i].depth > 20 {
+                // To avoid panic in server, we just stop calculating depth instead of panicking, 
+                // but if we need a strict error, we can panic. 
+                // The Java version throws DomainGraphException, which fails generation.
+                panic!("DomainGraphException: The KSML XML reference graph exceeds the maximum supported depth of 20. Cycle detected near entity '{}'.", entities[i].name);
+            }
         }
     }
 
@@ -762,7 +769,7 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
                     for m in &other_entity.fields {
                         if m.name != "id"
                             && m.name != "version"
-                            && m.rust_type == "chrono::DateTime<chrono::Utc>"
+                            && m.rust_type == "teaql_core::time::Timestamp"
                         {
                             let f_name = &m.name;
                             let other_plural = inflector::string::pluralize::to_plural(
@@ -859,11 +866,11 @@ pub fn build_render_context(domain: &Domain) -> RenderDomain {
         rust_crate_name: format!("{}-core", domain.name),
         rust_workspace_crate_name: format!("{}-console", domain.name),
         rust_workspace_generated_lib_path: "../rust-lib-core/lib".to_string(),
-        rust_teaql_dependency_version: "4.0.6".to_string(),
+        rust_teaql_dependency_version: "4.2.5".to_string(),
         rust_env_prefix: format!("{}_CORE", domain.name.to_snake_case().to_uppercase()),
         rust_crate_version: "0.1.0".to_string(),
         generator_version: env!("CARGO_PKG_VERSION").to_string(),
-        rust_sql_provider_dependency: "teaql-provider-sqlite = \"4.0.6\"".to_string(),
+        rust_sql_provider_dependency: "teaql-provider-sqlite = \"4.2.5\"".to_string(),
         support_full_text_search: false,
         object_descriptors: render_entities.clone(),
         root_descriptors,

@@ -1,0 +1,48 @@
+# TeaQL Topcoat Runtime & Request Context Reference
+
+> [!WARNING]
+> **DO NOT GUESS FRAMEWORK APIS**
+> Do not guess how to use `UserContext`, `Cx`, `CxBuilder`, schema setup, or
+> save pipelines.
+
+For exact TeaQL runtime examples, execute:
+
+```bash
+cargo teaql --input models/{{ name }}.xml rust-assist-runtime-custom
+```
+
+## Context Boundary
+
+The root Topcoat request layer constructs one independent TeaQL `UserContext`
+for every request and registers it only in Topcoat's request context.
+
+Pages and components access it with:
+
+```rust
+let ctx: &UserContext = user_context(cx);
+```
+
+All TeaQL resources remain inside `UserContext`. Do not place a TeaQL runtime,
+executor, repository, connection pool, or other TeaQL resource in Topcoat's
+application context.
+
+## HTTP Metadata
+
+The request layer inserts `WebRequestInfo` as a typed resource inside
+`UserContext`. Use `WebContextExt` to read:
+
+- `remote_ip()` (`client_ip()` is an alias)
+- `user_agent()`
+- `request_uri()`
+- `request_method()`
+- `request_header(name)`
+
+The initial client-IP implementation reads the first value from
+`X-Forwarded-For`, then falls back to `X-Real-IP`. Deployments must only trust
+these headers when they are supplied by a trusted reverse proxy.
+
+The following headers also enhance built-in `UserContext` fields:
+
+- `X-User-Id`
+- `X-Trace-Id`
+- `X-Timezone`

@@ -1,0 +1,44 @@
+# TeaQL Rust Topcoat Agent Instructions
+
+> [!WARNING]
+> **IGNORE GENERIC ORM EXPERIENCE**
+>
+> Do **not** use SeaORM, Diesel, SQLx, rbatis, raw SQL, DAOs, Repository
+> implementations, or custom persistence layers.
+>
+> Do **not** guess TeaQL method names.
+
+## How to Write Domain Code
+
+To get exact API usage and query examples, execute:
+
+```bash
+cargo teaql --input models/{{ name }}.xml rust-assist-[action]/[entity-name]
+```
+
+Replace `[action]` with `query`, `create`, `update`, `delete`, `expression`,
+`list-page`, or `debug`.
+
+Replace `[entity-name]` with the exact entity-name from the table below:
+
+| entity-name | display-name |
+|-------------|--------------|
+{% for it in objectDescriptors %}| {{ it.rust_struct }} | {{ it.name }} |
+{% endfor %}
+
+Read the generated output before editing pages, components, shards, or
+procedures.
+
+## Mandatory Query and Save Constraints
+
+- Before `execute_for_list()` or `execute()`, call `.purpose("why")` and
+  `.comment("what")`.
+- Before `.save()` or `.update()`, call `.audit_as("description")`.
+
+## Topcoat Runtime
+
+- Obtain TeaQL resources through the request's `UserContext`.
+- Use `user_context(cx)` in pages and components.
+- Never register TeaQL resources in Topcoat's application context.
+- Use `WebContextExt` on `UserContext` to read HTTP metadata and headers.
+- Read `RUNTIME_CUSTOM_GUIDE.md` before changing request-context wiring.

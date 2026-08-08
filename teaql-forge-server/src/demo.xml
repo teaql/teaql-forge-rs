@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<root alias_model_name="crp_erp_suite"
+<root
       cfg_mask_china_mobile="false"
-      chinese_name="Customer Relation and Enterprise Resource Planning"
-      english_name="Customer Relation and Enterprise Resource Planning"
+
+
       data_service="postgres"
       name="crm-erp-service"
       org="doublechaintech"

@@ -67,6 +67,7 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
         crate::rules::evaluate_structure_rule(&doc, &mut response, &xml_path);
         crate::rules::evaluate_object_metadata_rule(&doc, &mut response, &xml_path);
         crate::rules::evaluate_module_rule(&doc, &mut response, &xml_path);
+        crate::rules::evaluate_logging_object_rule(&doc, &mut response, &xml_path);
     }
 
     let rust_kw: HashSet<&str> = [
@@ -294,12 +295,20 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
     .into_iter()
     .collect();
 
+    
+    let sql_kw: HashSet<&str> = [
+        "transaction", "select", "table",
+    ]
+    .into_iter()
+    .collect();
+
     let mut languages = HashMap::new();
     languages.insert("Rust", rust_kw);
     languages.insert("Java", java_kw);
     languages.insert("Go", go_kw);
     languages.insert("Swift", swift_kw);
     languages.insert("Dart", dart_kw);
+    languages.insert("SQL", sql_kw);
 
     for entity in domain.entities {
         let get_conflicts = |name: &str| -> Vec<&str> {
@@ -317,7 +326,7 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
             response.errors.push(EvaluationItem {
                 rule_id: "KSML-KEYWORD-001".to_string(),
                 title: "Object name conflicts with reserved keyword".to_string(),
-                message: format!("Object name '{}' conflicts with reserved keywords in: {}. This will cause compilation/generation errors.", entity.name, entity_conflicts.join(", ")),
+                message: format!("KSML XML naming error: element <{}> uses the reserved name '{}', which conflicts with: {}. Rename the XML element itself to a descriptive two-word snake_case name such as <{}_record>, and update references to the old element name.", entity.name, entity.name, entity_conflicts.join(", "), entity.name),
                 path: format!("/root/{}", entity.name),
                 object_name: entity.name.clone(),
                 field_name: None,
@@ -338,10 +347,18 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
 
             let field_conflicts = get_conflicts(&name);
             if !field_conflicts.is_empty() {
+                let suggested_name = if name == "operator" {
+                    "operator_id".to_string()
+                } else if name == "user" {
+                    "user_id".to_string()
+                } else {
+                    format!("{}_{}", entity.name, name)
+                };
+                
                 response.errors.push(EvaluationItem {
                     rule_id: "KSML-KEYWORD-002".to_string(),
                     title: "Field name conflicts with reserved keyword".to_string(),
-                    message: format!("Field '{}' in object '{}' conflicts with reserved keywords in: {}. (Defined at {}:{}, attribute '{}'). Please rename the field to avoid generation/compilation errors.", name, entity.name, field_conflicts.join(", "), field_xml_path, line_number, name),
+                    message: format!("KSML XML naming error at {}:{}: element <{}> defines an XML attribute named '{}', which conflicts with reserved keywords in: {}. Rename the attribute in the KSML XML itself and keep its current value; for example, change {}=\"...\" to {}=\"...\". Also update any <_value> attributes or other model references that use the old field name.", field_xml_path, line_number, entity.name, name, field_conflicts.join(", "), name, suggested_name),
                     path: format!("/root/{}/{}", entity.name, name),
                     object_name: entity.name.clone(),
                     field_name: Some(name),
@@ -353,4 +370,107 @@ pub async fn evaluate_handler(mut multipart: Multipart) -> impl IntoResponse {
     }
 
     Json(response).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use teaql_forge_model::parser::parse_model;
+
+    fn run_eval(xml: &str) -> EvaluationResponse {
+        let domain = parse_model(xml, "main.xml").expect("Should parse");
+        let mut response = EvaluationResponse {
+            errors: Vec::new(),
+            warnings: Vec::new(),
+        };
+        let doc = roxmltree::Document::parse(xml).expect("Should parse xml doc");
+        
+        crate::rules::evaluate_root_rule(&doc, &mut response, "main.xml");
+        crate::rules::evaluate_structure_rule(&doc, &mut response, "main.xml");
+        crate::rules::evaluate_object_metadata_rule(&doc, &mut response, "main.xml");
+        crate::rules::evaluate_module_rule(&doc, &mut response, "main.xml");
+        crate::rules::evaluate_logging_object_rule(&doc, &mut response, "main.xml");
+        
+        response
+    }
+
+    #[test]
+    fn test_missing_organization_suggests_example_organization() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <root name="crm-service" data_service="sqlite" _module_key="root">
+            <company _name="Company" _module="Organization" _module_key="organization" name="Example Company"/>
+        </root>
+        "#;
+        
+        let response = run_eval(xml);
+        for w in &response.warnings {
+            println!("WARNING: [{}] {}", w.rule_id, w.message);
+        }
+        assert!(response.warnings.iter().any(|item| item.rule_id == "KSML-ROOT-006" && item.message.contains("org=\"example\"")));
+    }
+
+    #[test]
+    fn test_wrong_root_wrapper_returns_xml_error() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <model name="crm-service">
+            <merchant name="string()" />
+        </model>
+        "#;
+        
+        let err = parse_model(xml, "main.xml").unwrap_err();
+        println!("ERROR: {}", err.to_string());
+        assert!(err.to_string().contains("Domain tag is missing"));
+    }
+
+    #[test]
+    fn test_logging_object_missing_timestamp_and_user() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <root name="test-service" org="example">
+            <payment_log _log="true" amount="number()" />
+        </root>
+        "#;
+        
+        let response = run_eval(xml);
+        
+        let has_timestamp_err = response.errors.iter().any(|i| i.rule_id == "KSML-LOG-003");
+        let has_user_err = response.errors.iter().any(|i| i.rule_id == "KSML-LOG-004");
+        assert!(has_timestamp_err);
+        assert!(has_user_err);
+    }
+
+    #[test]
+    fn test_logging_object_incompatible_types() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <root name="test-service" org="example">
+            <payment_log _log="true" _constant="true" log_time="createTime()" user_id="string()" user_name="string()"/>
+        </root>
+        "#;
+        
+        let response = run_eval(xml);
+        assert!(response.errors.iter().any(|i| i.rule_id == "KSML-LOG-002"));
+    }
+
+    #[test]
+    fn test_logging_object_suggests_log_purpose() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <root name="test-service" org="example">
+            <payment_log _log="true" log_time="createTime()" user_id="string()" user_name="string()"/>
+        </root>
+        "#;
+        
+        let response = run_eval(xml);
+        assert!(response.warnings.iter().any(|i| i.rule_id == "KSML-LOG-006"));
+    }
+
+    #[test]
+    fn test_suggests_adding_log_to_name() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <root name="test-service" org="example">
+            <payment_log log_time="createTime()" user_id="string()" user_name="string()"/>
+        </root>
+        "#;
+        
+        let response = run_eval(xml);
+        assert!(response.warnings.iter().any(|i| i.rule_id == "KSML-LOG-007"));
+    }
 }

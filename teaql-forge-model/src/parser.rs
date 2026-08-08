@@ -99,7 +99,7 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
                     }
                     match prefix {
                         "string" | "number" | "bool" | "date" | "datetime" | "money" | "text"
-                        | "createTime" | "updateTime" | "id" => (false, "", Cardinality::ManyToOne),
+                        | "createTime" | "updateTime" | "id" | "decimal" => (false, "", Cardinality::ManyToOne),
                         _ => {
                             let mut target = if let Some(pipe_idx) = inside.find('|') {
                                 &inside[..pipe_idx]
@@ -137,8 +137,12 @@ pub fn parse_model(src: &str, xml_path: &str) -> Result<Domain, ParseError> {
                     FieldType::Text
                 } else if attr_value.contains("bool") {
                     FieldType::Bool
-                } else if attr_value.contains("createTime") || attr_value.contains("updateTime") {
+                } else if attr_value.contains("date()") || attr_value.contains("date?") {
+                    FieldType::Date
+                } else if attr_value.contains("datetime") || attr_value.contains("createTime") || attr_value.contains("updateTime") {
                     FieldType::DateTime
+                } else if attr_value.contains("decimal") {
+                    FieldType::Decimal
                 } else {
                     FieldType::String // fallback
                 };

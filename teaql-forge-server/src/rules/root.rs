@@ -109,6 +109,17 @@ pub fn evaluate_root_rule(doc: &Document, response: &mut EvaluationResponse, xml
                 line_number: doc.text_pos_at(root.range().start).row as usize,
             });
         }
+    } else {
+        response.warnings.push(EvaluationItem {
+            rule_id: "KSML-ROOT-006".to_string(),
+            title: "Missing organization name".to_string(),
+            message: "Missing org attribute on root. Please specify an organization, e.g. org=\"example\" or org=\"doublechaintech\".".to_string(),
+            path: path.clone(),
+            object_name: "root".to_string(),
+            field_name: None,
+            xml_path: xml_path.to_string(),
+            line_number: doc.text_pos_at(root.range().start).row as usize,
+        });
     }
 
     // 5. _module_key check
