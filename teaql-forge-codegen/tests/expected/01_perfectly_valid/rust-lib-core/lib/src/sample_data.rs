@@ -3,7 +3,7 @@ use crate::TeaqlRuntime;
 use crate::Q;
 use teaql_core::Entity;
 use crate::request_support::TeaqlUserContextExt;
-use crate::request_support::AuditedSave;
+use teaql_runtime::AuditedSaveExt;
 pub trait IntoU64 {
     fn into_u64(self) -> u64;
 }
@@ -111,6 +111,7 @@ where
     log::info!("Starting sample data generation. Scale: {:?}, Seed: {}", plan.scale, plan.seed);
     let mut state = SampleDataState::new(plan);
     load_root_ticket_statuses(ctx, &mut state).await?; //depth: 0
+    load_constant_ticket_statuses(ctx, &mut state).await?;
     ctx.user_context().transaction_data(|| async {
         Box::pin(generate_support_tickets(ctx, &mut state)).await.map_err(|e| {
             teaql_runtime::DataServiceError::Runtime(teaql_runtime::RuntimeError::Graph(e))
@@ -126,6 +127,19 @@ where
     Ok(report)
 }
 async fn load_root_ticket_statuses<C>(
+    ctx: &C,
+    state: &mut SampleDataState,
+) -> Result<(), String>
+where
+    C: TeaqlRuntime + ?Sized + crate::TeaqlRepositoryProvider,
+{
+    let list = Q::ticket_statuses().purpose("Init Sample Data").execute_for_list(ctx).await.unwrap_or_default();
+    for item in list {
+        state.add_reference("Ticket Status", item.id().into_u64());
+    }
+    Ok(())
+}
+async fn load_constant_ticket_statuses<C>(
     ctx: &C,
     state: &mut SampleDataState,
 ) -> Result<(), String>
@@ -160,7 +174,7 @@ where
     log::info!("Generating sample data for Support Ticket (expected: {})...", fanout);
     for i in 0..fanout {
         let mut entity = Q::support_tickets().purpose("Init Sample Data").new_entity(ctx);
-        let mut used_refs = std::collections::HashSet::new();
+        let mut used_refs: std::collections::HashSet<u64> = std::collections::HashSet::new();
                 if let Some(ref_id) = state.pick_unused_id("Ticket Status", i as usize, &used_refs) {
                     entity.update_status_id(ref_id);
                     used_refs.insert(ref_id);
@@ -178,7 +192,7 @@ where
                     let past = chrono::Utc::now().naive_utc() - chrono::Duration::try_days(days).unwrap_or_default();
                     entity.update_update_time(past.format("%Y-%m-%d").to_string());
                 }
-        let entity = entity.audit_as("Init Sample Data").save(ctx).await.map_err(|e| e.to_string())?;
+        let entity = entity.audit_as("Init Sample Data").save(ctx.user_context()).await.map_err(|e| e.to_string())?;
         state.record_generated("Support Ticket");
         if i % 20 == 0 {
             log::info!("Generating Support Ticket: {}/{}", i, fanout);
@@ -210,7 +224,7 @@ where
     log::info!("Generating sample data for Customer Issue (expected: {})...", fanout);
     for i in 0..fanout {
         let mut entity = Q::customer_issues().purpose("Init Sample Data").new_entity(ctx);
-        let mut used_refs = std::collections::HashSet::new();
+        let mut used_refs: std::collections::HashSet<u64> = std::collections::HashSet::new();
                 if let Some(ref_id) = state.pick_unused_id("Support Ticket", i as usize, &used_refs) {
                     entity.update_ticket_id(ref_id);
                     used_refs.insert(ref_id);
@@ -228,7 +242,7 @@ where
                     let past = chrono::Utc::now().naive_utc() - chrono::Duration::try_days(days).unwrap_or_default();
                     entity.update_update_time(past.format("%Y-%m-%d").to_string());
                 }
-entity.audit_as("Init Sample Data").save(ctx).await.map_err(|e| e.to_string())?;
+entity.audit_as("Init Sample Data").save(ctx.user_context()).await.map_err(|e| e.to_string())?;
         state.record_generated("Customer Issue");
         if i % 20 == 0 {
             log::info!("Generating Customer Issue: {}/{}", i, fanout);

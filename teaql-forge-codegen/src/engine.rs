@@ -499,6 +499,16 @@ pub fn render_preview(
         include_str!("../templates/rust-assist-update/prompt.md.j2"),
     )
     .unwrap();
+    env.add_template(
+        "rust-assist-ensure-schema",
+        include_str!("../templates/rust-assist-ensure-schema/prompt.md.j2"),
+    )
+    .unwrap();
+    env.add_template(
+        "rust-assist-i18n",
+        include_str!("../templates/rust-assist-i18n/prompt.md.j2"),
+    )
+    .unwrap();
 
     let template = env.get_template(template_name).map_err(|e| e.to_string())?;
 

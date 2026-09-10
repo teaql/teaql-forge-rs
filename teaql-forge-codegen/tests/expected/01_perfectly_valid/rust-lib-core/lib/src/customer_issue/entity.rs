@@ -195,26 +195,4 @@ impl CustomerIssue {
         self.root.set_comment(comment);
         self
     }
-    pub(crate) async fn save<'a, C>(
-        &self,
-        ctx: &'a C,
-    ) -> Result<teaql_runtime::GraphNode, crate::TeaqlDataServiceError<C::CustomerIssueRepository<'a>>>
-    where
-        C: crate::TeaqlRepositoryProvider + ?Sized,
-    {
-        let root = ctx.user_context().entity_root();
-        let key = self.entity_key();
-        let has_ledger_change = (self.id != 0)
-            && (root.current_change_set().changes().contains_key(&key)
-                || root.is_marked_as_delete(&key)
-                || root.is_new(&key));
-        let repository = ctx
-            .customer_issue_repository()
-            .map_err(|err| teaql_runtime::DataServiceError::Runtime(teaql_runtime::RuntimeError::Graph(err.to_string())))?;
-        if has_ledger_change {
-            crate::TeaqlEntityRepository::save_entity_ledger(&repository, root.clone()).await?;
-            return Ok(teaql_runtime::GraphNode::new("CustomerIssue"));
-        }
-        crate::TeaqlEntityRepository::save_entity_graph(&repository, self.clone()).await
-    }
 }

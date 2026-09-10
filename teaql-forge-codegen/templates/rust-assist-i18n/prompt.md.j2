@@ -1,0 +1,2 @@
+# Rust Assist — Internationalization
+Parse the generated `teaql-i18n.json` catalog, install it explicitly on `context`, and call `context.set_locale_code(code)` before checker execution. Preserve the typed `UnsupportedLocale` error and do not change the active locale when parsing fails. Translate display messages without changing rule ids.

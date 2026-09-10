@@ -92,12 +92,16 @@ impl<R> SupportTicketRequest<R> {
             .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
         let relation_aggregates = runtime_relation_aggregates(&query_options);
-        let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
+        let query = authorize_query(apply_runtime_metadata(
+            self.query,
+            &query_options,
+            &self.child_enhancements,
+        )).map_err(DataServiceError::Runtime)?;
         let mut rows = repository.fetch_enhanced_entities_with_relation_aggregates::<R>(
             &query,
             &relation_aggregates,
         ).await?;
-        let facets = execute_facets(ctx, &query, &query_options)
+        let facets = execute_facets(ctx, query.as_query(), &query_options)
             .await
             .map_err(DataServiceError::Runtime)?;
         attach_facets(&mut rows, facets);
@@ -114,7 +118,11 @@ impl<R> SupportTicketRequest<R> {
             .support_ticket_repository()
             .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let query_options = self.query_options.clone();
-        let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
+        let query = authorize_query(apply_runtime_metadata(
+            self.query,
+            &query_options,
+            &self.child_enhancements,
+        )).map_err(DataServiceError::Runtime)?;
         let chunks = repository.fetch_stream(&query)
             .await?;
         Ok(chunks)
@@ -172,6 +180,7 @@ impl<R> SupportTicketRequest<R> {
         query.slice = None;
         query.relations.clear();
         query = query.count(COUNT_ALIAS);
+        let query = authorize_query(query).map_err(DataServiceError::Runtime)?;
         let rows = repository.fetch_all(&query).await?;
         rows.first()
             .and_then(|row| row.get(COUNT_ALIAS))
@@ -190,6 +199,7 @@ impl<R> SupportTicketRequest<R> {
             .map_err(|err| DataServiceError::Runtime(RuntimeError::Graph(err.to_string())))?;
         let mut query = self.query.limit(1);
         query.relations.clear();
+        let query = authorize_query(query).map_err(DataServiceError::Runtime)?;
         let rows = repository.fetch_all(&query).await?;
         Ok(!rows.is_empty())
     }
@@ -206,7 +216,11 @@ impl<R> SupportTicketRequest<R> {
         let query_options = self.query_options.clone();
         let outer_query = self.query.clone();
         let relation_aggregates = runtime_relation_aggregates(&query_options);
-        let query = apply_runtime_metadata(self.query, &query_options, &self.child_enhancements);
+        let query = authorize_query(apply_runtime_metadata(
+            self.query,
+            &query_options,
+            &self.child_enhancements,
+        )).map_err(DataServiceError::Runtime)?;
         let mut rows = repository.fetch_smart_list_with_relation_aggregates(&query, &relation_aggregates).await?;
         let facets = execute_facets(ctx, &outer_query, &query_options)
             .await
@@ -1379,7 +1393,7 @@ impl<R> SupportTicketRequest<R> {
     /// 2. **Advanced**: Only use this method when you need to perform advanced searches, dynamic subqueries, or filter based on complex relation conditions.
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,ignore
     /// // Only use when building dynamic queries
     /// let dynamic_query = crate::Q::ticket_statuses_minimal().filter(...);
     /// let request = crate::Q::support_tickets().with_status_matching(dynamic_query);
@@ -1407,7 +1421,7 @@ impl<R> SupportTicketRequest<R> {
     /// 2. **Advanced**: Only use this method when you need to perform advanced searches, dynamic subqueries, or filter based on complex relation conditions.
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,ignore
     /// // Only use when building dynamic queries
     /// let dynamic_query = crate::Q::ticket_statuses_minimal().filter(...);
     /// let request = crate::Q::support_tickets().without_status_matching(dynamic_query);
@@ -1645,14 +1659,6 @@ impl<R> From< SupportTicketRequest<R> > for QuerySelection {
             child_enhancements: request.child_enhancements,
             query_options: request.query_options,
         }
-    }
-}
-impl<'a, C> crate::request_support::AuditedSave<'a, C> for teaql_core::Audited<crate::SupportTicket>
-where C: crate::request_support::TeaqlRepositoryProvider + ?Sized + 'a
-{
-    type Error = crate::TeaqlDataServiceError<C::SupportTicketRepository<'a>>;
-    fn save(self, ctx: &'a C) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<teaql_runtime::GraphNode, Self::Error>> + '_>> {
-        Box::pin(async move { self.into_entity().save(ctx).await })
     }
 }
 impl<R: teaql_core::Entity> crate::PurposedQuery<SupportTicketRequest<R>> {
