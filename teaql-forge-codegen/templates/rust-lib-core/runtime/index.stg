@@ -1,0 +1,389 @@
+index(domain) ::= <<
+
+use crate::*;
+use teaql_core::TeaqlEntity;
+
+<if(domain.dataService.rustHasSqlProvider)>
+use <domain.dataService.rustSqlProviderExtTrait> as _;
+
+pub type DataServiceDialect = <domain.dataService.rustSqlDialectType>;
+pub type DataServiceMutationExecutor = <domain.dataService.rustSqlMutationExecutorType>;
+pub type DataServiceMutationError = <domain.dataService.rustSqlMutationErrorType>;
+pub type DataServiceIdGenerator = <domain.dataService.rustSqlIdGeneratorType>;
+<if(domain.businessIdFields)><if(domain.dataService.rustSupportsBusinessIdInfrastructure)>pub type DataServiceBusinessIdAllocator = <domain.dataService.rustBusinessIdAllocatorType>;
+<endif><endif>
+pub type DataServicePool = <domain.dataService.rustSqlPoolType>;
+pub type DataServiceExecutor = ServiceRuntimeExecutor;
+pub type ServiceRuntime = teaql_runtime::UserContext;
+
+pub const DATABASE_URL_ENV: &str = "<domain.rustEnvPrefix>_DATABASE_URL";
+<if(domain.businessIdFields)>pub const BUSINESS_ID_KEY_HEX_ENV: &str = "TEAQL_BUSINESS_ID_KEY_V1_HEX";
+pub const BUSINESS_ID_KEY_VERSION_ENV: &str = "TEAQL_BUSINESS_ID_KEY_VERSION";
+<endif>
+<if(domain.dataService.rustSqlNeedsCredentials)>pub const DATABASE_USER_ENV: &str = "<domain.rustEnvPrefix>_DATABASE_USER";
+pub const DATABASE_PASSWORD_ENV: &str = "<domain.rustEnvPrefix>_DATABASE_PASSWORD";
+<endif>
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ServiceRuntimeConfig {
+    pub database_url: String,
+<if(domain.dataService.rustSqlNeedsCredentials)>    pub database_user: String,
+    pub database_password: String,
+<endif>}
+
+impl ServiceRuntimeConfig {
+    pub fn from_env() -> Result\<Self, ServiceRuntimeError\> {
+        Ok(Self {
+            database_url: env_value(DATABASE_URL_ENV)?,
+<if(domain.dataService.rustSqlNeedsCredentials)>            database_user: env_value(DATABASE_USER_ENV)?,
+            database_password: env_value(DATABASE_PASSWORD_ENV)?,
+<endif>        })
+    }
+}
+
+#[derive(Debug)]
+pub enum ServiceRuntimeError {
+    MissingEnv {
+        name: &'static str,
+        source: std::env::VarError,
+    },
+    ConnectionError(String),
+    Configuration(String),
+<if(domain.dataService.rustSqlSupportsTransactions)>    Rusqlite(rusqlite::Error),<endif>
+    Runtime(teaql_runtime::RuntimeError),
+}
+
+impl std::fmt::Display for ServiceRuntimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter\<'_\>) -> std::fmt::Result {
+        match self {
+            ServiceRuntimeError::MissingEnv { name, source } => {
+                write!(f, "missing environment variable {name}: {source}")
+            }
+            ServiceRuntimeError::ConnectionError(err) => write!(f, "connection error: {err}"),
+            ServiceRuntimeError::Configuration(err) => write!(f, "configuration error: {err}"),
+<if(domain.dataService.rustSqlSupportsTransactions)>            ServiceRuntimeError::Rusqlite(err) => write!(f, "rusqlite error: {err}"),<endif>
+            ServiceRuntimeError::Runtime(err) => write!(f, "runtime error: {err}"),
+        }
+    }
+}
+
+impl std::error::Error for ServiceRuntimeError {
+    fn source(&self) -> Option\<&(dyn std::error::Error + 'static)\> {
+        match self {
+            ServiceRuntimeError::MissingEnv { source, .. } => Some(source),
+            ServiceRuntimeError::ConnectionError(_) => None,
+            ServiceRuntimeError::Configuration(_) => None,
+<if(domain.dataService.rustSqlSupportsTransactions)>            ServiceRuntimeError::Rusqlite(err) => Some(err),<endif>
+            ServiceRuntimeError::Runtime(err) => Some(err),
+        }
+    }
+}
+
+<if(domain.dataService.rustSqlSupportsTransactions)>impl From\<rusqlite::Error\> for ServiceRuntimeError {
+    fn from(err: rusqlite::Error) -> Self {
+        ServiceRuntimeError::Rusqlite(err)
+    }
+}<endif>
+
+impl From\<teaql_runtime::RuntimeError\> for ServiceRuntimeError {
+    fn from(err: teaql_runtime::RuntimeError) -> Self {
+        ServiceRuntimeError::Runtime(err)
+    }
+}
+
+#[derive(Clone)]
+pub struct LocalSchemaProvider;
+
+impl teaql_data_service::SchemaProvider for LocalSchemaProvider {
+    fn get_entity(&self, name: &str) -> Option\<std::sync::Arc\<teaql_core::EntityDescriptor\>\> {
+        match name {
+            <domain.objectDescriptors:{obj | "<obj.rustStructName>" => Some(std::sync::Arc::new(crate::<obj.rustStructName>::entity_descriptor())),};separator="\n">
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ServiceRuntimeExecutor {
+    inner: teaql_sql::SqlDataServiceExecutor\<
+        DataServiceDialect,
+        DataServiceMutationExecutor,
+        LocalSchemaProvider
+    \>,
+<if(domain.supportFullTextSearch)>    meilisearch: Option\<teaql_provider_meilisearch::MeilisearchProvider\>,<endif>
+}
+
+impl ServiceRuntimeExecutor {
+    pub fn new(inner: DataServiceMutationExecutor) -> Self {
+        Self {
+            inner: teaql_sql::SqlDataServiceExecutor::new(
+                DataServiceDialect::default(),
+                inner,
+                LocalSchemaProvider
+            ),
+<if(domain.supportFullTextSearch)>            meilisearch: None,<endif>
+        }
+    }
+
+<if(domain.supportFullTextSearch)>
+    pub fn with_meilisearch(mut self, meilisearch: teaql_provider_meilisearch::MeilisearchProvider) -> Self {
+        self.meilisearch = Some(meilisearch);
+        self
+    }
+<endif>
+}
+
+impl teaql_data_service::DataServiceExecutor for ServiceRuntimeExecutor {
+    type Error = teaql_sql::SqlExecutorError\<DataServiceMutationError\>;
+    fn capabilities(&self) -> teaql_data_service::DataServiceCapabilities {
+        teaql_data_service::DataServiceExecutor::capabilities(&self.inner)
+    }
+}
+
+impl teaql_data_service::QueryExecutor for ServiceRuntimeExecutor {
+    async fn query(&self, request: teaql_data_service::QueryRequest) -> Result\<teaql_data_service::QueryResult, Self::Error\> {
+<if(domain.supportFullTextSearch)>        use teaql_data_service::SchemaProvider;
+        if let Some(desc) = self.inner.schema_provider.get_entity(&request.query.entity) {
+            if desc.data_service.as_deref() == Some("meilisearch") {
+                if let Some(meili) = &self.meilisearch {
+                    return teaql_data_service::QueryExecutor::query(meili, request).await.map_err(|e| teaql_sql::SqlExecutorError::Compile(teaql_sql::SqlCompileError::UnknownEntity(e.to_string())));
+                }
+            }
+        }
+<endif>        teaql_data_service::QueryExecutor::query(&self.inner, request).await
+    }
+}
+
+impl teaql_data_service::StreamQueryExecutor for ServiceRuntimeExecutor {
+    fn query_stream(&self, request: teaql_data_service::QueryRequest, chunk_size: usize) -> teaql_data_service::QueryStream\<'_, Self::Error\> {
+<if(domain.supportFullTextSearch)>        use teaql_data_service::SchemaProvider;
+        if let Some(desc) = self.inner.schema_provider.get_entity(&request.query.entity) {
+            if desc.data_service.as_deref() == Some("meilisearch") {
+                if let Some(_meili) = &self.meilisearch {
+                    return Box::pin(futures_util::stream::once(async { Err(teaql_sql::SqlExecutorError::Compile(teaql_sql::SqlCompileError::UnknownEntity("Meilisearch stream queries not supported".to_string()))) }));
+                }
+            }
+        }
+<endif>        teaql_data_service::StreamQueryExecutor::query_stream(&self.inner, request, chunk_size)
+    }
+}
+
+impl teaql_data_service::MutationExecutor for ServiceRuntimeExecutor {
+    async fn mutate(&self, request: teaql_data_service::MutationRequest) -> Result\<teaql_data_service::MutationResult, Self::Error\> {
+<if(domain.supportFullTextSearch)>        use teaql_data_service::SchemaProvider;
+        let entity_name = match &request {
+            teaql_data_service::MutationRequest::Insert(cmd) => Some(&cmd.entity),
+            teaql_data_service::MutationRequest::Update(cmd) => Some(&cmd.entity),
+            teaql_data_service::MutationRequest::Delete(cmd) => Some(&cmd.entity),
+            teaql_data_service::MutationRequest::Recover(cmd) => Some(&cmd.entity),
+            teaql_data_service::MutationRequest::Batch(_) => None,
+        };
+        if let Some(entity_name) = entity_name {
+            if let Some(desc) = self.inner.schema_provider.get_entity(entity_name) {
+                if desc.data_service.as_deref() == Some("meilisearch") {
+                    if let Some(meili) = &self.meilisearch {
+                        // Always fallback to Meilisearch if it's explicitly set for the entity.
+                        return teaql_data_service::MutationExecutor::mutate(meili, request).await.map_err(|e| teaql_sql::SqlExecutorError::Compile(teaql_sql::SqlCompileError::UnknownEntity(e.to_string())));
+                    }
+                }
+            }
+        }
+<endif>        teaql_data_service::MutationExecutor::mutate(&self.inner, request).await
+    }
+}
+
+impl teaql_data_service::TransactionExecutor for ServiceRuntimeExecutor {
+    type Tx\<'a\> = teaql_sql::SqlDataServiceTransaction\<'a, DataServiceDialect, \<DataServiceMutationExecutor as teaql_sql::SqlTransactionTransport\>::Tx\<'a\>, LocalSchemaProvider\> where Self: 'a;
+
+    async fn begin(&self) -> Result\<Self::Tx\<'_ \>, Self::Error\> {
+        teaql_data_service::TransactionExecutor::begin(&self.inner).await
+    }
+}
+
+pub async fn service_runtime_from_env() -> Result\<ServiceRuntime, ServiceRuntimeError\> {
+    service_runtime(ServiceRuntimeConfig::from_env()?).await
+}
+
+pub async fn service_runtime(config: ServiceRuntimeConfig) -> Result\<ServiceRuntime, ServiceRuntimeError\> {
+    let pool = connect_data_service_pool(&config).await?;
+    service_runtime_from_pool(pool).await
+}
+
+pub async fn service_runtime_from_pool(pool: DataServicePool) -> Result\<ServiceRuntime, ServiceRuntimeError\> {
+<if(domain.dataService.rustSqlNeedsCredentials)>    let id_generator = DataServiceIdGenerator::new(pool.clone());
+    let mutation_executor = DataServiceMutationExecutor::new(pool);<else>    let mutation_executor = DataServiceMutationExecutor::new(pool);
+    let id_generator = DataServiceIdGenerator::from_executor(mutation_executor.clone());<endif>
+    let mut context = module_with_behaviors_and_checkers().into_context();
+    context.set_internal_id_generator(id_generator);
+    context.<domain.dataService.rustSqlUseProviderMethod>(mutation_executor.clone());
+<if(domain.businessIdFields)><if(domain.dataService.rustSupportsBusinessIdInfrastructure)>    context.set_business_id_infrastructure(DataServiceBusinessIdAllocator::from_executor(mutation_executor.clone()));
+    context
+        .set_business_id_key_provider(business_id_key_provider_from_env()?)
+        .map_err(|error| ServiceRuntimeError::Configuration(error.to_string()))?;
+<else>    // This provider has no portable persistent Business ID allocator yet.
+    // Install an application-owned BusinessIdService before creating an Aggregate.
+<endif><endif>
+    let executor = ServiceRuntimeExecutor::new(mutation_executor);
+    context.register_executor(executor.clone());
+    context.insert_resource(executor);
+    
+    // SQL logging is owned by teaql-runtime. The legacy teaql-tool-core
+    // environment whitelist rejects runtime logging variables and must not
+    // gate generated application startup. Schema remains explicit.
+    
+    Ok(context)
+}
+
+
+
+fn env_value(name: &'static str) -> Result\<String, ServiceRuntimeError\> {
+    std::env::var(name).map_err(|source| ServiceRuntimeError::MissingEnv { name, source })
+}
+
+<if(domain.businessIdFields)>fn business_id_key_provider_from_env() -> Result\<teaql_runtime::StaticBusinessIdKeyProvider, ServiceRuntimeError\> {
+    let encoded = env_value(BUSINESS_ID_KEY_HEX_ENV)?;
+    if encoded.len() != 64 {
+        return Err(ServiceRuntimeError::Configuration(
+            format!("{BUSINESS_ID_KEY_HEX_ENV} must contain exactly 64 hexadecimal characters"),
+        ));
+    }
+    let mut bytes = [0_u8; 32];
+    for (index, byte) in bytes.iter_mut().enumerate() {
+        let offset = index * 2;
+        *byte = u8::from_str_radix(&encoded[offset..offset + 2], 16).map_err(|_| {
+            ServiceRuntimeError::Configuration(
+                format!("{BUSINESS_ID_KEY_HEX_ENV} must contain only hexadecimal characters"),
+            )
+        })?;
+    }
+    let version = std::env::var(BUSINESS_ID_KEY_VERSION_ENV)
+        .unwrap_or_else(|_| "1".to_owned())
+        .parse::\<u32\>()
+        .map_err(|_| ServiceRuntimeError::Configuration(
+            format!("{BUSINESS_ID_KEY_VERSION_ENV} must be a positive u32"),
+        ))?;
+    let key = teaql_runtime::BusinessIdEncodingKey::new(version, bytes)
+        .map_err(|error| ServiceRuntimeError::Configuration(error.to_string()))?;
+    Ok(teaql_runtime::StaticBusinessIdKeyProvider::new(key))
+}
+<endif>
+
+<if(domain.dataService.rustSqlNeedsCredentials)>async fn connect_data_service_pool(config: &ServiceRuntimeConfig) -> Result\<DataServicePool, ServiceRuntimeError\> {
+<domain.dataService.rustSqlConnectPoolCode>
+}
+<else>async fn connect_data_service_pool(config: &ServiceRuntimeConfig) -> Result\<DataServicePool, ServiceRuntimeError\> {
+<domain.dataService.rustSqlConnectPoolCode>
+}
+<endif>
+<endif>
+
+<if(domain.dataService.rustIsLinuxProvider)>
+pub type DataServiceExecutor = teaql_provider_linux::LinuxDataServiceExecutor;
+pub type ServiceRuntime = teaql_runtime::UserContext;
+
+#[derive(Debug)]
+pub enum ServiceRuntimeError {
+    Runtime(teaql_runtime::RuntimeError),
+}
+
+impl std::fmt::Display for ServiceRuntimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter\<'_\>) -> std::fmt::Result {
+        match self {
+            ServiceRuntimeError::Runtime(err) => write!(f, "runtime error: {err}"),
+        }
+    }
+}
+
+impl std::error::Error for ServiceRuntimeError {
+    fn source(&self) -> Option\<&(dyn std::error::Error + 'static)\> {
+        match self {
+            ServiceRuntimeError::Runtime(err) => Some(err),
+        }
+    }
+}
+
+impl From\<teaql_runtime::RuntimeError\> for ServiceRuntimeError {
+    fn from(err: teaql_runtime::RuntimeError) -> Self {
+        ServiceRuntimeError::Runtime(err)
+    }
+}
+
+pub async fn service_runtime_from_env() -> Result\<ServiceRuntime, ServiceRuntimeError\> {
+    service_runtime().await
+}
+
+pub async fn service_runtime() -> Result\<ServiceRuntime, ServiceRuntimeError\> {
+    let mut context = module_with_behaviors_and_checkers().into_context();
+    context.register_executor(DataServiceExecutor::new());
+    Ok(context)
+}
+<endif>
+
+pub fn repository_registry() -> teaql_runtime::InMemoryEntityRegistry {
+    teaql_runtime::InMemoryEntityRegistry::new()
+<domain.objectDescriptors:{objectDescriptor |         .with_entity("<objectDescriptor.rustStructName>")};separator="\n">
+}
+
+pub fn behavior_registry() -> teaql_runtime::InMemoryEntityDataServiceBehaviorRegistry {
+    teaql_runtime::InMemoryEntityDataServiceBehaviorRegistry::new()
+<domain.objectDescriptors:{objectDescriptor |         .with_behavior("<objectDescriptor.rustStructName>", <objectDescriptor.rustBehaviorName>::default())};separator="\n">
+}
+
+pub fn checker_registry() -> teaql_runtime::InMemoryCheckerRegistry {
+    teaql_runtime::InMemoryCheckerRegistry::new()
+<domain.objectDescriptors:{objectDescriptor |         .with_checker(teaql_runtime::TypedEntityChecker::\<<objectDescriptor.rustStructName>, _\>::new(<objectDescriptor.rustStructName>Checker::default()))};separator="\n">
+}
+
+<domain.rustGeneratedBootstrap>
+
+/// Canonical KSML field to selected JSON wire name, consumed by HTTP/TFP adapters.
+pub fn generated_wire_field_mappings() -> std::collections::BTreeMap\<String, std::collections::BTreeMap\<String, String\>\> {
+    std::collections::BTreeMap::from([
+<domain.objectDescriptors:rustWireEntity();separator=",\n">
+    ])
+}
+
+/// Accepted legacy aliases; empty until explicitly declared by the model.
+pub fn generated_wire_field_aliases() -> std::collections::BTreeMap\<String, std::collections::BTreeMap\<String, String\>\> {
+    std::collections::BTreeMap::new()
+}
+
+pub fn module() -> teaql_runtime::RuntimeModule {
+    teaql_runtime::RuntimeModule::new()
+<domain.objectDescriptors:{objectDescriptor |         .entity::\<<objectDescriptor.rustStructName>\>()};separator="\n">
+        .generated_schema_bootstrap(ensure_generated_bootstrap)
+}
+
+pub fn module_with_checkers() -> teaql_runtime::RuntimeModule {
+    let mut module = teaql_runtime::RuntimeModule::new();
+<domain.objectDescriptors:{objectDescriptor |     module = module.entity::\<<objectDescriptor.rustStructName>\>();
+    module = module.checker(teaql_runtime::TypedEntityChecker::\<<objectDescriptor.rustStructName>, _\>::new(<objectDescriptor.rustStructName>Checker::default()));};separator="\n">
+    module = module.generated_schema_bootstrap(ensure_generated_bootstrap);
+    module
+}
+
+pub fn module_with_behaviors() -> teaql_runtime::RuntimeModule {
+    let mut module = teaql_runtime::RuntimeModule::new();
+<domain.objectDescriptors:{objectDescriptor |     module = module.entity_with_behavior::\<<objectDescriptor.rustStructName>, _\>(<objectDescriptor.rustBehaviorName>::default());};separator="\n">
+    module = module.generated_schema_bootstrap(ensure_generated_bootstrap);
+    module
+}
+
+pub fn module_with_behaviors_and_checkers() -> teaql_runtime::RuntimeModule {
+    let mut module = teaql_runtime::RuntimeModule::new();
+<domain.objectDescriptors:{objectDescriptor |     module = module.entity_with_behavior::\<<objectDescriptor.rustStructName>, _\>(<objectDescriptor.rustBehaviorName>::default());
+    module = module.checker(teaql_runtime::TypedEntityChecker::\<<objectDescriptor.rustStructName>, _\>::new(<objectDescriptor.rustStructName>Checker::default()));};separator="\n">
+    module = module.generated_schema_bootstrap(ensure_generated_bootstrap);
+    module
+}
+>>
+
+rootGraph(objectDescriptor) ::= <<
+teaql_runtime::GraphNode::new("<objectDescriptor.rustStructName>")
+<objectDescriptor.rustScalarFields:{field |             .value("<field.rustStorageFieldName>", <field.rustRootSeedValue>)};separator="\n">
+>>
+
+rustWireEntity(entity) ::= <<
+        ("<entity.rustStructName>".to_owned(), std::collections::BTreeMap::from([
+<entity.fields:{field |             ("<field.canonicalPropertyName>".to_owned(), "<field.jsonFieldName>".to_owned())};separator=",\n">
+        ]))
+>>

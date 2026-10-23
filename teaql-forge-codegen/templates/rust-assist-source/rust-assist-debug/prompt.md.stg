@@ -1,0 +1,97 @@
+index(domain) ::= <<
+\<!-- ephemeral -->
+
+# Rust Assist — Debug and SQL evidence
+
+TeaQL captures structured SQL evidence on `UserContext`. Keep `sql` and
+`parameter_count` in application diagnostics; `debug_sql` and raw `params` may
+contain customer data and must remain inside a trusted, access-controlled test
+or operator boundary.
+
+```rust
+use teaql_runtime::{SqlLogEntry, SqlLogOptions, SqlLogOperation, UserContext};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SafeSqlEvidence {
+    pub operation: &'static str,
+    pub parameterized_sql: String,
+    pub parameter_count: usize,
+    pub elapsed_micros: u128,
+    pub result_count: Option\<usize>,
+    pub affected_rows: Option\<u64>,
+    pub result_summary: String,
+}
+
+pub fn enable_all_sql_evidence(context: &mut UserContext) {
+    context.set_sql_log_options(SqlLogOptions::all());
+    context.clear_sql_logs();
+}
+
+pub fn enable_select_sql_evidence(context: &mut UserContext) {
+    context.set_sql_log_options(SqlLogOptions::select_only());
+    context.clear_sql_logs();
+}
+
+pub fn enable_mutation_sql_evidence(context: &mut UserContext) {
+    context.set_sql_log_options(SqlLogOptions::mutation_only());
+    context.clear_sql_logs();
+}
+
+pub fn disable_select_sql_evidence(context: &mut UserContext) {
+    context.disable_select_sql_log();
+    context.clear_sql_logs();
+}
+
+pub fn disable_mutation_sql_evidence(context: &mut UserContext) {
+    context.disable_mutation_sql_log();
+    context.clear_sql_logs();
+}
+
+pub fn disable_sql_evidence(context: &mut UserContext) {
+    context.disable_sql_log();
+}
+
+pub fn sql_evidence(context: &UserContext) -> Vec\<SafeSqlEvidence> {
+    context.sql_logs().iter().map(safe_sql_evidence).collect()
+}
+
+fn safe_sql_evidence(entry: &SqlLogEntry) -> SafeSqlEvidence {
+    SafeSqlEvidence {
+        operation: match entry.operation {
+            SqlLogOperation::Select => "select",
+            SqlLogOperation::Insert => "insert",
+            SqlLogOperation::Update => "update",
+            SqlLogOperation::Delete => "delete",
+            SqlLogOperation::Recover => "recover",
+        },
+        parameterized_sql: entry.sql.clone(),
+        parameter_count: entry.params.len(),
+        elapsed_micros: entry.elapsed.as_micros(),
+        result_count: entry.result_count,
+        affected_rows: entry.affected_rows,
+        result_summary: entry.result_summary.clone(),
+    }
+}
+```
+
+Every generated query must still carry non-empty `.comment(...)` and
+`.purpose(...)`; every mutation must carry `.audit_as(...)`. Classify
+not-found, validation/checker, optimistic-conflict, and provider errors rather
+than converting them into an empty successful result.
+
+Runtime log formatting accepts these environment values:
+
+- `TEAQL_SQL_LOG`: `_silent`, `_summary`, `_full`, `_full_with_payload`;
+- `TEAQL_SQL_LOG_TABLES`: comma-separated table focus;
+- `TEAQL_AUDIT_LOG`: the same four levels;
+- `TEAQL_AUDIT_LOG_ENTITIES`: comma-separated entity focus.
+
+Query and mutation SQL logging are both enabled on a new `UserContext`.
+`context.disable_select_sql_log()` and
+`context.disable_mutation_sql_log()` are independent switches; use
+`disable_sql_log()` only when both families must be silent. Each entry retains
+`comment`, `purpose`, `audit_reason`, the typed multi-level `trace_path`,
+parameterized SQL, copy-paste `debug_sql`, elapsed time, result count, and
+affected rows. Rendered values remain trusted operator output and
+`RuntimeTelemetry` must not export them.
+>>

@@ -10,3 +10,4 @@ roxmltree.workspace = true
 thiserror.workspace = true
 miette.workspace = true
 serde.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,36 @@
+                <div id="Table-__TABLE_NAME__" class="table-wrap page-break pt-4">
+                    <h3 class="mb-3 text-primary">__INDEX__. Table: __TABLE_NAME__</h3>
+
+                    <h5 class="mt-4">Columns</h5>
+                    <table class="table table-bordered table-sm table-striped">
+                        <thead class="table-light">
+                            <tr><th width="5%">#</th><th width="20%">Column Name</th><th width="25%">Name</th><th width="25%">Type</th><th width="25%">Sample</th></tr>
+                        </thead>
+                        <tbody>
+__COLUMNS_ROWS__
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Index</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr><th>#</th><th>Index Name</th><th>Columns</th><th>Type</th><th>Remark</th></tr>
+                        </thead>
+                        <tbody>
+__INDEX_ROWS__
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Constraints</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr><th>#</th><th>Constraint Name</th><th>Column</th><th>Reference Table</th><th>Reference Column</th><th>Remark</th></tr>
+                        </thead>
+                        <tbody>
+__CONSTRAINTS_ROWS__
+                        </tbody>
+                    </table>
+
+__SECTIONS__
+
+                </div>

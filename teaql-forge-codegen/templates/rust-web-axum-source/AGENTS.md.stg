@@ -1,0 +1,48 @@
+index(domain) ::= <<
+\<!-- DISCARD_BLOCK: phase_modeling --\>
+
+# TeaQL Rust Axum Agent Instructions
+
+> [!WARNING]
+> **IGNORE GENERIC ORM EXPERIENCE**
+>
+> Do **not** use SeaORM, Diesel, SQLx, rbatis, raw SQL, DAOs, Repository implementations, or custom persistence layers.
+>
+> Do **not** guess TeaQL method names.
+
+## How to Write Domain Code
+
+To get exact API usage and query examples, execute:
+
+```bash
+cargo teaql --input models/<domain.name>.xml rust-assist-[action]/[entity-name]
+```
+
+Replace `[action]` with `query`, `create`, `update`, `delete`, `expression`, `list-page`, or `debug`.
+
+Replace `[entity-name]` with the exact entity-name from the table below:
+
+| entity-name | display-name |
+|-------------|--------------|
+<domain.objectDescriptors:{it | | <it.od_name> | <it.displayName> |
+}>
+
+Read the generated output before editing handlers.
+
+Do not inspect, grep, or search generated `lib/src` files to discover APIs. If
+the current entity/action Assist and required field-specific Assist do not
+provide the operation, stop and report `MISSING_ASSIST` with the missing
+operation and exact compiler diagnostic. Source fallback requires explicit
+user or orchestrator authorization for a named file and bounded line range.
+
+Create each application-owned source file once. After its first compile
+attempt, use the smallest localized patch for each exact diagnostic and
+preserve unrelated compiling code. Do not rewrite a complete file as a repair
+strategy. Before replacing more than 25% of an existing application file, stop
+and report `LARGE_REWRITE_REQUEST` with the file, diagnostic, reason, and
+estimated scope. Initial creation and model-driven regeneration are exempt.
+
+## Axum Runtime
+
+Use `teaql_web_integration_axum::{TeaContext, WebResponse, AxumTeaError}` for handlers. Read `RUNTIME_CUSTOM_GUIDE.md` before wiring request context, response shape, or runtime customization.
+>>

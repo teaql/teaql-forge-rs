@@ -1,0 +1,43 @@
+<root name="todo" org="doublechaintech"  version="0.0.25" >
+    <platform
+
+            name="todo platform"
+            create_time="createTime()"
+
+    />
+    <merchant
+            name="双链科技"
+            platform="platform()"
+    />
+
+
+    <gender_type
+            _name="Gender Type"
+            _module="platform_data"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            platform="platform()"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Male" code="MALE"/>
+        <_value id="2" name="Female" code="FEMALE"/>
+        <_value id="3" name="Undisclosed" code="OTHER"/>
+    </gender_type>
+
+    <todo_item
+
+            name="申报个人所得税"
+            status="DONE|WORK"
+            create_time="createTime()"
+            update_time="2090-01-01T10:10:10"
+            merchant="merchant(context)"
+    />
+
+
+
+
+
+</root>

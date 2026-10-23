@@ -1,0 +1,1363 @@
+{
+  "source_commit": "6f2d0a33699277b943148db948bdec2d5725df37",
+  "types": {
+    "root": [
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "id": [
+      {
+        "name": "javaType",
+        "value": "java.lang.Long"
+      },
+      {
+        "name": "sqlType",
+        "value": "BIGINT"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Long"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "number(11)"
+      },
+      {
+        "name": "snowflake_sqlType",
+        "value": "number"
+      },
+      {
+        "name": "isId",
+        "value": "true"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "true"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "version": [
+      {
+        "name": "javaType",
+        "value": "java.lang.Long"
+      },
+      {
+        "name": "sqlType",
+        "value": "BIGINT"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Long"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "number(11)"
+      },
+      {
+        "name": "snowflake_sqlType",
+        "value": "number"
+      },
+      {
+        "name": "isVersion",
+        "value": "true"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "true"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "string": [
+      {
+        "name": "max",
+        "value": "100"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "sqlType",
+        "value": "VARCHAR(<max>)"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "businessId": [
+      {
+        "name": "isBusinessId",
+        "value": "true"
+      },
+      {
+        "name": "profile",
+        "value": "daily-permuted-v1"
+      },
+      {
+        "name": "splitbydate",
+        "value": "true"
+      },
+      {
+        "name": "dateFormat",
+        "value": "yyyyMMdd"
+      },
+      {
+        "name": "reset",
+        "value": "daily"
+      },
+      {
+        "name": "preserve_digits",
+        "value": "6"
+      },
+      {
+        "name": "separator",
+        "value": "-"
+      },
+      {
+        "name": "policyVersion",
+        "value": "1"
+      },
+      {
+        "name": "max",
+        "value": "100"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "sqlType",
+        "value": "VARCHAR(<max>)"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "business_id": [
+      {
+        "name": "isBusinessId",
+        "value": "true"
+      },
+      {
+        "name": "profile",
+        "value": "daily-permuted-v1"
+      },
+      {
+        "name": "splitbydate",
+        "value": "true"
+      },
+      {
+        "name": "dateFormat",
+        "value": "yyyyMMdd"
+      },
+      {
+        "name": "reset",
+        "value": "daily"
+      },
+      {
+        "name": "preserve_digits",
+        "value": "6"
+      },
+      {
+        "name": "separator",
+        "value": "-"
+      },
+      {
+        "name": "policyVersion",
+        "value": "1"
+      },
+      {
+        "name": "max",
+        "value": "100"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "sqlType",
+        "value": "VARCHAR(<max>)"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "text": [
+      {
+        "name": "sqlType",
+        "value": "LARGE_TEXT"
+      },
+      {
+        "name": "isText",
+        "value": "true"
+      },
+      {
+        "name": "optional",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "jsonMe": [
+      {
+        "name": "zip",
+        "value": "true"
+      },
+      {
+        "name": "propertyDescriptor",
+        "value": "io.teaql.data.sql.JsonMeProperty"
+      },
+      {
+        "name": "sqlType",
+        "value": "LARGE_TEXT"
+      },
+      {
+        "name": "isText",
+        "value": "true"
+      },
+      {
+        "name": "optional",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "number": [
+      {
+        "name": "javaType",
+        "value": "java.math.BigDecimal"
+      },
+      {
+        "name": "graphqlType",
+        "value": "BigDecimal"
+      },
+      {
+        "name": "sqlType",
+        "value": "NUMERIC(19,7)"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "number(19,7)"
+      },
+      {
+        "name": "db2_sqlType",
+        "value": "decimal(19,7)"
+      },
+      {
+        "name": "isNumber",
+        "value": "true"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "float": [
+      {
+        "name": "javaType",
+        "value": "java.lang.Float"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Float"
+      },
+      {
+        "name": "sqlType",
+        "value": "REAL"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "binary_float"
+      },
+      {
+        "name": "isFloat",
+        "value": "true"
+      },
+      {
+        "name": "db2_sqlType",
+        "value": "decimal(19,7)"
+      },
+      {
+        "name": "isNumber",
+        "value": "true"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "double": [
+      {
+        "name": "javaType",
+        "value": "java.lang.Double"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Float"
+      },
+      {
+        "name": "sqlType",
+        "value": "DOUBLE PRECISION"
+      },
+      {
+        "name": "mysql_sqlType",
+        "value": "DOUBLE"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "binary_double"
+      },
+      {
+        "name": "mssql_sqlType",
+        "value": "FLOAT"
+      },
+      {
+        "name": "isDouble",
+        "value": "true"
+      },
+      {
+        "name": "db2_sqlType",
+        "value": "decimal(19,7)"
+      },
+      {
+        "name": "isNumber",
+        "value": "true"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "integer": [
+      {
+        "name": "graphqlType",
+        "value": "Int"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.Integer"
+      },
+      {
+        "name": "sqlType",
+        "value": "INTEGER"
+      },
+      {
+        "name": "isInt",
+        "value": "true"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "number(19,7)"
+      },
+      {
+        "name": "db2_sqlType",
+        "value": "decimal(19,7)"
+      },
+      {
+        "name": "isNumber",
+        "value": "true"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "long": [
+      {
+        "name": "graphqlType",
+        "value": "Long"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.Long"
+      },
+      {
+        "name": "sqlType",
+        "value": "BIGINT"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "number(11)"
+      },
+      {
+        "name": "snowflake_sqlType",
+        "value": "number"
+      },
+      {
+        "name": "db2_sqlType",
+        "value": "decimal(19,7)"
+      },
+      {
+        "name": "isNumber",
+        "value": "true"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "bool": [
+      {
+        "name": "javaType",
+        "value": "java.lang.Boolean"
+      },
+      {
+        "name": "sqlType",
+        "value": "BOOLEAN"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Boolean"
+      },
+      {
+        "name": "oracle_sqlType",
+        "value": "number(1)"
+      },
+      {
+        "name": "mssql_sqlType",
+        "value": "bit"
+      },
+      {
+        "name": "isBool",
+        "value": "true"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "date": [
+      {
+        "name": "isDate",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.time.LocalDate"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Date"
+      },
+      {
+        "name": "sqlType",
+        "value": "DATE"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "time": [
+      {
+        "name": "isTime",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.time.LocalTime"
+      },
+      {
+        "name": "graphqlType",
+        "value": "Time"
+      },
+      {
+        "name": "sqlType",
+        "value": "TIME"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "dateTime": [
+      {
+        "name": "isDate",
+        "value": "true"
+      },
+      {
+        "name": "isTime",
+        "value": "true"
+      },
+      {
+        "name": "mssql_sqlType",
+        "value": "dateTime"
+      },
+      {
+        "name": "isDateTime",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.time.LocalDateTime"
+      },
+      {
+        "name": "graphqlType",
+        "value": "LocalTime"
+      },
+      {
+        "name": "sqlType",
+        "value": "TIMESTAMP"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "createTime": [
+      {
+        "name": "createFunction",
+        "value": "now"
+      },
+      {
+        "name": "isDate",
+        "value": "true"
+      },
+      {
+        "name": "isTime",
+        "value": "true"
+      },
+      {
+        "name": "mssql_sqlType",
+        "value": "dateTime"
+      },
+      {
+        "name": "isDateTime",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.time.LocalDateTime"
+      },
+      {
+        "name": "graphqlType",
+        "value": "LocalTime"
+      },
+      {
+        "name": "sqlType",
+        "value": "TIMESTAMP"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "updateTime": [
+      {
+        "name": "createFunction",
+        "value": "now"
+      },
+      {
+        "name": "updateFunction",
+        "value": "now"
+      },
+      {
+        "name": "isDate",
+        "value": "true"
+      },
+      {
+        "name": "isTime",
+        "value": "true"
+      },
+      {
+        "name": "mssql_sqlType",
+        "value": "dateTime"
+      },
+      {
+        "name": "isDateTime",
+        "value": "true"
+      },
+      {
+        "name": "javaType",
+        "value": "java.time.LocalDateTime"
+      },
+      {
+        "name": "graphqlType",
+        "value": "LocalTime"
+      },
+      {
+        "name": "sqlType",
+        "value": "TIMESTAMP"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isString",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ],
+    "password": [
+      {
+        "name": "isPassword",
+        "value": "true"
+      },
+      {
+        "name": "max",
+        "value": "100"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "sqlType",
+        "value": "VARCHAR(<max>)"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      }
+    ],
+    "uniStr": [
+      {
+        "name": "createFunction",
+        "value": "uniStr"
+      },
+      {
+        "name": "createFunctionArgNames",
+        "value": "prefix"
+      },
+      {
+        "name": "prefix",
+        "value": ""
+      },
+      {
+        "name": "max",
+        "value": "100"
+      },
+      {
+        "name": "isString",
+        "value": "true"
+      },
+      {
+        "name": "graphqlType",
+        "value": "String"
+      },
+      {
+        "name": "sqlType",
+        "value": "VARCHAR(<max>)"
+      },
+      {
+        "name": "javaType",
+        "value": "java.lang.String"
+      },
+      {
+        "name": "isNumber",
+        "value": "false"
+      },
+      {
+        "name": "isBool",
+        "value": "false"
+      },
+      {
+        "name": "isDate",
+        "value": "false"
+      },
+      {
+        "name": "isTime",
+        "value": "false"
+      },
+      {
+        "name": "isText",
+        "value": "false"
+      },
+      {
+        "name": "isId",
+        "value": "false"
+      },
+      {
+        "name": "isVersion",
+        "value": "false"
+      },
+      {
+        "name": "isBaseEntityField",
+        "value": "false"
+      },
+      {
+        "name": "isPassword",
+        "value": "false"
+      }
+    ]
+  }
+}

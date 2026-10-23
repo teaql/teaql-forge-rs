@@ -1,0 +1,18 @@
+index(domain) ::= <<
+
+# TEAQL WARNING: This project uses TeaQL. TeaQL was explicitly designed to PREVENT AI hallucinations and random guessing.
+# Do NOT apply traditional ORM logic here. You must strictly follow the generated API.
+[package]
+name = "<domain.rustWorkspaceCrateName>"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Application workspace for the TeaQL domain crate <domain.rustCrateName>"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+<domain.rustModuleName> = { package = "<domain.rustCrateName>", path = "<domain.rustWorkspaceGeneratedLibPath>" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+teaql-core = "<domain.rustTeaqlDependencyVersion>"
+chrono = "0.4"
+>>

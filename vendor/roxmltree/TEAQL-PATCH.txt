@@ -1,0 +1,6 @@
+Upstream: roxmltree 0.20.0, crates.io package, MIT OR Apache-2.0.
+Local change: XML 1.1 nonzero control character references are accepted when the
+original document declares version 1.1. Invalid Unicode scalar references are
+rejected instead of being converted to U+FFFD. Literal characters keep upstream
+validation. The generator validates XML 1.1 restricted characters before parsing.
+The public tree API and default DTD policy are unchanged.

@@ -1,0 +1,2919 @@
+{
+  "bean_getters" : {
+    "com.skynet.codegenerator.meta.AggregateFunction" : {
+      "Class" : "class",
+      "DeclaringClass" : "declaringClass",
+      "GolangRuntimeMethod" : "golangRuntimeMethod",
+      "Noun" : "noun",
+      "PascalVerb" : "pascalVerb",
+      "PortableBaseline" : "portableBaseline",
+      "SnakeNoun" : "snakeNoun",
+      "Verb" : "verb",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.Attribute" : {
+      "Append" : "append",
+      "AttachableAttributes" : "attachableAttributes",
+      "AttachableToAdditional" : "attachableToAdditional",
+      "Attributes" : "attributes",
+      "Class" : "class",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "LineNumber" : "lineNumber",
+      "Name" : "name",
+      "Override" : "override",
+      "Remove" : "remove",
+      "SnakeName" : "snakeName",
+      "Value" : "value",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.AutoFunction" : {
+      "ArgNames" : "argNames",
+      "ArgValues" : "argValues",
+      "Class" : "class",
+      "FunctionName" : "functionName",
+      "ReturnType" : "returnType",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.Candidate" : {
+      "CandidateValue" : "candidateValue",
+      "Class" : "class",
+      "Fullpackage" : "fullpackage",
+      "Id" : "id",
+      "Key" : "key",
+      "LineNumber" : "lineNumber",
+      "RustCandidateFilterValue" : "rustCandidateFilterValue",
+      "RustCandidateMethodValue" : "rustCandidateMethodValue",
+      "ScenarioEntranceService" : "scenarioEntranceService",
+      "ScenarioEntranceServiceName" : "scenarioEntranceServiceName",
+      "ScenarioEntranceServicePath" : "scenarioEntranceServicePath",
+      "Value" : "value",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.DataService" : {
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "Class" : "class",
+      "Default" : "default",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "LineNumber" : "lineNumber",
+      "Name" : "name",
+      "SnakeName" : "snakeName",
+      "SupportStack" : "supportStack",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.Domain" : {
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "BoxedRelationsCostThreshold" : "boxedRelationsCostThreshold",
+      "BusinessIdFields" : "businessIdFields",
+      "Class" : "class",
+      "CommonDomain" : "commonDomain",
+      "ConstantDescriptors" : "constantDescriptors",
+      "CustomAutoFunctions" : "customAutoFunctions",
+      "DataService" : "dataService",
+      "DataServiceDepends" : "dataServiceDepends",
+      "DataServices" : "dataServices",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "HaveNoVerb" : "haveNoVerb",
+      "HaveVerb" : "haveVerb",
+      "InUseLibraries" : "inUseLibraries",
+      "JsonFieldNaming" : "jsonFieldNaming",
+      "JsonFieldNamingProfile" : "jsonFieldNamingProfile",
+      "Libraries" : "libraries",
+      "LineNumber" : "lineNumber",
+      "MavenDataServiceDepends" : "mavenDataServiceDepends",
+      "Name" : "name",
+      "ObjectDescriptors" : "objectDescriptors",
+      "ObjectDescriptorsHasList" : "objectDescriptorsHasList",
+      "RootDescriptors" : "rootDescriptors",
+      "RustCrateVersion" : "rustCrateVersion",
+      "Scalars" : "scalars",
+      "SnakeName" : "snakeName",
+      "SortedObjectDescriptors" : "sortedObjectDescriptors",
+      "SupportFullTextSearch" : "supportFullTextSearch",
+      "TargetRepository" : "targetRepository",
+      "TeaqlDotnetVersion" : "teaqlDotnetVersion",
+      "TeaqlGoVersion" : "teaqlGoVersion",
+      "TeaqlPythonVersion" : "teaqlPythonVersion",
+      "TeaqlRepository" : "teaqlRepository",
+      "TeaqlSwiftVersion" : "teaqlSwiftVersion",
+      "TeaqlTypescriptVersion" : "teaqlTypescriptVersion",
+      "TeaqlVersion" : "teaqlVersion",
+      "TypeMatchers" : "typeMatchers",
+      "Types" : "types",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.FieldDescriptor" : {
+      "AggregationFunctions" : "aggregationFunctions",
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "Boolean" : "boolean",
+      "BusinessId" : "businessId",
+      "BusinessIdDateFormat" : "businessIdDateFormat",
+      "BusinessIdDigits" : "businessIdDigits",
+      "BusinessIdNamespace" : "businessIdNamespace",
+      "BusinessIdPolicyVersion" : "businessIdPolicyVersion",
+      "BusinessIdPrefix" : "businessIdPrefix",
+      "BusinessIdProfile" : "businessIdProfile",
+      "BusinessIdReset" : "businessIdReset",
+      "BusinessIdSeparator" : "businessIdSeparator",
+      "BusinessIdSplitByDate" : "businessIdSplitByDate",
+      "CandidateForConst" : "candidateForConst",
+      "Class" : "class",
+      "ConstantObjectField" : "constantObjectField",
+      "ConstantTargetValues" : "constantTargetValues",
+      "ContextRoot" : "contextRoot",
+      "CreateFunctionArgumentNames" : "createFunctionArgumentNames",
+      "CreateFunctionArguments" : "createFunctionArguments",
+      "CreateTime" : "createTime",
+      "Date" : "date",
+      "DateTime" : "dateTime",
+      "DateTimeWithZone" : "dateTimeWithZone",
+      "Decimal" : "decimal",
+      "DefaultSampleValue" : "defaultSampleValue",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "Double" : "double",
+      "EntityType" : "entityType",
+      "FieldType" : "fieldType",
+      "Float" : "float",
+      "Id" : "id",
+      "Integer" : "integer",
+      "IsBool" : "isBool",
+      "IsBoolean" : "isBoolean",
+      "IsBusinessId" : "isBusinessId",
+      "IsDate" : "isDate",
+      "IsDateTime" : "isDateTime",
+      "IsDateTimeWithZone" : "isDateTimeWithZone",
+      "IsDecimal" : "isDecimal",
+      "IsDouble" : "isDouble",
+      "IsFloat" : "isFloat",
+      "IsInteger" : "isInteger",
+      "IsJSON" : "isJSON",
+      "IsLong" : "isLong",
+      "IsMoney" : "isMoney",
+      "IsNumber" : "isNumber",
+      "IsString" : "isString",
+      "IsTime" : "isTime",
+      "JSON" : "jSON",
+      "JsonFieldName" : "jsonFieldName",
+      "JsonLiteral" : "jsonLiteral",
+      "LineNumber" : "lineNumber",
+      "Long" : "long",
+      "Money" : "money",
+      "Name" : "name",
+      "Number" : "number",
+      "ObjectDescriptor" : "objectDescriptor",
+      "ObjectProperty" : "objectProperty",
+      "ReferenceObject" : "referenceObject",
+      "Required" : "required",
+      "RustSafeDefaultSampleValue" : "rustSafeDefaultSampleValue",
+      "SimpleProperty" : "simpleProperty",
+      "SnakeName" : "snakeName",
+      "String" : "string",
+      "Time" : "time",
+      "Type" : "type",
+      "UpdateFunctionArgumentNames" : "updateFunctionArgumentNames",
+      "UpdateFunctionArguments" : "updateFunctionArguments",
+      "UpdateTime" : "updateTime",
+      "Version" : "version",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.JsonFieldNaming" : {
+      "Class" : "class",
+      "DeclaringClass" : "declaringClass",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.ObjectDescriptor" : {
+      "AggregationEntries" : "aggregationEntries",
+      "AggregationProperties" : "aggregationProperties",
+      "AllChildrenOds" : "allChildrenOds",
+      "AttachableAttributes" : "attachableAttributes",
+      "AttributePredicatePrefix" : "attributePredicatePrefix",
+      "AttributePredicateSuffix" : "attributePredicateSuffix",
+      "Attributes" : "attributes",
+      "AuditMaskFields" : "auditMaskFields",
+      "BooleanPredicatePrefix" : "booleanPredicatePrefix",
+      "BoxedReverseRelations" : "boxedReverseRelations",
+      "BusinessIdFields" : "businessIdFields",
+      "BusinessIdRootField" : "businessIdRootField",
+      "BusinessIdRootObject" : "businessIdRootObject",
+      "BusinessIdRootTypeName" : "businessIdRootTypeName",
+      "ChildrenOds" : "childrenOds",
+      "Class" : "class",
+      "Constant" : "constant",
+      "ConstantItemList" : "constantItemList",
+      "ConstantObjectFields" : "constantObjectFields",
+      "ContextRootField" : "contextRootField",
+      "DataService" : "dataService",
+      "Deleted" : "deleted",
+      "Depth" : "depth",
+      "DisplayName" : "displayName",
+      "Domain" : "domain",
+      "Fields" : "fields",
+      "HasParent" : "hasParent",
+      "HumanOd" : "humanOd",
+      "IdentityConstants" : "identityConstants",
+      "LineNumber" : "lineNumber",
+      "LogObject" : "logObject",
+      "Name" : "name",
+      "ObjectFields" : "objectFields",
+      "ObjectProperties" : "objectProperties",
+      "OneToManyRelations" : "oneToManyRelations",
+      "OneToOneRelations" : "oneToOneRelations",
+      "ParentAggregationEntries" : "parentAggregationEntries",
+      "ParentAggregationProperties" : "parentAggregationProperties",
+      "ParentFilterProperties" : "parentFilterProperties",
+      "ParentOd" : "parentOd",
+      "ParentOneToManyRelations" : "parentOneToManyRelations",
+      "ParentOneToOneRelations" : "parentOneToOneRelations",
+      "ParentPojoProperties" : "parentPojoProperties",
+      "ParentReverseRelations" : "parentReverseRelations",
+      "Properties" : "properties",
+      "Repository" : "repository",
+      "RequestFilterProperties" : "requestFilterProperties",
+      "ReverseRelations" : "reverseRelations",
+      "ReverseRelationsCost" : "reverseRelationsCost",
+      "Root" : "root",
+      "ScalarFields" : "scalarFields",
+      "SnakeName" : "snakeName",
+      "SupportFullTextSearch" : "supportFullTextSearch",
+      "TableName" : "tableName",
+      "Transient" : "transient",
+      "UnifiedRelations" : "unifiedRelations",
+      "ValueObject" : "valueObject",
+      "ViewObject" : "viewObject",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.ObjectType" : {
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "Class" : "class",
+      "Default" : "default",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "LineNumber" : "lineNumber",
+      "Name" : "name",
+      "Parent" : "parent",
+      "ParentType" : "parentType",
+      "Refer" : "refer",
+      "SnakeName" : "snakeName",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.ReverseRelation" : {
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "Child" : "child",
+      "Class" : "class",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "LineNumber" : "lineNumber",
+      "Name" : "name",
+      "Parent" : "parent",
+      "Property" : "property",
+      "SnakeName" : "snakeName",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.SKYNETObject" : {
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "Class" : "class",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "LineNumber" : "lineNumber",
+      "Name" : "name",
+      "SnakeName" : "snakeName",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.Type" : {
+      "AttachableAttributes" : "attachableAttributes",
+      "Attributes" : "attributes",
+      "Class" : "class",
+      "Default" : "default",
+      "Deleted" : "deleted",
+      "DisplayName" : "displayName",
+      "LineNumber" : "lineNumber",
+      "Name" : "name",
+      "Parent" : "parent",
+      "ParentType" : "parentType",
+      "SnakeName" : "snakeName",
+      "XmlPath" : "xmlPath",
+      "hCode" : "hCode"
+    },
+    "com.skynet.codegenerator.meta.TypeMatcher" : {
+      "Class" : "class",
+      "Order" : "order",
+      "Pattern" : "pattern",
+      "Type" : "type",
+      "hCode" : "hCode"
+    }
+  },
+  "classes" : {
+    "[B" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : true,
+      "canonicalName" : "byte[]",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : {
+        "__stg_java_type" : "byte",
+        "__string" : "byte"
+      },
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.Cloneable",
+          "__string" : "interface java.lang.Cloneable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1041,
+      "name" : "[B",
+      "nestHost" : {
+        "__stg_java_type" : "[B",
+        "__string" : "class [B"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "byte[]",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "byte[]"
+    },
+    "[Ljava.lang.Class;" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : true,
+      "canonicalName" : "java.lang.Class[]",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.Cloneable",
+          "__string" : "interface java.lang.Cloneable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1041,
+      "name" : "[Ljava.lang.Class;",
+      "nestHost" : {
+        "__stg_java_type" : "[Ljava.lang.Class;",
+        "__string" : "class [Ljava.lang.Class;"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Class[]",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Class[]"
+    },
+    "boolean" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "boolean",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1041,
+      "name" : "boolean",
+      "nestHost" : {
+        "__stg_java_type" : "boolean",
+        "__string" : "boolean"
+      },
+      "packageName" : "java.lang",
+      "primitive" : true,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "boolean",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "boolean"
+    },
+    "byte" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "byte",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1041,
+      "name" : "byte",
+      "nestHost" : {
+        "__stg_java_type" : "byte",
+        "__string" : "byte"
+      },
+      "packageName" : "java.lang",
+      "primitive" : true,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "byte",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "byte"
+    },
+    "com.skynet.codegenerator.meta.AggregateFunction" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.AggregateFunction",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : true,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 16401,
+      "name" : "com.skynet.codegenerator.meta.AggregateFunction",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.AggregateFunction",
+        "__string" : "class com.skynet.codegenerator.meta.AggregateFunction"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AggregateFunction",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Enum",
+        "__string" : "class java.lang.Enum"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.AggregateFunction"
+    },
+    "com.skynet.codegenerator.meta.Attribute" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.Attribute",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.Attribute",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.Attribute",
+        "__string" : "class com.skynet.codegenerator.meta.Attribute"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Attribute",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.Attribute"
+    },
+    "com.skynet.codegenerator.meta.AutoFunction" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.AutoFunction",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.AutoFunction",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.AutoFunction",
+        "__string" : "class com.skynet.codegenerator.meta.AutoFunction"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AutoFunction",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.AutoFunction"
+    },
+    "com.skynet.codegenerator.meta.Candidate" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.Candidate",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.Candidate",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.Candidate",
+        "__string" : "class com.skynet.codegenerator.meta.Candidate"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Candidate",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.Candidate"
+    },
+    "com.skynet.codegenerator.meta.DataService" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.DataService",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.DataService",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.DataService",
+        "__string" : "class com.skynet.codegenerator.meta.DataService"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "DataService",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.DataService"
+    },
+    "com.skynet.codegenerator.meta.Domain" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.Domain",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.Domain",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.Domain",
+        "__string" : "class com.skynet.codegenerator.meta.Domain"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Domain",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.Domain"
+    },
+    "com.skynet.codegenerator.meta.FieldDescriptor" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.FieldDescriptor",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.FieldDescriptor",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.FieldDescriptor",
+        "__string" : "class com.skynet.codegenerator.meta.FieldDescriptor"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "FieldDescriptor",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.FieldDescriptor"
+    },
+    "com.skynet.codegenerator.meta.JsonFieldNaming" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : true,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 16401,
+      "name" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+        "__string" : "class com.skynet.codegenerator.meta.JsonFieldNaming"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "JsonFieldNaming",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Enum",
+        "__string" : "class java.lang.Enum"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.JsonFieldNaming"
+    },
+    "com.skynet.codegenerator.meta.ObjectDescriptor" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.ObjectDescriptor",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.ObjectDescriptor",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.ObjectDescriptor",
+        "__string" : "class com.skynet.codegenerator.meta.ObjectDescriptor"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "ObjectDescriptor",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.ObjectDescriptor"
+    },
+    "com.skynet.codegenerator.meta.ObjectType" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.ObjectType",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.ObjectType",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.ObjectType",
+        "__string" : "class com.skynet.codegenerator.meta.ObjectType"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "ObjectType",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.Type",
+        "__string" : "class com.skynet.codegenerator.meta.Type"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.ObjectType"
+    },
+    "com.skynet.codegenerator.meta.ReverseRelation" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.ReverseRelation",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.ReverseRelation",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.ReverseRelation",
+        "__string" : "class com.skynet.codegenerator.meta.ReverseRelation"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "ReverseRelation",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.ReverseRelation"
+    },
+    "com.skynet.codegenerator.meta.SKYNETObject" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.SKYNETObject",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.SKYNETObject",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "SKYNETObject",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.SKYNETObject"
+    },
+    "com.skynet.codegenerator.meta.Type" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.Type",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.Type",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.Type",
+        "__string" : "class com.skynet.codegenerator.meta.Type"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Type",
+      "superclass" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.SKYNETObject",
+        "__string" : "class com.skynet.codegenerator.meta.SKYNETObject"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.Type"
+    },
+    "com.skynet.codegenerator.meta.TypeMatcher" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "com.skynet.codegenerator.meta.TypeMatcher",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "com.skynet.codegenerator.meta.TypeMatcher",
+      "nestHost" : {
+        "__stg_java_type" : "com.skynet.codegenerator.meta.TypeMatcher",
+        "__string" : "class com.skynet.codegenerator.meta.TypeMatcher"
+      },
+      "packageName" : "com.skynet.codegenerator.meta",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "TypeMatcher",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "com.skynet.codegenerator.meta.TypeMatcher"
+    },
+    "int" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "int",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1041,
+      "name" : "int",
+      "nestHost" : {
+        "__stg_java_type" : "int",
+        "__string" : "int"
+      },
+      "packageName" : "java.lang",
+      "primitive" : true,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "int",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "int"
+    },
+    "java.io.Serializable" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.io.Serializable",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.io.Serializable",
+      "nestHost" : {
+        "__stg_java_type" : "java.io.Serializable",
+        "__string" : "interface java.io.Serializable"
+      },
+      "packageName" : "java.io",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Serializable",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.io.Serializable"
+    },
+    "java.lang.Boolean" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Boolean",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        }, {
+          "__stg_java_type" : "java.lang.Comparable",
+          "__string" : "interface java.lang.Comparable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 17,
+      "name" : "java.lang.Boolean",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Boolean",
+        "__string" : "class java.lang.Boolean"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Boolean",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Boolean"
+    },
+    "java.lang.Byte" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Byte",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.Comparable",
+          "__string" : "interface java.lang.Comparable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 17,
+      "name" : "java.lang.Byte",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Byte",
+        "__string" : "class java.lang.Byte"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Byte",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Number",
+        "__string" : "class java.lang.Number"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Byte"
+    },
+    "java.lang.CharSequence" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.CharSequence",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.CharSequence",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.CharSequence",
+        "__string" : "interface java.lang.CharSequence"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "CharSequence",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.CharSequence"
+    },
+    "java.lang.Class" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Class",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        }, {
+          "__stg_java_type" : "java.lang.reflect.GenericDeclaration",
+          "__string" : "interface java.lang.reflect.GenericDeclaration"
+        }, {
+          "__stg_java_type" : "java.lang.reflect.Type",
+          "__string" : "interface java.lang.reflect.Type"
+        }, {
+          "__stg_java_type" : "java.lang.reflect.AnnotatedElement",
+          "__string" : "interface java.lang.reflect.AnnotatedElement"
+        }, {
+          "__stg_java_type" : "java.lang.invoke.TypeDescriptor$OfField",
+          "__string" : "interface java.lang.invoke.TypeDescriptor$OfField"
+        }, {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 17,
+      "name" : "java.lang.Class",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Class",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Class"
+    },
+    "java.lang.Cloneable" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Cloneable",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.Cloneable",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Cloneable",
+        "__string" : "interface java.lang.Cloneable"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Cloneable",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.Cloneable"
+    },
+    "java.lang.Comparable" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Comparable",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.Comparable",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Comparable",
+        "__string" : "interface java.lang.Comparable"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Comparable",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.Comparable"
+    },
+    "java.lang.Enum" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Enum",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        }, {
+          "__stg_java_type" : "java.lang.Comparable",
+          "__string" : "interface java.lang.Comparable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.lang.Enum",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Enum",
+        "__string" : "class java.lang.Enum"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Enum",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Enum"
+    },
+    "java.lang.Integer" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Integer",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.Comparable",
+          "__string" : "interface java.lang.Comparable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.ConstantDesc",
+          "__string" : "interface java.lang.constant.ConstantDesc"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 17,
+      "name" : "java.lang.Integer",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Integer",
+        "__string" : "class java.lang.Integer"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Integer",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Number",
+        "__string" : "class java.lang.Number"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Integer"
+    },
+    "java.lang.Iterable" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Iterable",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.Iterable",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Iterable",
+        "__string" : "interface java.lang.Iterable"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Iterable",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.Iterable"
+    },
+    "java.lang.Long" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Long",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.Comparable",
+          "__string" : "interface java.lang.Comparable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.ConstantDesc",
+          "__string" : "interface java.lang.constant.ConstantDesc"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 17,
+      "name" : "java.lang.Long",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Long",
+        "__string" : "class java.lang.Long"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Long",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Number",
+        "__string" : "class java.lang.Number"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Long"
+    },
+    "java.lang.Number" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Number",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.lang.Number",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Number",
+        "__string" : "class java.lang.Number"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Number",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.Number"
+    },
+    "java.lang.Object" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.Object",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "java.lang.Object",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Object",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.Object"
+    },
+    "java.lang.String" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.String",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        }, {
+          "__stg_java_type" : "java.lang.Comparable",
+          "__string" : "interface java.lang.Comparable"
+        }, {
+          "__stg_java_type" : "java.lang.CharSequence",
+          "__string" : "interface java.lang.CharSequence"
+        }, {
+          "__stg_java_type" : "java.lang.constant.Constable",
+          "__string" : "interface java.lang.constant.Constable"
+        }, {
+          "__stg_java_type" : "java.lang.constant.ConstantDesc",
+          "__string" : "interface java.lang.constant.ConstantDesc"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 17,
+      "name" : "java.lang.String",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.String",
+        "__string" : "class java.lang.String"
+      },
+      "packageName" : "java.lang",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "String",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.lang.String"
+    },
+    "java.lang.constant.Constable" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.constant.Constable",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.constant.Constable",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.constant.Constable",
+        "__string" : "interface java.lang.constant.Constable"
+      },
+      "packageName" : "java.lang.constant",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Constable",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.constant.Constable"
+    },
+    "java.lang.constant.ConstantDesc" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.constant.ConstantDesc",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.constant.ConstantDesc",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.constant.ConstantDesc",
+        "__string" : "interface java.lang.constant.ConstantDesc"
+      },
+      "packageName" : "java.lang.constant",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : true,
+      "simpleName" : "ConstantDesc",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.constant.ConstantDesc"
+    },
+    "java.lang.invoke.TypeDescriptor" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.invoke.TypeDescriptor",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.invoke.TypeDescriptor",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.invoke.TypeDescriptor",
+        "__string" : "interface java.lang.invoke.TypeDescriptor"
+      },
+      "packageName" : "java.lang.invoke",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "TypeDescriptor",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.invoke.TypeDescriptor"
+    },
+    "java.lang.invoke.TypeDescriptor$OfField" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.invoke.TypeDescriptor.OfField",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.invoke.TypeDescriptor",
+          "__string" : "interface java.lang.invoke.TypeDescriptor"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : true,
+      "modifiers" : 1545,
+      "name" : "java.lang.invoke.TypeDescriptor$OfField",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.invoke.TypeDescriptor",
+        "__string" : "interface java.lang.invoke.TypeDescriptor"
+      },
+      "packageName" : "java.lang.invoke",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "OfField",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.invoke.TypeDescriptor$OfField"
+    },
+    "java.lang.reflect.AnnotatedElement" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.reflect.AnnotatedElement",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.reflect.AnnotatedElement",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.reflect.AnnotatedElement",
+        "__string" : "interface java.lang.reflect.AnnotatedElement"
+      },
+      "packageName" : "java.lang.reflect",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AnnotatedElement",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.reflect.AnnotatedElement"
+    },
+    "java.lang.reflect.GenericDeclaration" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.reflect.GenericDeclaration",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.reflect.AnnotatedElement",
+          "__string" : "interface java.lang.reflect.AnnotatedElement"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.reflect.GenericDeclaration",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.reflect.GenericDeclaration",
+        "__string" : "interface java.lang.reflect.GenericDeclaration"
+      },
+      "packageName" : "java.lang.reflect",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "GenericDeclaration",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.reflect.GenericDeclaration"
+    },
+    "java.lang.reflect.Type" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.lang.reflect.Type",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.lang.reflect.Type",
+      "nestHost" : {
+        "__stg_java_type" : "java.lang.reflect.Type",
+        "__string" : "interface java.lang.reflect.Type"
+      },
+      "packageName" : "java.lang.reflect",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Type",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.lang.reflect.Type"
+    },
+    "java.util.AbstractCollection" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.AbstractCollection",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Collection",
+          "__string" : "interface java.util.Collection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.util.AbstractCollection",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.AbstractCollection",
+        "__string" : "class java.util.AbstractCollection"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AbstractCollection",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.AbstractCollection"
+    },
+    "java.util.AbstractList" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.AbstractList",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.List",
+          "__string" : "interface java.util.List"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.util.AbstractList",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.AbstractList",
+        "__string" : "class java.util.AbstractList"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AbstractList",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractCollection",
+        "__string" : "class java.util.AbstractCollection"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.AbstractList"
+    },
+    "java.util.AbstractMap" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.AbstractMap",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Map",
+          "__string" : "interface java.util.Map"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.util.AbstractMap",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.AbstractMap",
+        "__string" : "class java.util.AbstractMap"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AbstractMap",
+      "superclass" : {
+        "__stg_java_type" : "java.lang.Object",
+        "__string" : "class java.lang.Object"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.AbstractMap"
+    },
+    "java.util.AbstractSequentialList" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.AbstractSequentialList",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.util.AbstractSequentialList",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.AbstractSequentialList",
+        "__string" : "class java.util.AbstractSequentialList"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AbstractSequentialList",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractList",
+        "__string" : "class java.util.AbstractList"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.AbstractSequentialList"
+    },
+    "java.util.AbstractSet" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.AbstractSet",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Set",
+          "__string" : "interface java.util.Set"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1025,
+      "name" : "java.util.AbstractSet",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.AbstractSet",
+        "__string" : "class java.util.AbstractSet"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "AbstractSet",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractCollection",
+        "__string" : "class java.util.AbstractCollection"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.AbstractSet"
+    },
+    "java.util.ArrayList" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.ArrayList",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.List",
+          "__string" : "interface java.util.List"
+        }, {
+          "__stg_java_type" : "java.util.RandomAccess",
+          "__string" : "interface java.util.RandomAccess"
+        }, {
+          "__stg_java_type" : "java.lang.Cloneable",
+          "__string" : "interface java.lang.Cloneable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "java.util.ArrayList",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.ArrayList",
+        "__string" : "class java.util.ArrayList"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "ArrayList",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractList",
+        "__string" : "class java.util.AbstractList"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.ArrayList"
+    },
+    "java.util.ArrayList$SubList" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.ArrayList.SubList",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.RandomAccess",
+          "__string" : "interface java.util.RandomAccess"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : true,
+      "modifiers" : 10,
+      "name" : "java.util.ArrayList$SubList",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.ArrayList",
+        "__string" : "class java.util.ArrayList"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "SubList",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractList",
+        "__string" : "class java.util.AbstractList"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.ArrayList$SubList"
+    },
+    "java.util.Collection" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.Collection",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.lang.Iterable",
+          "__string" : "interface java.lang.Iterable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.Collection",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.Collection",
+        "__string" : "interface java.util.Collection"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Collection",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.Collection"
+    },
+    "java.util.Deque" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.Deque",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Queue",
+          "__string" : "interface java.util.Queue"
+        }, {
+          "__stg_java_type" : "java.util.SequencedCollection",
+          "__string" : "interface java.util.SequencedCollection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.Deque",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.Deque",
+        "__string" : "interface java.util.Deque"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Deque",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.Deque"
+    },
+    "java.util.HashMap" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.HashMap",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Map",
+          "__string" : "interface java.util.Map"
+        }, {
+          "__stg_java_type" : "java.lang.Cloneable",
+          "__string" : "interface java.lang.Cloneable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "java.util.HashMap",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.HashMap",
+        "__string" : "class java.util.HashMap"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "HashMap",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractMap",
+        "__string" : "class java.util.AbstractMap"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.HashMap"
+    },
+    "java.util.HashSet" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.HashSet",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Set",
+          "__string" : "interface java.util.Set"
+        }, {
+          "__stg_java_type" : "java.lang.Cloneable",
+          "__string" : "interface java.lang.Cloneable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "java.util.HashSet",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.HashSet",
+        "__string" : "class java.util.HashSet"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "HashSet",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractSet",
+        "__string" : "class java.util.AbstractSet"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.HashSet"
+    },
+    "java.util.LinkedHashMap" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.LinkedHashMap",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.SequencedMap",
+          "__string" : "interface java.util.SequencedMap"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "java.util.LinkedHashMap",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.LinkedHashMap",
+        "__string" : "class java.util.LinkedHashMap"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "LinkedHashMap",
+      "superclass" : {
+        "__stg_java_type" : "java.util.HashMap",
+        "__string" : "class java.util.HashMap"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.LinkedHashMap"
+    },
+    "java.util.LinkedHashMap$LinkedKeySet" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.LinkedHashMap.LinkedKeySet",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.SequencedSet",
+          "__string" : "interface java.util.SequencedSet"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : true,
+      "modifiers" : 16,
+      "name" : "java.util.LinkedHashMap$LinkedKeySet",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.LinkedHashMap",
+        "__string" : "class java.util.LinkedHashMap"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "LinkedKeySet",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractSet",
+        "__string" : "class java.util.AbstractSet"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.LinkedHashMap$LinkedKeySet"
+    },
+    "java.util.LinkedHashMap$LinkedValues" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.LinkedHashMap.LinkedValues",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.SequencedCollection",
+          "__string" : "interface java.util.SequencedCollection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : true,
+      "modifiers" : 16,
+      "name" : "java.util.LinkedHashMap$LinkedValues",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.LinkedHashMap",
+        "__string" : "class java.util.LinkedHashMap"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "LinkedValues",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractCollection",
+        "__string" : "class java.util.AbstractCollection"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.LinkedHashMap$LinkedValues"
+    },
+    "java.util.LinkedList" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.LinkedList",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.List",
+          "__string" : "interface java.util.List"
+        }, {
+          "__stg_java_type" : "java.util.Deque",
+          "__string" : "interface java.util.Deque"
+        }, {
+          "__stg_java_type" : "java.lang.Cloneable",
+          "__string" : "interface java.lang.Cloneable"
+        }, {
+          "__stg_java_type" : "java.io.Serializable",
+          "__string" : "interface java.io.Serializable"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1,
+      "name" : "java.util.LinkedList",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.LinkedList",
+        "__string" : "class java.util.LinkedList"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "LinkedList",
+      "superclass" : {
+        "__stg_java_type" : "java.util.AbstractSequentialList",
+        "__string" : "class java.util.AbstractSequentialList"
+      },
+      "synthetic" : false,
+      "typeName" : "java.util.LinkedList"
+    },
+    "java.util.List" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.List",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.SequencedCollection",
+          "__string" : "interface java.util.SequencedCollection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.List",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.List",
+        "__string" : "interface java.util.List"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "List",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.List"
+    },
+    "java.util.Map" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.Map",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.Map",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.Map",
+        "__string" : "interface java.util.Map"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Map",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.Map"
+    },
+    "java.util.Queue" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.Queue",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Collection",
+          "__string" : "interface java.util.Collection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.Queue",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.Queue",
+        "__string" : "interface java.util.Queue"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Queue",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.Queue"
+    },
+    "java.util.RandomAccess" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.RandomAccess",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.RandomAccess",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.RandomAccess",
+        "__string" : "interface java.util.RandomAccess"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "RandomAccess",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.RandomAccess"
+    },
+    "java.util.SequencedCollection" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.SequencedCollection",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Collection",
+          "__string" : "interface java.util.Collection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.SequencedCollection",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.SequencedCollection",
+        "__string" : "interface java.util.SequencedCollection"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "SequencedCollection",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.SequencedCollection"
+    },
+    "java.util.SequencedMap" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.SequencedMap",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Map",
+          "__string" : "interface java.util.Map"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.SequencedMap",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.SequencedMap",
+        "__string" : "interface java.util.SequencedMap"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "SequencedMap",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.SequencedMap"
+    },
+    "java.util.SequencedSet" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.SequencedSet",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.SequencedCollection",
+          "__string" : "interface java.util.SequencedCollection"
+        }, {
+          "__stg_java_type" : "java.util.Set",
+          "__string" : "interface java.util.Set"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.SequencedSet",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.SequencedSet",
+        "__string" : "interface java.util.SequencedSet"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "SequencedSet",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.SequencedSet"
+    },
+    "java.util.Set" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "java.util.Set",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : true,
+      "interfaces" : {
+        "__stg_java_array" : [ {
+          "__stg_java_type" : "java.util.Collection",
+          "__string" : "interface java.util.Collection"
+        } ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1537,
+      "name" : "java.util.Set",
+      "nestHost" : {
+        "__stg_java_type" : "java.util.Set",
+        "__string" : "interface java.util.Set"
+      },
+      "packageName" : "java.util",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "Set",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "java.util.Set"
+    },
+    "long" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "long",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : false,
+      "modifiers" : 1041,
+      "name" : "long",
+      "nestHost" : {
+        "__stg_java_type" : "long",
+        "__string" : "long"
+      },
+      "packageName" : "java.lang",
+      "primitive" : true,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "long",
+      "superclass" : null,
+      "synthetic" : false,
+      "typeName" : "long"
+    },
+    "org.stringtemplate.v4.Interpreter$ObjectList" : {
+      "annotation" : false,
+      "anonymousClass" : false,
+      "array" : false,
+      "canonicalName" : "org.stringtemplate.v4.Interpreter.ObjectList",
+      "class" : {
+        "__stg_java_type" : "java.lang.Class",
+        "__string" : "class java.lang.Class"
+      },
+      "componentType" : null,
+      "enum" : false,
+      "hidden" : false,
+      "interface" : false,
+      "interfaces" : {
+        "__stg_java_array" : [ ],
+        "__stg_java_array_type" : "[Ljava.lang.Class;"
+      },
+      "localClass" : false,
+      "memberClass" : true,
+      "modifiers" : 12,
+      "name" : "org.stringtemplate.v4.Interpreter$ObjectList",
+      "nestHost" : {
+        "__stg_java_type" : "org.stringtemplate.v4.Interpreter$ObjectList",
+        "__string" : "class org.stringtemplate.v4.Interpreter$ObjectList"
+      },
+      "packageName" : "org.stringtemplate.v4",
+      "primitive" : false,
+      "record" : false,
+      "sealed" : false,
+      "simpleName" : "ObjectList",
+      "superclass" : {
+        "__stg_java_type" : "java.util.ArrayList",
+        "__string" : "class java.util.ArrayList"
+      },
+      "synthetic" : false,
+      "typeName" : "org.stringtemplate.v4.Interpreter$ObjectList"
+    }
+  },
+  "fields" : {
+    "com.skynet.codegenerator.meta.JsonFieldNaming" : {
+      "CAMEL_CASE" : {
+        "__stg_java_enum" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+        "__string" : "CAMEL_CASE"
+      },
+      "DEFAULT" : {
+        "__stg_java_enum" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+        "__string" : "CAMEL_CASE"
+      },
+      "PASCAL_CASE" : {
+        "__stg_java_enum" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+        "__string" : "PASCAL_CASE"
+      },
+      "SNAKE_CASE" : {
+        "__stg_java_enum" : "com.skynet.codegenerator.meta.JsonFieldNaming",
+        "__string" : "SNAKE_CASE"
+      }
+    },
+    "java.lang.Boolean" : {
+      "FALSE" : false,
+      "TRUE" : true,
+      "TYPE" : {
+        "__stg_java_type" : "boolean",
+        "__string" : "boolean"
+      }
+    },
+    "java.lang.Byte" : {
+      "BYTES" : 1,
+      "MAX_VALUE" : {
+        "__stg_java_box" : "java.lang.Byte",
+        "__string" : "127"
+      },
+      "MIN_VALUE" : {
+        "__stg_java_box" : "java.lang.Byte",
+        "__string" : "-128"
+      },
+      "SIZE" : 8,
+      "TYPE" : {
+        "__stg_java_type" : "byte",
+        "__string" : "byte"
+      }
+    },
+    "java.lang.Integer" : {
+      "BYTES" : 4,
+      "MAX_VALUE" : 2147483647,
+      "MIN_VALUE" : -2147483648,
+      "SIZE" : 32,
+      "TYPE" : {
+        "__stg_java_type" : "int",
+        "__string" : "int"
+      }
+    },
+    "java.lang.Long" : {
+      "BYTES" : 8,
+      "MAX_VALUE" : {
+        "__stg_java_box" : "java.lang.Long",
+        "__string" : "9223372036854775807"
+      },
+      "MIN_VALUE" : {
+        "__stg_java_box" : "java.lang.Long",
+        "__string" : "-9223372036854775808"
+      },
+      "SIZE" : 64,
+      "TYPE" : {
+        "__stg_java_type" : "long",
+        "__string" : "long"
+      }
+    }
+  }
+}

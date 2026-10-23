@@ -1,0 +1,172 @@
+{
+  "types": [
+    {
+      "name": "root",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": null
+    },
+    {
+      "name": "id",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "version",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "string",
+      "parent": null,
+      "default": true,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "businessId",
+      "parent": "string",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "string"
+    },
+    {
+      "name": "business_id",
+      "parent": "businessId",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "businessId"
+    },
+    {
+      "name": "text",
+      "parent": "string",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "string"
+    },
+    {
+      "name": "jsonMe",
+      "parent": "text",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "text"
+    },
+    {
+      "name": "number",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "float",
+      "parent": "number",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "number"
+    },
+    {
+      "name": "double",
+      "parent": "number",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "number"
+    },
+    {
+      "name": "integer",
+      "parent": "number",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "number"
+    },
+    {
+      "name": "long",
+      "parent": "number",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "number"
+    },
+    {
+      "name": "bool",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "date",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "time",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "dateTime",
+      "parent": null,
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "root"
+    },
+    {
+      "name": "createTime",
+      "parent": "dateTime",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "dateTime"
+    },
+    {
+      "name": "updateTime",
+      "parent": "dateTime",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "dateTime"
+    },
+    {
+      "name": "password",
+      "parent": "string",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "string"
+    },
+    {
+      "name": "uniStr",
+      "parent": "string",
+      "default": false,
+      "lineNumber": 0,
+      "xmlPath": null,
+      "parentType": "string"
+    }
+  ]
+}

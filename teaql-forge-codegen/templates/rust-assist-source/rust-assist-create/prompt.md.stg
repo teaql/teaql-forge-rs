@@ -1,0 +1,73 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+Please help me complete the creation (Create) service business code for the `<entity.name>` object.
+
+To ensure absolute correctness of the API, please refer to and strictly imitate the following **real creation code example for `<entity.name>`**.
+
+### Standard Creation Example (Reference)
+Please carefully observe the initialization of the object, the `update_xxx()` property setting methods, and the strictly required `.audit_as()` and `.save()` cascade in the example code.
+
+```rust
+use <entity.domain.rustModuleName>::teaql_core::Entity;
+use <entity.domain.rustModuleName>::{Q, <entity.rustStructName>, TeaqlRuntime, AuditedSave};
+
+pub async fn create_example(
+    context: &impl TeaqlRuntime,
+) -> Result\<<entity.rustStructName>, Box\<dyn std::error::Error>> {
+    // 1. Initialize the new entity
+    let mut new_entity = Q::<entity.rustPluralName>()
+        .comment("what: Initialize a new entity instance")
+        .purpose("why: Create a new entity instance")
+        .new_entity(context);
+
+    // 2. Set property values (replace dummy data with actual inputs)
+<entity.fields:{f | <if(f.id)>
+<else><if(f.version)>
+<else><if(f.candidateForConst)>
+    // Enum constant field <f.name>: optional assignment methods are as follows
+<f.candidateForConst:{c |     // new_entity.update_<f.rustMemberName>_to_<c.rustCandidateMethodValue>();
+}>
+<else>
+    // new_entity.update_<f.rustStorageMemberName>(/* input data */);
+<endif><endif><endif>}>
+
+    // 3. CRITICAL: Security audit constraints must be attached before calling save()!
+    let persisted = new_entity
+        .audit_as("Why this create operation was executed (audit record)")
+        .save(context).await?;
+
+    Ok(persisted)
+}
+```
+
+<if(entity.domain.rustGraphCompositionAvailable)>
+### When this new entity belongs to an existing mutation graph
+
+This is optional. If the operation must save a new child and a loaded parent as
+one graph, first set the child's **modeled parent-reference ID** using the
+`update_xxx_id(...)` method listed above. Load the parent with its full
+non-minimal `Q` request. Then explicitly join the child's pending mutation
+intent to the parent before one audited parent save:
+
+```rust
+use <entity.domain.rustModuleName>::LedgerEntity as _;
+
+parent.include_pending_mutations_from(&new_entity)?;
+let persisted_parent = parent.audit_as("business reason: save the graph")
+    .save(context).await?;
+```
+
+`include_pending_mutations_from` is the exact public runtime contract. It
+does not query, save, or create a context-owned ledger. Do not save the child
+separately, clone entities to compose them, or guess the parent's query and
+the child's relationship setter. If either exact generated API is absent
+from Assist, report `MISSING_ASSIST` for that path.
+<endif>
+
+### Your Task
+Please completely imitate the framework, imports, and syntax features of the above code to implement the real creation logic for `<entity.name>` based on my specific business needs. Please output the Rust source code directly.
+
+**CRITICAL**: We have already generated the correct plural/singular form for the `Q::` methods in the example above (e.g. `Q::<entity.rustPluralName>_minimal()`). Do NOT try to guess or invent a plural form yourself. You MUST copy the EXACT spelling of the `Q::` method from the example.
+
+>>

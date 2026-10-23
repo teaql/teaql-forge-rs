@@ -89,3 +89,7 @@ cargo run --bin teaql-forge-server -- --host 127.0.0.1 --port 8080
 
 ## 许可证
 Apache-2.0 License
+
+## 多语言生成器迁移
+
+原生成器的固定提交、迁移顺序及逐字节验收流程见 [生成器文本一致性迁移](docs/text-parity-migration.md)。

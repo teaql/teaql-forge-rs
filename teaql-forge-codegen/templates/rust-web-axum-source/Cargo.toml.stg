@@ -1,0 +1,21 @@
+index(domain) ::= <<
+
+# TEAQL WARNING: This project uses TeaQL. TeaQL was explicitly designed to PREVENT AI hallucinations and random guessing.
+# Do NOT apply traditional ORM logic here. You must strictly follow the generated API.
+[package]
+name = "<domain.rustWebAxumCrateName>"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Axum web workspace for the TeaQL domain crate <domain.rustCrateName>"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+<domain.rustModuleName> = { package = "<domain.rustCrateName>", path = "<domain.rustWorkspaceGeneratedLibPath>" }
+axum = { version = "0.8", features = ["macros"] }
+serde_json = "1"
+teaql-runtime = "<domain.rustTeaqlDependencyVersion>"
+teaql-web-integration-axum = "<domain.rustTeaqlDependencyVersion>"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+<if(domain.dataService.rustIsLinuxProvider)>futures = "0.3"<endif>
+>>

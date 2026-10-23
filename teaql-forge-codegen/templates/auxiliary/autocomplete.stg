@@ -1,0 +1,42 @@
+index(naming, domain) ::= <<
+
+const database=[
+
+    <domain.objectDescriptors:{objectDescriptor |  <od(objectDescriptor,i)>};separator=",">
+
+]
+
+
+
+>>
+
+
+
+od (objectDescriptor,i)  ::= <<
+
+    <objectDescriptor.odLevelRequestMethods:{method |<odLevel(method,i)>};separator=",\n">
+    ,
+    <objectDescriptor.requestMethods:{method |<detailLevel(method,i)>};separator=",\n">
+
+
+>>
+odLevel (method,i)  ::= <<
+     {
+              documentation: 'query start',
+              insertText: '<method.name>(<method.parametersExpr>)',
+              kind: monaco.languages.CompletionItemKind.Method,
+              label: '<method.name>(<method.parametersExpr>)',
+              match:["Q."]
+     }
+>>
+
+detailLevel (method,i)  ::= <<
+     {
+              documentation: '----',
+              insertText: '<method.name>(<method.parametersExpr>)',
+              kind: monaco.languages.CompletionItemKind.Method,
+              label: '<method.name>(<method.parametersExpr>)',
+              match:[<objectDescriptor.matches>]
+     }
+>>
+

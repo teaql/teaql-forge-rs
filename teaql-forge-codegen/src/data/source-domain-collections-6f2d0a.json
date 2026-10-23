@@ -1,0 +1,39 @@
+{
+  "typeMatchers" : [ {
+    "pattern" : "^\\d+$",
+    "type" : "integer",
+    "order" : 1
+  }, {
+    "pattern" : "^\\d+(l|L)$",
+    "type" : "long",
+    "order" : 2
+  }, {
+    "pattern" : "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)(f|F)$",
+    "type" : "float",
+    "order" : 3
+  }, {
+    "pattern" : "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)(d|D)$",
+    "type" : "double",
+    "order" : 4
+  }, {
+    "pattern" : "^\\d+\\.\\d+$",
+    "type" : "number",
+    "order" : 5
+  }, {
+    "pattern" : "^(true)|(false)|(on)|(off)|(yes)|(no)$",
+    "type" : "bool",
+    "order" : 6
+  }, {
+    "pattern" : "^\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}\\:\\d{1,2}\\:\\d{1,2}$",
+    "type" : "dateTime",
+    "order" : 7
+  }, {
+    "pattern" : "^\\d{4}-\\d{1,2}-\\d{1,2}$",
+    "type" : "date",
+    "order" : 8
+  } ],
+  "scalars" : [ "LocalTime", "Long", "Time", "JSON", "BigDecimal", "Date" ],
+  "customAutoFunctions" : [ ],
+  "libraries" : 0,
+  "inUseLibraries" : 0
+}

@@ -1,6 +1,5 @@
-use crate::context::{build_render_context, RenderDomain};
+use crate::context::RenderDomain;
 use minijinja::{context, Environment};
-use teaql_forge_model::ir::Domain;
 
 #[derive(Debug, Clone)]
 pub struct GeneratedFile {
@@ -8,433 +7,145 @@ pub struct GeneratedFile {
     pub content: String,
 }
 
-fn clean_whitespace(content: &str) -> String {
-    let lines: Vec<&str> = content.lines().collect();
-    // remove trailing spaces from each line
-    let cleaned_lines: Vec<String> = lines
-        .into_iter()
-        .map(|l| l.trim_end().to_string())
-        .collect();
-    let mut out = cleaned_lines.join("\n");
-    // remove leading empty lines
-    out = out.trim_start_matches('\n').to_string();
-    // ensure no trailing newlines to match STG
-    out = out.trim_end_matches('\n').to_string();
-    // remove the first blank line after pub struct
-    out = out.replace("{\n\n// @source", "{\n// @source");
-    if out.contains("pub struct Request") || out.contains("pub fn select_self_fields") {
-        let replacements = vec![
-            (r"    \}\n{2,}    pub fn order_by_id_asc", "    }\n\n    pub fn order_by_id_asc"),
-            (r"    \}\n{2,}    pub fn group_by_version", "    }\n\n    pub fn group_by_version"),
-            (r"    \}\n{2,}    pub fn id_is_value_1001\(", "    }\n    pub fn id_is_value_1001("),
-            (r"    \}\n{2,}    pub fn name_is_pending\(", "    }\n\n\n\n    pub fn name_is_pending("),
-            (r"    \}\n{2,}    pub fn code_is_pendin_g\(", "    }\n\n\n\n    pub fn code_is_pendin_g("),
-            (r"    \}\n{2,}    pub fn have_support_tickets\(", "    }\n\n\n\n\n    pub fn have_support_tickets("),
-            (r"\}\n{2,}    pub fn count_support_tickets\(", "}\n    pub fn count_support_tickets("),
-            (r"    \}\n{2,}    pub fn status_is_pending\(", "    }\n    pub fn status_is_pending("),
-            (r"    \}\n{2,}    pub fn status_is_resolved\(", "    }\n\n\n    pub fn status_is_resolved("),
-            (r"    \}\n{2,}    pub fn select_status\(", "    }\n\n\n    pub fn select_status("),
-            (r"    \}\n{2,}    pub fn facet_by_status_as\(", "}\n\n    pub fn facet_by_status_as("),
-            (r"    \}\n{2,}    pub fn have_customer_issues\(", "    }\n    pub fn have_customer_issues("),
-            (r"\}\n{2,}    pub fn count_customer_issues\(", "}\n    pub fn count_customer_issues("),
-            (r"    \}\n{2,}    pub fn filter_by_ticket\(", "    }\n    pub fn filter_by_ticket("),
-            (r"    \}\n{2,}    pub fn select_ticket\(", "    }\n    pub fn select_ticket("),
-            (r"    \}\n{2,}    pub fn facet_by_ticket_as\(", "}\n\n    pub fn facet_by_ticket_as("),
-            (r"    \}\n{2,}    /// Please use `with_status_is` instead", "    }\n    /// Please use `with_status_is` instead"),
-            (r"    \}\n{2,}    /// Complex relation filter for `status`\.\n    ///\n    /// \*\*Usage Priority:\*\*\n    ///\n    /// 1\. \*\*Preferred\*\*: If you only want to filter by specific known constants, please \*\*prefer\*\* the generated semantic shortcut methods, such as:\n    ///    - \[`Self::with_status_is_xxx`\]", "    }\n    /// Complex relation filter for `status`.\n    ///\n    /// **Usage Priority:**\n    ///\n    /// 1. **Preferred**: If you only want to filter by specific known constants, please **prefer** the generated semantic shortcut methods, such as:\n    ///    - [`Self::with_status_is_xxx`]"),
-            (r"    \}\n{2,}\}", "    }\n}"),
-        ];
-
-        for (pattern, replacement) in replacements {
-            let re = regex::Regex::new(pattern).unwrap();
-            out = re.replace_all(&out, replacement).to_string();
-        }
-    }
-
-    out
+#[derive(Debug, thiserror::Error)]
+pub enum GenerationError {
+    #[error("Unsupported scope: {0}")]
+    UnsupportedScope(String),
+    #[error("{0}")]
+    InvalidJavaModel(String),
+    #[error("{0}")]
+    InvalidRustModel(String),
+    #[error(transparent)]
+    Render(#[from] minijinja::Error),
 }
 
-pub fn generate_virtual_crate(
+pub fn render_external_preview(domain: &RenderDomain, source: &str) -> Result<String, String> {
+    let (vars, graph) = crate::preview_graph::context(domain);
+    crate::java_stg::StgTemplate::parse_preview(source)?.render_graph_preview(vars, graph)
+}
+
+pub fn render_named_external_preview(domain: &RenderDomain, path: &str, source: &str) -> Result<String, String> {
+    let filename=path.rsplit('/').next().unwrap_or(path);
+    let data_design=matches!(filename,"data-design"|"data-design.html"|"data-design-react"|"data-design-react.html")
+        || filename.eq_ignore_ascii_case("data-design.md");
+    if !data_design { return render_external_preview(domain,source); }
+    let (mut vars,mut graph)=crate::preview_graph::context(domain);
+    vars["domain"]=crate::graph_service::attach(domain,&mut graph);
+    crate::java_stg::StgTemplate::parse_preview(source)?.render_graph_preview(vars,graph)
+}
+
+pub fn generate_for_scope(
     domain: &RenderDomain,
-) -> Result<Vec<GeneratedFile>, minijinja::Error> {
-    let mut env = Environment::new();
-    env.set_trim_blocks(true);
-    env.set_lstrip_blocks(false);
-
-    env.add_template("lib", include_str!("../templates/lib/lib/index.j2"))?;
-    env.add_template(
-        "expression",
-        include_str!("../templates/lib/expression/index.j2"),
-    )?;
-    env.add_template("q", include_str!("../templates/src/q.rs.j2"))?;
-    env.add_template("request", include_str!("../templates/lib/request/index.j2"))?;
-    env.add_template(
-        "request_support",
-        include_str!("../templates/lib/request_support/index.j2"),
-    )?;
-    env.add_template("runtime", include_str!("../templates/lib/runtime/index.j2"))?;
-    env.add_template(
-        "sample_data",
-        include_str!("../templates/lib/sample_data/index.j2"),
-    )?;
-    env.add_template(
-        "entity_struct",
-        include_str!("../templates/lib/entity/struct.rs.j2"),
-    )?;
-    env.add_template(
-        "behavior",
-        include_str!("../templates/lib/behavior/index.j2"),
-    )?;
-    env.add_template("checker", include_str!("../templates/lib/checker/index.j2"))?;
-    env.add_template(
-        "entity_mod",
-        include_str!("../templates/lib/entity_mod.rs.j2"),
-    )?;
-
-    env.add_template(
-        "cargo",
-        include_str!("../templates/lib/cargo/Cargo.toml.j2"),
-    )?;
-
-    let mut files = Vec::new();
-
-    let rust_crate_name = domain.rust_crate_name.clone();
-    let name = domain.name.clone();
-    let rust_teaql_dependency_version = "4.2.5";
-    let rust_crate_version = "0.1.0";
-    let has_sql_provider = domain.has_sql_provider;
-    let rust_sql_provider_dependency = "teaql-provider-sqlite = \"4.2.5\"";
-    let data_service = "rusqlite = { version = \"0.40\", features = [\"bundled\", \"chrono\", \"column_decltype\"] }";
-
-    let ctx = context! {
-        domain => domain,
-        entities => &domain.entities,
-        businessObjectDescriptors => &domain.business_descriptors,
-        constantObjectDescriptors => &domain.constant_descriptors,
-        rootObjectDescriptors => &domain.root_descriptors,
-        rust_crate_name => rust_crate_name,
-        name => name,
-        rust_teaql_dependency_version => rust_teaql_dependency_version,
-        rust_crate_version => rust_crate_version,
-        has_sql_provider => has_sql_provider,
-        rust_sql_provider_dependency => rust_sql_provider_dependency,
-            rust_sql_provider_name => "teaql_provider_sqlite",
-            rust_sql_provider_pascal => "Sqlite",
-        data_service => data_service,
+    scope: &str,
+) -> Result<Vec<GeneratedFile>, GenerationError> {
+    let normalized = scope.trim().to_ascii_lowercase();
+    let scope = if normalized.is_empty() {
+        "rust-lib-core"
+    } else {
+        &normalized
     };
-
-    files.push(GeneratedFile {
-        path: "lib/Cargo.toml".to_string(),
-        content: clean_whitespace(&env.get_template("cargo")?.render(ctx.clone())?),
-    });
-
-    files.push(GeneratedFile {
-        path: "lib/src/lib.rs".to_string(),
-        content: clean_whitespace(&env.get_template("lib")?.render(ctx.clone())?),
-    });
-
-    files.push(GeneratedFile {
-        path: "lib/src/e.rs".to_string(),
-        content: clean_whitespace(&env.get_template("expression")?.render(ctx.clone())?),
-    });
-
-    files.push(GeneratedFile {
-        path: "lib/src/request_support.rs".to_string(),
-        content: clean_whitespace(&env.get_template("request_support")?.render(ctx.clone())?),
-    });
-
-    files.push(GeneratedFile {
-        path: "lib/src/q.rs".to_string(),
-        content: clean_whitespace(&env.get_template("q")?.render(ctx.clone())?),
-    });
-
-    files.push(GeneratedFile {
-        path: "lib/src/runtime.rs".to_string(),
-        content: clean_whitespace(&env.get_template("runtime")?.render(ctx.clone())?),
-    });
-
-    files.push(GeneratedFile {
-        path: "lib/src/sample_data.rs".to_string(),
-        content: clean_whitespace(&env.get_template("sample_data")?.render(ctx.clone())?),
-    });
-
-    for entity in &domain.entities {
-        files.push(GeneratedFile {
-            path: format!("lib/src/{}/mod.rs", entity.rust_module),
-            content: clean_whitespace(
-                &env.get_template("entity_mod")?
-                    .render(context! { objectDescriptor => entity })?,
-            ),
-        });
-        files.push(GeneratedFile {
-            path: format!("lib/src/{}/entity.rs", entity.rust_module),
-            content: clean_whitespace(&env.get_template("entity_struct")?.render(context! {
-                objectDescriptor => entity,
-                rust_module_name => entity.rust_module.clone(),
-                rust_struct_name => entity.rust_struct.clone(),
-                rust_table_name => entity.table_name.clone(),
-                data_service => entity.data_service.clone().unwrap_or_default(),
-                audit_mask_fields => entity.audit_mask_fields.join(","),
-                audit_value_max_len => entity.audit_value_max_len,
-            })?),
-        });
-        files.push(GeneratedFile {
-            path: format!("lib/src/{}/behavior.rs", entity.rust_module),
-            content: clean_whitespace(
-                &env.get_template("behavior")?
-                    .render(context! { objectDescriptor => entity })?,
-            ),
-        });
-        files.push(GeneratedFile {
-            path: format!("lib/src/{}/checker.rs", entity.rust_module),
-            content: clean_whitespace(
-                &env.get_template("checker")?
-                    .render(context! { objectDescriptor => entity })?,
-            ),
-        });
-        files.push(GeneratedFile {
-            path: format!("lib/src/{}/expression.rs", entity.rust_module),
-            content: clean_whitespace(&env.render_str("{% from 'expression' import entityExpression, listExpression %}{{ entityExpression(objectDescriptor) }}{{ listExpression(objectDescriptor) }}", context! { objectDescriptor => entity, domain => domain })?),
-        });
-        files.push(GeneratedFile {
-            path: format!("lib/src/{}/request.rs", entity.rust_module),
-            content: clean_whitespace(&env.render_str(
-                "{% from 'request' import request %}{{ request(objectDescriptor) }}",
-                context! { objectDescriptor => entity, domain => domain },
-            )?),
-        });
-    }
-
-    Ok(files)
-}
-
-pub fn generate_virtual_workspace(
-    domain: &RenderDomain,
-) -> Result<Vec<GeneratedFile>, minijinja::Error> {
-    let mut env = Environment::new();
-    env.set_trim_blocks(true);
-    env.set_lstrip_blocks(true);
-
-    env.add_template(
-        "Cargo.toml",
-        include_str!("../templates/workspace/Cargo.toml.j2"),
-    )?;
-    env.add_template(
-        "Makefile",
-        include_str!("../templates/workspace/Makefile.j2"),
-    )?;
-    env.add_template(
-        ".gitignore",
-        include_str!("../templates/workspace/.gitignore.j2"),
-    )?;
-    env.add_template(
-        "AGENTS.md",
-        include_str!("../templates/workspace/AGENTS.md.j2"),
-    )?;
-    env.add_template(
-        "RUNTIME_CUSTOM_GUIDE.md",
-        include_str!("../templates/workspace/RUNTIME_CUSTOM_GUIDE.md.j2"),
-    )?;
-    env.add_template(
-        "TOOL_API_GUIDE.md",
-        include_str!("../templates/workspace/TOOL_API_GUIDE.md.j2"),
-    )?;
-    env.add_template(
-        "README.md",
-        include_str!("../templates/workspace/README.md.j2"),
-    )?;
-    env.add_template(
-        "Dockerfile",
-        include_str!("../templates/rust-workspace/Dockerfile.j2"),
-    )?;
-    env.add_template(
-        ".dockerignore",
-        include_str!("../templates/rust-workspace/.dockerignore.j2"),
-    )?;
-    env.add_template(
-        ".github/workflows/rust.yml",
-        include_str!("../templates/rust-workspace/.github/workflows/rust.yml.j2"),
-    )?;
-
-    env.add_template(
-        "console_Cargo.toml",
-        include_str!("../templates/rust-app-console/cargo/Cargo.toml.j2"),
-    )?;
-    env.add_template(
-        "console_main.rs",
-        include_str!("../templates/rust-app-console/src/main.rs.j2"),
-    )?;
-    env.add_template(
-        "console_lib.rs",
-        include_str!("../templates/rust-app-console/src/lib.rs.j2"),
-    )?;
-
-    env.add_template(
-        "axum_Cargo.toml",
-        include_str!("../templates/rust-web-axum/cargo/Cargo.toml.j2"),
-    )?;
-    env.add_template(
-        "axum_main.rs",
-        include_str!("../templates/rust-web-axum/src/main.rs.j2"),
-    )?;
-
-    env.add_template(
-        "topcoat_Cargo.toml",
-        include_str!("../templates/rust-web-topcoat/Cargo.toml.j2"),
-    )?;
-    env.add_template(
-        "topcoat_Makefile",
-        include_str!("../templates/rust-web-topcoat/Makefile.j2"),
-    )?;
-    env.add_template(
-        "topcoat_gitignore",
-        include_str!("../templates/rust-web-topcoat/.gitignore.j2"),
-    )?;
-    env.add_template(
-        "topcoat_AGENTS.md",
-        include_str!("../templates/rust-web-topcoat/AGENTS.md.j2"),
-    )?;
-    env.add_template(
-        "topcoat_RUNTIME_CUSTOM_GUIDE.md",
-        include_str!("../templates/rust-web-topcoat/RUNTIME_CUSTOM_GUIDE.md.j2"),
-    )?;
-    env.add_template(
-        "topcoat_TOOL_API_GUIDE.md",
-        include_str!("../templates/rust-web-topcoat/TOOL_API_GUIDE.md.j2"),
-    )?;
-    env.add_template(
-        "topcoat_README.md",
-        include_str!("../templates/rust-web-topcoat/README.md.j2"),
-    )?;
-    env.add_template(
-        "topcoat_main.rs",
-        include_str!("../templates/rust-web-topcoat/main.rs.j2"),
-    )?;
-    env.add_template(
-        "topcoat_lib.rs",
-        include_str!("../templates/rust-web-topcoat/lib.rs.j2"),
-    )?;
-
-    let mut files = Vec::new();
-    let root_templates = [
-        "Cargo.toml",
-        "Makefile",
-        ".gitignore",
-        "AGENTS.md",
-        "RUNTIME_CUSTOM_GUIDE.md",
-        "TOOL_API_GUIDE.md",
-        "README.md",
-        "Dockerfile",
-        ".dockerignore",
-        ".github/workflows/rust.yml",
-    ];
-
-    let sub_crates = vec![
-        (
-            "rust-app-console",
-            vec![
-                ("console_Cargo.toml", "Cargo.toml"),
-                ("console_main.rs", "src/main.rs"),
-                ("console_lib.rs", "src/lib.rs"),
-            ],
-        ),
-        (
-            "rust-web-axum",
-            vec![
-                ("axum_Cargo.toml", "Cargo.toml"),
-                ("axum_main.rs", "src/main.rs"),
-            ],
-        ),
-        (
-            "rust-web-topcoat",
-            vec![
-                ("topcoat_Cargo.toml", "Cargo.toml"),
-                ("topcoat_Makefile", "Makefile"),
-                ("topcoat_gitignore", ".gitignore"),
-                ("topcoat_AGENTS.md", "AGENTS.md"),
-                ("topcoat_RUNTIME_CUSTOM_GUIDE.md", "RUNTIME_CUSTOM_GUIDE.md"),
-                ("topcoat_TOOL_API_GUIDE.md", "TOOL_API_GUIDE.md"),
-                ("topcoat_README.md", "README.md"),
-                ("topcoat_main.rs", "src/main.rs"),
-                ("topcoat_lib.rs", "src/lib.rs"),
-            ],
-        ),
-    ];
-
-    let rust_crate_name = domain.rust_crate_name.clone();
-    let rust_workspace_crate_name = domain.workspace_crate_name.clone();
-    let rust_workspace_generated_lib_path = "lib";
-    let rust_module_name = rust_crate_name.replace('-', "_");
-    let rust_teaql_dependency_version = "4.2.5";
-
-    let has_sql_provider = domain.has_sql_provider;
-
-    let ctx = context! {
-        domain => domain,
-        entities => &domain.entities,
-        businessObjectDescriptors => &domain.business_descriptors,
-        constantObjectDescriptors => &domain.constant_descriptors,
-        rootObjectDescriptors => &domain.root_descriptors,
-        rust_crate_name => rust_crate_name,
-        rust_workspace_crate_name => rust_workspace_crate_name,
-        rust_web_topcoat_crate_name => format!("{}-topcoat", domain.name),
-        rust_workspace_generated_lib_path => rust_workspace_generated_lib_path,
-        rust_module_name => rust_module_name,
-        rust_teaql_dependency_version => rust_teaql_dependency_version,
-        has_sql_provider => has_sql_provider,
-    };
-
-    for tmpl in root_templates {
-        let template = env.get_template(tmpl).map_err(|e| {
-            minijinja::Error::new(minijinja::ErrorKind::TemplateNotFound, e.to_string())
-        })?;
-        let content = template.render(ctx.clone())?;
-        files.push(GeneratedFile {
-            path: tmpl.to_string(),
-            content,
-        });
-    }
-
-    for (crate_dir, crate_templates) in sub_crates {
-        for (tmpl_name, file_path) in crate_templates {
-            let template = env.get_template(tmpl_name).map_err(|e| {
-                minijinja::Error::new(minijinja::ErrorKind::TemplateNotFound, e.to_string())
-            })?;
-            let content = template.render(ctx.clone())?;
-            files.push(GeneratedFile {
-                path: format!("{}/{}", crate_dir, file_path),
-                content,
-            });
+    let entity_view;
+    let domain =
+        if scope.starts_with("rust") || scope.starts_with("golang") || scope.starts_with("swift") {
+            entity_view = domain.entity_domain();
+            &entity_view
+        } else {
+            domain
+        };
+    match scope {
+        "frontend" | "tool" => {
+            crate::auxiliary::generate(domain, scope).map_err(GenerationError::InvalidJavaModel)
         }
+        "doc" | "model-view" | "data-design" => {
+            let mut files = Vec::new();
+            if scope != "data-design" {
+                files.push(GeneratedFile {
+                    path: "model-view.html".into(),
+                    content: crate::java_doc::render_with_descriptor_override(domain, include_str!("../templates/doc-shadow-source/model-view.stg"))?
+                        .unwrap_or_else(|| crate::java_doc::render_model_view(domain)),
+                });
+            }
+            if scope != "model-view" {
+                files.push(GeneratedFile {
+                    path: "data-design.html".into(),
+                    content: crate::java_doc::render_with_descriptor_override(domain, include_str!("../templates/doc-shadow-source/data-design.stg"))?
+                        .unwrap_or_else(|| crate::java_doc::render_data_design(domain)),
+                });
+            }
+            if scope != "model-view" {
+                files.push(GeneratedFile {
+                    path: "data-design-react.html".into(),
+                    content: crate::java_doc::render_with_descriptor_override(domain, include_str!("../templates/doc-shadow-source/data-design-react.stg"))?
+                        .unwrap_or_else(|| crate::java_doc::render_data_design_react(domain)),
+                });
+            }
+            Ok(files)
+        }
+        "rust-lib" | "rust_lib" | "rust-lib-core" => Ok(generate_virtual_crate(domain)?),
+        "rust-workspace" | "rust-app-console" | "rust-web-axum" | "rust-web-topcoat" => {
+            let scope = if scope == "rust-workspace" {
+                "rust-app-console"
+            } else {
+                scope
+            };
+            crate::rust_workspace::generate(domain, scope)
+                .map_err(GenerationError::InvalidRustModel)
+        }
+        _ => Err(GenerationError::UnsupportedScope(scope.to_string())),
     }
-
-    Ok(files)
 }
 
-pub fn generate_all(domain: &Domain) -> Result<Vec<GeneratedFile>, Box<dyn std::error::Error>> {
-    let render_ctx = build_render_context(domain);
-    let mut files = generate_virtual_crate(&render_ctx)?;
-    files.extend(generate_virtual_workspace(&render_ctx)?);
-
-    // Some minor string replacements to avoid dealing with STG formatting quirks natively
-    for file in &mut files {
-        file.content = file
-            .content
-            .replace(" \n", "\n")
-            .replace("\n\n\n", "\n\n")
-            .trim()
-            .to_string()
-            + "\n";
-    }
-
-    Ok(files)
-}
+pub use crate::rust_engine::{generate_all, generate_virtual_crate, generate_virtual_workspace};
 
 pub fn render_preview(
     domain: &RenderDomain,
     template_name: &str,
     target_entity: Option<String>,
 ) -> Result<String, String> {
+    let target_entity = if template_name.contains("-assist-") {
+        target_entity.filter(|location| !location.is_empty())
+    } else {
+        target_entity
+    };
+    if let Some(source) = crate::templates::read(template_name) {
+        return render_named_external_preview(domain, template_name, &source);
+    }
+    if let Some(result) = crate::preview::render_builtin(domain, template_name) {
+        return result;
+    }
+    if template_name.contains("-assist-") && !has_builtin_assist_template(template_name) {
+        let file = if template_name.ends_with("-assist-query")
+            && target_entity.as_deref().is_some_and(|location| location.contains('.'))
+        {
+            "field.md.stg"
+        } else {
+            "prompt.md.stg"
+        };
+        return Err(format!(
+            "Template not found or empty: generator/{template_name}/{file}"
+        ));
+    }
+    if template_name == "doc/model-view.MD" {
+        return Ok("## ❌ Error\n\nTemplate `model-view.MD.stg` not found in `doc`.\n".into());
+    }
+    if template_name == "doc/model-view" {
+        return Ok(crate::java_doc::render_with_descriptor_override(domain, include_str!("../templates/doc-shadow-source/model-view.stg")).map_err(|error| error.to_string())?
+            .unwrap_or_else(|| crate::java_doc::render_model_view(domain)));
+    }
+    if template_name == "doc/data-design-react" {
+        return Ok(crate::java_doc::render_with_descriptor_override(domain, include_str!("../templates/doc-shadow-source/data-design-react.stg")).map_err(|error| error.to_string())?
+            .unwrap_or_else(|| crate::java_doc::render_data_design_react(domain)));
+    }
+    if template_name == "doc/data-design" {
+        return Ok(crate::java_doc::render_with_descriptor_override(domain, include_str!("../templates/doc-shadow-source/data-design.stg")).map_err(|error| error.to_string())?
+            .unwrap_or_else(|| crate::java_doc::render_data_design(domain)));
+    }
+    if template_name == "index" {
+        return crate::index::render_index(domain);
+    }
+    if template_name.starts_with("rust-assist-") {
+        return crate::rust_assist::render(domain, template_name, target_entity.as_deref());
+    }
     let mut env = Environment::new();
     env.set_trim_blocks(true);
     env.set_lstrip_blocks(true);
@@ -503,11 +214,7 @@ pub fn render_preview(
     let template = env.get_template(template_name).map_err(|e| e.to_string())?;
 
     let context = if let Some(entity_name) = target_entity {
-        let object_descriptor = domain
-            .entities
-            .iter()
-            .find(|e| e.rust_module == entity_name || e.name == entity_name)
-            .cloned();
+        let object_descriptor = domain.find_object_descriptor(&entity_name).cloned();
         if object_descriptor.is_none() {
             return Err(format!("Entity {} not found", entity_name));
         }
@@ -523,4 +230,38 @@ pub fn render_preview(
     };
 
     template.render(context).map_err(|e| e.to_string())
+}
+
+fn has_builtin_assist_template(scope: &str) -> bool {
+    let Some((language, action)) = scope.split_once("-assist-") else {
+        return false;
+    };
+    matches!(
+        language,
+        "rust"
+    ) && matches!(
+        action,
+        "query"
+            | "list-page"
+            | "create"
+            | "update"
+            | "delete"
+            | "expression"
+            | "ensure-schema"
+            | "debug"
+            | "i18n"
+            | "runtime-custom"
+            | "tool-api"
+    )
+}
+
+pub const ASSIST_QUERY_NULL_ENTITY_MESSAGE: &str =
+    "Cannot invoke \"com.skynet.codegenerator.meta.ObjectDescriptor.getFields()\" because \"entity\" is null";
+
+pub fn assist_query_null_entity_path(path: &str) -> bool {
+    let mut parts = path.split('/');
+    let scope = parts.next().unwrap_or("");
+    scope.ends_with("-assist-query")
+        && parts.next() == Some("")
+        && parts.any(|part| !part.is_empty())
 }

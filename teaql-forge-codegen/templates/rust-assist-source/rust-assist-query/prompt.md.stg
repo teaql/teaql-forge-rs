@@ -1,0 +1,44 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+# Rust Assist — Query `<entity.name>`
+
+Use the exact generated `Q::<entity.rustPluralName>_minimal()` entry point.
+The request is allow-listed from the model, uses stable ordering and bounded
+results, and receives trusted policy/provider state only through the context.
+
+```rust
+use teaql_core::SmartList;
+use <entity.domain.rustModuleName>::{
+    Q, <entity.rustStructName>, TeaqlRuntime,
+};
+
+pub async fn query_<entity.rustModuleName>_by_id(
+    context: &impl TeaqlRuntime,
+    entity_id: u64,
+) -> Result\<SmartList\<<entity.rustStructName>>, Box\<dyn std::error::Error>> {
+    let rows = Q::<entity.rustPluralName>_minimal()
+<entity.fields:{f | <if(f.id)>        .<f.rustAttributePredicatePrefixExpr>_is(entity_id)
+<endif>}>
+        .order_by_id_asc()
+        .limit(20)
+        .comment("what: load the requested <entity.name> row")
+        .purpose("why: serve the authorized <entity.name> view")
+        .execute_for_list(context)
+        .await?;
+
+    Ok(rows)
+}
+```
+
+The example is complete source, not pseudocode. Use only these generated field,
+predicate, ordering, projection, and relation-selection methods. Keep the same
+active filters for rows, counts, facets, and aggregates. Missing/blank intent,
+unknown fields, unbounded reads, and trusted-context input must fail. Use generated
+relation loading rather than handwritten child-query loops; never guess a plural name.
+
+For field-specific predicates and projections, request
+`rust-assist-query/<entity.name>.[field_name]`; boolean fields have distinct
+true, false, known, and unknown predicates in that field-level help.
+
+>>

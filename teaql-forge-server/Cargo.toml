@@ -7,7 +7,8 @@ license.workspace = true
 
 [dependencies]
 axum = { version = "0.7.5", features = ["multipart"] }
-serde_json.workspace = true
+serde_json = { workspace = true, features = ["raw_value"] }
+mime = "0.3"
 tokio = { version = "1.37.0", features = ["full"] }
 tower = "0.5.3"
 tower-http = { version = "0.5", features = ["trace"] }
@@ -18,3 +19,15 @@ clap.workspace = true
 serde = { workspace = true, features = ["derive"] }
 regex = "1.12.3"
 roxmltree.workspace = true
+base64 = "0.22.1"
+ed25519-dalek = { version = "2.2.0", features = ["pkcs8", "pem", "rand_core"] }
+futures-util = "0.3"
+prost = "0.13.5"
+rand = "0.8.5"
+sha2 = "0.10.9"
+time = { version = "0.3.47", features = ["formatting"] }
+encoding_rs = "=0.8.35"
+flate2 = { version = "1.1", features = ["zlib"] }
+
+[dev-dependencies]
+teaql-forge-codegen = { path = "../teaql-forge-codegen", features = ["parity-probes"] }

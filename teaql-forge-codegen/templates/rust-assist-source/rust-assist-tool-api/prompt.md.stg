@@ -1,0 +1,44 @@
+index(domain, moduleName, moduleContent) ::= <<
+\<!-- ephemeral -->
+
+<if(moduleContent)>
+<moduleContent>
+<else>
+<indexContent(domain)>
+<endif>
+>>
+
+indexContent(domain) ::= <<
+# TeaQL Rust Tool API Reference
+
+> [!WARNING]
+> **DO NOT GUESS TOOL APIS.** The published surface is the versioned
+> request-scoped \`teaql-tool-context\` facade. A module absent from this inventory is unsupported.
+
+To get the exact API usage and examples for TeaQL Tool APIs, execute the following command:
+
+```bash
+cargo teaql --input models/<domain.name>.xml rust-assist-tool-api/[module]
+```
+
+Replace \`[module]\` with one of the following:
+
+```json
+{"schema":"io.teaql.assist.tool-api/v1","language":"rust","crate":"teaql-tool-context","version":"2.0.0","intent":"comment","modules":[{"name":"time","feature":"std","facade":"context.time()"},{"name":"id","feature":"std","facade":"context.id()"},{"name":"text","feature":"std","facade":"context.text()"},{"name":"json","feature":"std","facade":"context.json()"},{"name":"decimal","feature":"std","facade":"context.decimal()"},{"name":"money","feature":"std","facade":"context.money()"},{"name":"http","feature":"http","facade":"context.http()"}]}
+```
+
+| module | Facade | Feature | Native result |
+|---|---|---|---|
+| time | \`context.time()\` | \`std\` | chrono value behind \`.comment(...)\` |
+| id | \`context.id()\` | \`std\` | \`String\` behind \`.comment(...)\` |
+| text | \`context.text()\` | \`std\` | \`String\` / \`bool\` behind \`.comment(...)\` |
+| json | \`context.json()\` | \`std\` | serde JSON / result, selected reads require comment |
+| decimal | \`context.decimal()\` | \`std\` | decimal / result behind \`.comment(...)\` |
+| money | \`context.money()\` | \`std\` | money / result behind \`.comment(...)\` |
+| http | \`context.http()\` | \`http\` | awaitable \`Result\<String, String\>\` after comment |
+
+The inventory intentionally contains only modules exercised by the conformance gate. Fetch
+one module for its exact signatures. Unknown modules are rejected with HTTP 404.
+
+Once the command succeeds, read its output. Use the printed code as a template to write your logic.
+>>

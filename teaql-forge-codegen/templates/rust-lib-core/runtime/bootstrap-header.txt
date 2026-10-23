@@ -1,0 +1,23 @@
+fn is_generated_bootstrap_retryable_conflict(error: &teaql_runtime::RuntimeError) -> bool {
+    if matches!(error, teaql_runtime::RuntimeError::OptimisticLockConflict { .. }) { return true }
+    let teaql_runtime::RuntimeError::Graph(message) = error else { return false };
+    (message.contains("UNIQUE constraint failed:") && message.contains("_data.id"))
+        || (message.contains("duplicate key value violates unique constraint") && message.contains("_data_pkey"))
+        || (message.contains("Duplicate entry") && message.contains("PRIMARY"))
+}
+
+fn ensure_generated_bootstrap<'a>(context: &'a teaql_runtime::UserContext) -> teaql_runtime::GeneratedSchemaBootstrapFuture<'a> {
+    Box::pin(async move {
+        for attempt in 0..5 {
+            match ensure_generated_bootstrap_once(context).await {
+                Ok(()) => return Ok(()),
+                Err(error) if attempt < 4 && is_generated_bootstrap_retryable_conflict(&error) => tokio::task::yield_now().await,
+                Err(error) => return Err(error),
+            }
+        }
+        unreachable!("bootstrap attempts always return or fail")
+    })
+}
+
+async fn ensure_generated_bootstrap_once(context: &teaql_runtime::UserContext) -> Result<(), teaql_runtime::RuntimeError> {
+        use teaql_core::Entity as _;

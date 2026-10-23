@@ -1,0 +1,1162 @@
+index(domain, targets) ::= <<
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeaQL Code Gen Server</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+        }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            background-image: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.15) 0%, rgba(15, 23, 42, 0) 70%);
+            background-attachment: fixed;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        h3 {
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+        }
+        p { color: var(--text-muted); }
+        strong { color: var(--text-main); }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .eyebrow {
+            color: #93c5fd;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        .hero-copy {
+            max-width: 760px;
+            margin: 0 auto;
+            font-size: 1.08rem;
+        }
+        .workflow-nav {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin: 32px 0 40px;
+        }
+        .workflow-nav a {
+            display: block;
+            padding: 14px 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            background: rgba(30, 41, 59, 0.55);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.82rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .workflow-nav a:hover {
+            color: var(--text-main);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .workflow-nav strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #60a5fa;
+            font-size: 0.72rem;
+        }
+        .stage {
+            position: relative;
+            scroll-margin-top: 24px;
+        }
+        .stage::before {
+            content: "";
+            position: absolute;
+            left: 31px;
+            top: -25px;
+            width: 1px;
+            height: 25px;
+            background: linear-gradient(var(--primary), transparent);
+        }
+        .stage-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+        .stage-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            flex: 0 0 44px;
+            border-radius: 12px;
+            color: #dbeafe;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+        }
+        .stage-title h2 {
+            padding: 0;
+            margin: 0 0 4px;
+            border: 0;
+        }
+        .stage-title p {
+            margin: 0;
+        }
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+        .panel {
+            padding: 18px;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        .panel p:last-child {
+            margin-bottom: 0;
+        }
+        .panel-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #93c5fd;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        pre {
+            margin: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.84rem;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .callout {
+            margin-top: 18px;
+            padding: 14px 16px;
+            color: #bfdbfe;
+            background: rgba(37, 99, 235, 0.1);
+            border-left: 3px solid #3b82f6;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+        }
+        .callout.warning {
+            color: #fde68a;
+            background: rgba(245, 158, 11, 0.08);
+            border-left-color: #f59e0b;
+        }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .target-groups {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+        .target-group {
+            padding: 18px;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        .target-group h3 {
+            color: #dbeafe;
+        }
+        .target-group ul {
+            margin: 12px 0 0;
+            padding-left: 20px;
+            color: var(--text-muted);
+        }
+        .target-group li {
+            margin: 7px 0;
+        }
+        .target-group code {
+            color: #f8fafc;
+        }
+        .status-levels {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .status-level {
+            padding: 12px 14px;
+            color: var(--text-muted);
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.86rem;
+        }
+        .status-level strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #dbeafe;
+        }
+        .feedback-loop {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .loop-step {
+            padding: 13px;
+            color: var(--text-muted);
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.84rem;
+            text-align: center;
+        }
+        .loop-step strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #c4b5fd;
+        }
+        @media (max-width: 760px) {
+            h1 {
+                font-size: 2.05rem;
+            }
+            .workflow-nav {
+                grid-template-columns: 1fr;
+            }
+            .stage-grid,
+            .target-groups,
+            .status-levels,
+            .feedback-loop {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+
+        .supported-languages {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .lang-item {
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .lang-item:hover {
+            transform: translateY(-8px);
+        }
+        .lang-emoji {
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+        }
+        .lang-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            letter-spacing: 0.05em;
+        }
+        @media (max-width: 760px) {
+            .supported-languages {
+                flex-direction: column;
+                gap: 30px;
+            }
+        }
+        /* Hero setup block */
+        .setup-block {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .code-container {
+            position: relative;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #334155;
+            overflow-x: auto;
+        }
+        #endpoint-code {
+            display: block;
+            box-sizing: border-box;
+            padding-right: 72px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: #2563eb; }
+        
+        /* Two columns */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .col { flex: 1; min-width: 300px; }
+        
+        /* Preview links */
+        .preview-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .link-chip {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .link-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+        
+        /* Targets list */
+        .target-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .target-tag {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        /* New Table and Buttons */
+        .prompt-table {
+            width: 100%;
+            min-width: 620px;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 8px;
+            overflow: hidden;
+            border-style: hidden;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+        }
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+        .prompt-table th {
+            background: rgba(30, 41, 59, 0.8);
+            font-weight: 600;
+            color: var(--text-main);
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .prompt-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.95rem;
+            color: #e2e8f0;
+        }
+        .prompt-table tr:last-child td {
+            border-bottom: none;
+        }
+        .prompt-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .assist-btn {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Seven language columns need a compact, consistent action. Keep the
+           original text in the accessibility tree and show one preview icon. */
+        .prompt-table .assist-btn {
+            min-width: 1.9rem;
+            padding: 6px 8px;
+            font-size: 0;
+            line-height: 1;
+        }
+        .prompt-table .assist-btn::before {
+            content: "↗";
+            font-size: 0.9rem;
+        }
+        .java-btn {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .java-btn:hover {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: #f59e0b;
+            transform: translateY(-1px);
+        }
+        .rust-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .rust-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+            transform: translateY(-1px);
+        }
+        .go-btn {
+            background: rgba(6, 182, 212, 0.15);
+            color: #67e8f9;
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .go-btn:hover {
+            background: rgba(6, 182, 212, 0.25);
+            border-color: #06b6d4;
+            transform: translateY(-1px);
+        }
+        
+        .py-btn {
+            background: rgba(234, 179, 8, 0.15);
+            color: #fde047;
+            border-color: rgba(234, 179, 8, 0.3);
+        }
+        .py-btn:hover {
+            background: rgba(234, 179, 8, 0.25);
+            border-color: #eab308;
+            transform: translateY(-1px);
+        }
+        .cs-btn {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+        .cs-btn:hover {
+            background: rgba(168, 85, 247, 0.25);
+            border-color: #a855f7;
+            transform: translateY(-1px);
+        }
+        .ts-btn {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .ts-btn:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .primary-btn {
+            background: rgba(59, 130, 246, 0.15);
+            color: #bfdbfe;
+            border-color: rgba(59, 130, 246, 0.35);
+        }
+        .primary-btn:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-container {
+            background: #1e293b;
+            width: 90%;
+            max-width: 900px;
+            height: 85vh;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.2s;
+        }
+        .modal-overlay.active .modal-container {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.5);
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #f8fafc;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: #f8fafc;
+        }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            background: #0f172a;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .modal-body pre {
+            margin: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="eyebrow">Model-driven development API</span>
+            <h1>From Business Requirement to Working Software</h1>
+            <p class="hero-copy">TeaQL gives developers and Coding Agents one continuous, verifiable path: create a typed domain model, evaluate it, generate a domain library and application workspace, then request model-aware API help while coding.</p>
+        </header>
+
+        <div class="supported-languages">
+            <div class="lang-item">
+                <div class="lang-emoji">☕</div>
+                <div class="lang-name">Java</div>
+            </div>
+            <div class="lang-item">
+                <div class="lang-emoji">🦀</div>
+                <div class="lang-name">Rust</div>
+            </div>
+            <div class="lang-item">
+                <div class="lang-emoji">🐹</div>
+                <div class="lang-name">Go</div>
+            </div>
+            <div class="lang-item">
+                <div class="lang-emoji">🐍</div>
+                <div class="lang-name">Python</div>
+            </div>
+            <div class="lang-item">
+                <div class="lang-emoji">🎯</div>
+                <div class="lang-name">.NET</div>
+            </div>
+            <div class="lang-item">
+                <div class="lang-emoji">📘</div>
+                <div class="lang-name">TypeScript</div>
+            </div>
+            <div class="lang-item">
+                <div class="lang-emoji">🕊️</div>
+                <div class="lang-name">Swift</div>
+            </div>
+        </div>
+
+        <div id="language-support-notice" class="callout" role="status">
+            <strong>Current verified baseline:</strong>
+            Java, Rust, Go, Python, .NET, and TypeScript have each generated, compiled, and executed the Order Search core feature against real PostgreSQL, MySQL, and SQLite databases.
+            Java also has full-feature verification on Oracle, DB2, DM8, SAP HANA, SQL Server, and DuckDB; .NET also has full-feature verification on SQL Server.
+            Swift 6 has generated and compiled domain output, a verified local SQLite runtime, and a verified TeaQL Federal Protocol client on Linux, macOS, and iOS Simulator; it participates in the same seven-language Assist matrix.
+            These statements describe the dated acceptance evidence, not every version or every target exposed by this server. Review the <a href="https://teaql.io/docs/reference/runtime-database-matrix">runtime evidence matrix</a> before selecting a production combination.
+            <div class="status-levels" aria-label="Verification status definitions">
+                <div class="status-level"><strong>Target available</strong>The generation route and templates exist. This alone makes no build or runtime claim.</div>
+                <div class="status-level"><strong>Generated &amp; compiled</strong>Generated output passed its language toolchain for the tested revision.</div>
+                <div class="status-level"><strong>Runtime verified</strong>Generated code connected to the named real database and executed persistence or queries.</div>
+                <div class="status-level"><strong>Full feature verified</strong>Rows, counts, aggregates, relations, saves, optimistic locking, purpose/comment, and both audit paths passed the stated scenario scope.</div>
+            </div>
+        </div>
+
+        <nav class="workflow-nav" aria-label="TeaQL development workflow">
+            <a href="#model-source"><strong>STEP 01</strong>Requirement → Model</a>
+            <a href="#model-shape"><strong>STEP 02</strong>Inspect the Model</a>
+            <a href="#evaluation"><strong>STEP 03</strong>Evaluate &amp; Repair</a>
+            <a href="#generation"><strong>STEP 04</strong>Generate Software</a>
+            <a href="#development"><strong>STEP 05</strong>Develop with Assist</a>
+        </nav>
+
+        <div class="card setup-block">
+            <h2>Connect the TeaQL Toolchain</h2>
+            <p>Point <code>cargo teaql</code> or another TeaQL client at this service. Coding Agents use the client instead of calling undocumented framework APIs directly.</p>
+            <div class="code-container">
+                <code id="endpoint-code">export TEAQL_ENDPOINT_PREFIX=http://localhost:8080/</code>
+                <button class="copy-btn" onclick="copyEndpoint()">Copy</button>
+            </div>
+            <div class="action-row">
+                <a href="services" class="assist-btn primary-btn" title="Live generation target catalog">Live Target Catalog</a>
+                <a href="version" class="assist-btn primary-btn" title="Generation Service version">Server Version</a>
+            </div>
+        </div>
+
+        <section id="model-source" class="card stage">
+            <div class="stage-header">
+                <span class="stage-number">01</span>
+                <div class="stage-title">
+                    <h2>Where Does the Model Come From?</h2>
+                    <p>A business requirement becomes a saved, reviewable KSML domain contract before application code is generated.</p>
+                </div>
+            </div>
+
+            <div class="stage-grid">
+                <div class="panel">
+                    <span class="panel-label">Input: business language</span>
+                    <pre>Build merchant onboarding.
+
+Each merchant belongs to a platform.
+Track tax number, address, external ID,
+creation time, and last update time.</pre>
+                </div>
+                <div class="panel">
+                    <span class="panel-label">Output: typed model artifact</span>
+                    <h3>Developer or Coding Agent</h3>
+                    <p>Clarifies objects, representative values, relationships, constants, ownership, and provider choice, then saves the result as XML/KSML.</p>
+                    <p>The model path—not a chat transcript—is the artifact used for evaluation, review, and regeneration.</p>
+                </div>
+            </div>
+
+            <div class="callout">TeaQL does not treat the first AI response as truth. The model is a proposal that must pass deterministic evaluation and remain available for human review.</div>
+        </section>
+
+        <section id="model-shape" class="card stage">
+            <div class="stage-header">
+                <span class="stage-number">02</span>
+                <div class="stage-title">
+                    <h2>What Does the Generated Model Look Like?</h2>
+                    <p>KSML uses concrete example values to describe fields and explicit function-like values to describe references and generated behaviors.</p>
+                </div>
+            </div>
+
+            <div class="stage-grid">
+                <div class="panel">
+                    <span class="panel-label">Excerpt from the live demo model</span>
+                    <pre>&lt;root name="crm-erp-service"
+      org="doublechaintech"
+      data_service="postgres"&gt;
+
+  &lt;platform
+      name="CRPERPPlatform"
+      create_time="createTime()"
+      last_update_time="updateTime()" /&gt;
+
+  &lt;merchant
+      name="Global Logistics Corporation"
+      tax_number="91XXXXXXXXXXXXX"
+      platform="platform()"
+      create_time="createTime()"
+      update_time="updateTime()" /&gt;
+
+&lt;/root&gt;</pre>
+                </div>
+                <div class="panel">
+                    <span class="panel-label">What the contract captures</span>
+                    <h3>Types, relationships, and generation intent</h3>
+                    <p>Representative values allow the evaluator and generator to infer supported field types. References such as <code>platform()</code> connect business objects. Metadata can add display names, modules, constants, identifiers, and ownership boundaries.</p>
+                    <div class="preview-links">
+                        <a href="model-view.html" class="link-chip">Entity Graph</a>
+                        <a href="data-design-react.html" class="link-chip">Data Dictionary</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout warning">The snippet explains the shape; the complete model is the source of truth. Coding Agents should edit the saved model and rerun evaluation instead of patching generated entities.</div>
+        </section>
+
+        <section id="evaluation" class="card stage">
+            <div class="stage-header">
+                <span class="stage-number">03</span>
+                <div class="stage-title">
+                    <h2>What Happens After Evaluation?</h2>
+                    <p>The service returns a Markdown report with Errors, Warnings, Suggestions, and confirmed solid areas.</p>
+                </div>
+            </div>
+
+            <div class="stage-grid">
+                <div class="panel">
+                    <span class="panel-label">Call the evaluator</span>
+                    <div class="code-container">
+                        <pre>cargo teaql evaluate \
+  --input model/main.xml</pre>
+                    </div>
+                    <div class="action-row">
+                        <a href="evaluate" class="assist-btn primary-btn" title="Live evaluation report for the demo model">Open Live Report</a>
+                    </div>
+                </div>
+                <div class="panel">
+                    <span class="panel-label">Use structured feedback</span>
+                    <pre>Evaluation Report
+├── Errors       must be fixed
+├── Warnings     require a decision
+├── Suggestions  optional improvements
+└── Solid Areas  preserve these sections</pre>
+                    <p>Generation is blocked when the submitted model contains evaluation Errors. Repair the model, evaluate again, and keep the report as evidence.</p>
+                </div>
+            </div>
+
+            <div class="feedback-loop">
+                <div class="loop-step"><strong>1. Submit</strong>Saved model</div>
+                <div class="loop-step"><strong>2. Read</strong>Markdown report</div>
+                <div class="loop-step"><strong>3. Repair</strong>Smallest model change</div>
+                <div class="loop-step"><strong>4. Repeat</strong>Until zero Errors</div>
+            </div>
+        </section>
+
+        <section id="generation" class="card stage">
+            <div class="stage-header">
+                <span class="stage-number">04</span>
+                <div class="stage-title">
+                    <h2>Which Libraries and Workspaces Can TeaQL Generate?</h2>
+                    <p>Generate the stable domain library separately from the editable application workspace.</p>
+                </div>
+            </div>
+
+            <div class="target-groups">
+                <div class="target-group">
+                    <h3>Domain libraries</h3>
+                    <ul>
+                        <li><code>java-lib-core</code> — Java entities, requests, expressions, metadata, and runtime registration.</li>
+                        <li><code>rust-lib-core</code> — Rust entities, typed requests, expressions, behaviors, checkers, and providers.</li>
+                        <li><code>golang-lib-core</code> — Go entities, typed requests, expressions, runtime helpers, and metadata.</li>
+                        <li><code>python-lib-core</code> — Python entities, typed requests, runtime integration, and metadata.</li>
+                        <li><code>dotnet-lib-core</code> — .NET entities, typed requests, ADO.NET integration, and metadata.</li>
+                        <li><code>typescript-lib-core</code> — TypeScript entities, typed requests, and TeaQL runtime integration.</li>
+                        <li><code>swift-lib-core</code> — Swift 6 entities and staged requests for local SQLite and TeaQL federation clients.</li>
+                    </ul>
+                </div>
+                <div class="target-group">
+                    <h3>Java workspaces</h3>
+                    <ul>
+                        <li><code>java-app-console</code></li>
+                        <li><code>java-web-spring-boot</code></li>
+                        <li><code>java-web-quarkus</code></li>
+                        <li><code>java-web-micronaut</code></li>
+                    </ul>
+                </div>
+                <div class="target-group">
+                    <h3>Polyglot workspaces</h3>
+                    <ul>
+                        <li><code>rust-app-console</code></li>
+                        <li><code>rust-web-axum</code></li>
+                        <li><code>rust-web-topcoat</code></li>
+                        <li><code>golang-app-console</code></li>
+                        <li><code>golang-web-gin</code></li>
+                        <li><code>python-app-console</code></li>
+                        <li><code>python-web-fastapi</code></li>
+                        <li><code>dotnet-app-console</code></li>
+                        <li><code>dotnet-web-aspnet</code></li>
+                        <li><code>typescript-app-console</code></li>
+                        <li><code>typescript-web-hono</code></li>
+                        <li><code>typescript-app-expo</code> — React Native local-first application with generated Expo SQLite schema.</li>
+                        <li><code>swift-app-console</code></li>
+                    </ul>
+                </div>
+                <div class="target-group">
+                    <h3>Design and guidance outputs</h3>
+                    <ul>
+                        <li><code>doc</code> — data-design documentation and visual previews.</li>
+                        <li><code>agent</code> — generated Coding Agent instructions.</li>
+                        <li><code>evaluation</code> and <code>mergemodel</code> — evaluation assets and model composition.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="stage-grid" style="margin-top: 18px;">
+                <div class="panel">
+                    <span class="panel-label">Generate a domain library</span>
+                    <div class="code-container">
+                        <pre>cargo teaql rust-lib-core \
+  --input model/main.xml \
+  --output generated/rust-lib-core</pre>
+                    </div>
+                </div>
+                <div class="panel">
+                    <span class="panel-label">Generate an editable workspace</span>
+                    <div class="code-container">
+                        <pre>cargo teaql rust-web-topcoat \
+  --input model/main.xml \
+  --output generated/rust-web-topcoat</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout">The live service catalog is authoritative for the configured endpoint. Generated workspaces reuse the matching core library; adding a web framework does not require creating another shared domain core.</div>
+            <div class="action-row">
+                <a href="swift-lib-core/workspace/README.md" class="assist-btn primary-btn" title="Preview the generated Swift package guide">Preview Swift Package</a>
+                <a href="services" class="assist-btn primary-btn" title="Live generation target catalog">Inspect All Live Targets</a>
+            </div>
+            <details style="margin-top: 18px;">
+                <summary style="cursor: pointer; color: var(--text-muted);">Raw target names exposed by this server</summary>
+                <div class="target-list" style="margin-top: 12px;">
+                    $targets:{t | <span class="target-tag">$t$</span>}$
+                </div>
+            </details>
+        </section>
+
+        <section id="development" class="card stage">
+            <div class="stage-header">
+                <span class="stage-number">05</span>
+                <div class="stage-title">
+                    <h2>How Does a Coding Agent Get API Help During Development?</h2>
+                    <p>The Agent asks for help using the current model, language, action, and exact object name. The response is generated Markdown, not a generic ORM example.</p>
+                </div>
+            </div>
+
+            <div class="stage-grid">
+                <div class="panel">
+                    <span class="panel-label">Model-aware assist request</span>
+                    <div class="code-container">
+                        <pre>cargo teaql \
+  --input model/main.xml \
+  rust-assist-query/merchant</pre>
+                    </div>
+                    <p>The same pattern supports create, update, delete, expression, list-page, debug, tool API, ensure-schema, and runtime-customization guidance.</p>
+                </div>
+                <div class="panel">
+                    <span class="panel-label">Development feedback loop</span>
+                    <pre>Generated AGENTS.md
+       ↓
+Select language + action + object
+       ↓
+Call TeaQL assist API with the model
+       ↓
+Use exact generated methods
+       ↓
+Compile, test, and request more help</pre>
+                </div>
+            </div>
+
+            <div class="callout">The complete 7 × 9 Assist matrix is rendered from the submitted model. Coding Agents must copy exact generated names (including centralized plurals), use the single runtime <code>UserContext</code> argument, enter the executable stage through <code>purpose</code>, require <code>comment</code> at execution, and attach the generated audit-reason API to every write.</div>
+
+            <h2 style="margin-top: 30px;">Live Model-aware API Help</h2>
+            <p>These previews use the built-in demo model and its <strong>$first(domain.objectDescriptors).od_name$</strong> object. Submit your own model through the CLI to receive guidance for your own objects.</p>
+
+            <div class="table-scroll">
+            <table class="prompt-table">
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">Feature / Capability</th>
+                        <th style="text-align: center;" title="Java">☕ JV</th>
+                        <th style="text-align: center;" title="Rust">🦀 RS</th>
+                        <th style="text-align: center;">🐹 Go</th>
+                        <th style="text-align: center;" title="Swift">🐦 SW</th>
+                        <th style="text-align: center;" title="Python">🐍 PY</th>
+                        <th style="text-align: center;" title=".NET / C#">🎯 C#</th>
+                        <th style="text-align: center;" title="TypeScript">📘 TS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: 500;">📚 Workspace API Guide</td>
+                        <td align="center"><a href="java-web-spring-boot/TOOL_API_GUIDE.md" class="assist-btn java-btn" title="Java Workspace API Guide (TOOL_API_GUIDE.md)">Preview</a></td>
+                        <td align="center"><a href="rust-app-console/TOOL_API_GUIDE.md" class="assist-btn rust-btn" title="Rust Workspace API Guide (TOOL_API_GUIDE.md)">Preview</a></td>
+                        <td align="center"><a href="golang-web-gin/TOOL_API_GUIDE.md" class="assist-btn go-btn" title="Go Workspace API Guide (TOOL_API_GUIDE.md)">Preview</a></td>
+                        <td align="center"><a href="swift-lib-core/workspace/README.md" class="assist-btn swift-btn" title="Swift package guide">Preview</a></td>
+                        <td align="center"><a href="python-web-fastapi/TOOL_API_GUIDE.md" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-web-aspnet/TOOL_API_GUIDE.md" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-web-hono/TOOL_API_GUIDE.md" class="assist-btn ts-btn" title="Hono workspace guide">Hono</a> <a href="typescript-app-expo/TOOL_API_GUIDE.md" class="assist-btn ts-btn" title="React Native/Expo SQLite workspace guide">Expo</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🔹 Create Entity</td>
+                        <td align="center"><a href="java-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-create/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="rust-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-create/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="golang-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-create/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="swift-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-create/$first(domain.objectDescriptors).od_name$" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🔹 Update Entity</td>
+                        <td align="center"><a href="java-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-update/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="rust-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-update/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="golang-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-update/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="swift-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-update/$first(domain.objectDescriptors).od_name$" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🔹 Query Entity</td>
+                        <td align="center"><a href="java-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-query/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="rust-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-query/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="golang-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-query/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="swift-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-query/$first(domain.objectDescriptors).od_name$" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🔹 List Page</td>
+                        <td align="center"><a href="java-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-list-page/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="rust-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-list-page/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="golang-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-list-page/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="swift-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-list-page/$first(domain.objectDescriptors).od_name$" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🔹 Expression</td>
+                        <td align="center"><a href="java-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-expression/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="rust-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-expression/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="golang-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-expression/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="swift-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-expression/$first(domain.objectDescriptors).od_name$" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🔹 Delete Entity</td>
+                        <td align="center"><a href="java-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-delete/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="rust-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-delete/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="golang-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-delete/$first(domain.objectDescriptors).od_name$">Preview</a></td>
+                        <td align="center"><a href="swift-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-delete/$first(domain.objectDescriptors).od_name$" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🛠️ Debug Guide</td>
+                        <td align="center"><a href="java-assist-debug" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-debug">Preview</a></td>
+                        <td align="center"><a href="rust-assist-debug" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-debug">Preview</a></td>
+                        <td align="center"><a href="golang-assist-debug" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-debug">Preview</a></td>
+                        <td align="center"><a href="swift-assist-debug" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-debug" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-debug" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-debug" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🛠️ Tool API: HTTP</td>
+                        <td align="center"><a href="java-assist-tool-api/http" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-tool-api/http">Preview</a></td>
+                        <td align="center"><a href="rust-assist-tool-api/http" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-tool-api/http">Preview</a></td>
+                        <td align="center"><a href="golang-assist-tool-api/http" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-tool-api/http">Preview</a></td>
+                        <td align="center"><a href="swift-assist-tool-api/http" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-tool-api/http" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-tool-api/http" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-tool-api/http" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">⚙️ Runtime Customization</td>
+                        <td align="center"><a href="java-assist-runtime-custom" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-runtime-custom">Preview</a></td>
+                        <td align="center"><a href="rust-assist-runtime-custom" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-runtime-custom">Preview</a></td>
+                        <td align="center"><a href="golang-assist-runtime-custom" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-runtime-custom">Preview</a></td>
+                        <td align="center"><a href="swift-assist-runtime-custom" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-runtime-custom" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-runtime-custom" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-runtime-custom" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🗄️ Ensure Schema</td>
+                        <td align="center"><a href="java-assist-ensure-schema" class="assist-btn java-btn" title="cargo teaql --input models/$domain.name$.xml java-assist-ensure-schema">Preview</a></td>
+                        <td align="center"><a href="rust-assist-ensure-schema" class="assist-btn rust-btn" title="cargo teaql --input models/$domain.name$.xml rust-assist-ensure-schema">Preview</a></td>
+                        <td align="center"><a href="golang-assist-ensure-schema" class="assist-btn go-btn" title="cargo teaql --input models/$domain.name$.xml golang-assist-ensure-schema">Preview</a></td>
+                        <td align="center"><a href="swift-assist-ensure-schema" class="assist-btn swift-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="python-assist-ensure-schema" class="assist-btn py-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="dotnet-assist-ensure-schema" class="assist-btn cs-btn" title="Preview">Preview</a></td>
+                        <td align="center"><a href="typescript-assist-ensure-schema" class="assist-btn ts-btn" title="Preview">Preview</a></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 500;">🌐 I18n</td>
+                        <td align="center"><a href="java-assist-i18n" class="assist-btn java-btn" title="Java i18n assist">I18n</a></td>
+                        <td align="center"><a href="rust-assist-i18n" class="assist-btn rust-btn" title="Rust i18n assist">I18n</a></td>
+                        <td align="center"><a href="golang-assist-i18n" class="assist-btn go-btn" title="Go i18n assist">I18n</a></td>
+                        <td align="center"><a href="swift-assist-i18n" class="assist-btn swift-btn" title="Swift i18n assist">I18n</a></td>
+                        <td align="center"><a href="python-assist-i18n" class="assist-btn py-btn" title="Python i18n assist">I18n</a></td>
+                        <td align="center"><a href="dotnet-assist-i18n" class="assist-btn cs-btn" title=".NET i18n assist">I18n</a></td>
+                        <td align="center"><a href="typescript-assist-i18n" class="assist-btn ts-btn" title="TypeScript i18n assist">I18n</a></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal-overlay" id="preview-modal" onclick="closeModal(event)">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">AI Prompt Preview</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <pre id="modal-content">Loading...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the endpoint to the actual host url (including subpaths like /latest/)
+        const endpointCode = document.getElementById('endpoint-code');
+        let currentUrl = window.location.href;
+        if (!currentUrl.endsWith('/')) {
+            currentUrl += '/';
+        }
+        const exportCmd = 'export TEAQL_ENDPOINT_PREFIX=' + currentUrl;
+        endpointCode.textContent = exportCmd;
+
+        function copyEndpoint() {
+            navigator.clipboard.writeText(exportCmd).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied! ✓';
+                btn.style.background = '#10b981'; // green
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#3b82f6';
+                }, 2000);
+            });
+        }
+
+        // Modal Logic
+        const modal = document.getElementById('preview-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+
+        function openModal(title, url) {
+            modalTitle.textContent = title;
+            modalContent.textContent = 'Loading...';
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            fetch(url)
+                .then(res => res.text())
+                .then(text => {
+                    modalContent.textContent = text;
+                })
+                .catch(err => {
+                    modalContent.textContent = 'Failed to load preview: ' + err;
+                });
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== modal && e.target.className !== 'modal-close') return;
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Intercept assist button clicks
+        document.querySelectorAll('.assist-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                let path = btn.getAttribute('href');
+                if (path.startsWith('/')) {
+                    path = path.substring(1);
+                }
+                const url = currentUrl + path;
+                const title = btn.getAttribute('title') || 'Preview';
+                openModal(title, url);
+            });
+        });
+    </script>
+</body>
+</html>
+>>

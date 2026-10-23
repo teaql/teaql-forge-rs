@@ -88,3 +88,7 @@ When running the binary manually, you can pass arguments:
 
 ## License
 Apache-2.0 License
+
+## Polyglot generator migration
+
+The pinned source commit, migration order, and byte-exact comparison workflow are documented in [Generator text parity](docs/text-parity-migration.md).

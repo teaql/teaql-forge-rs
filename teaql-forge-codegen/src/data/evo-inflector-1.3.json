@@ -1,0 +1,270 @@
+{
+  "notice" : "Derived from Evo Inflector 1.3, Copyright 2011 Atteo, Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0",
+  "mode" : "ENGLISH_ANGLICIZED",
+  "rules" : [ {
+    "kind" : "category",
+    "suffixes" : [ "fish", "ois", "sheep", "deer", "pox", "itis", "bison", "flounder", "pliers", "bream", "gallows", "proceedings", "breeches", "graffiti", "rabies", "britches", "headquarters", "salmon", "carp", "herpes", "scissors", "chassis", "high-jinks", "sea-bass", "clippers", "homework", "series", "cod", "innings", "shears", "contretemps", "jackanapes", "species", "corps", "mackerel", "swine", "debris", "measles", "trout", "diabetes", "mews", "tuna", "djinn", "mumps", "whiting", "eland", "news", "wildebeest", "elk", "pincers", "sugar" ],
+    "singular" : "",
+    "replacement" : ""
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(c)hild$",
+    "flags" : 2,
+    "replacement" : "$1hildren"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(e)phemeris$",
+    "flags" : 2,
+    "replacement" : "$1phemerides"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(m)ongoose$",
+    "flags" : 2,
+    "replacement" : "$1ongoose"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(m)ythos$",
+    "flags" : 2,
+    "replacement" : "$1ythoi"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(s)oliloquy$",
+    "flags" : 2,
+    "replacement" : "$1oliloquies"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(t)rilby$",
+    "flags" : 2,
+    "replacement" : "$1rilbys"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(g)enus$",
+    "flags" : 2,
+    "replacement" : "$1enera"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(q)uiz$",
+    "flags" : 2,
+    "replacement" : "$1uizzes"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(b)eef$",
+    "flags" : 2,
+    "replacement" : "$1eefs"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(b)rother$",
+    "flags" : 2,
+    "replacement" : "$1rothers"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(c)ow$",
+    "flags" : 2,
+    "replacement" : "$1ows"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(g)enie$",
+    "flags" : 2,
+    "replacement" : "$1enies"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(m)oney$",
+    "flags" : 2,
+    "replacement" : "$1oneys"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(o)ctopus$",
+    "flags" : 2,
+    "replacement" : "$1ctopuses"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(?i)(o)pus$",
+    "flags" : 2,
+    "replacement" : "$1puses"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "human", "Alabaman", "Bahaman", "Burman", "German", "Hiroshiman", "Liman", "Nakayaman", "Oklahoman", "Panaman", "Selman", "Sonaman", "Tacoman", "Yakiman", "Yokohaman", "Yuman" ],
+    "singular" : "",
+    "replacement" : "s"
+  }, {
+    "kind" : "regex",
+    "pattern" : "man$",
+    "flags" : 2,
+    "replacement" : "men"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([lm])ouse$",
+    "flags" : 2,
+    "replacement" : "$1ice"
+  }, {
+    "kind" : "regex",
+    "pattern" : "tooth$",
+    "flags" : 2,
+    "replacement" : "teeth"
+  }, {
+    "kind" : "regex",
+    "pattern" : "goose$",
+    "flags" : 2,
+    "replacement" : "geese"
+  }, {
+    "kind" : "regex",
+    "pattern" : "foot$",
+    "flags" : 2,
+    "replacement" : "feet"
+  }, {
+    "kind" : "regex",
+    "pattern" : "zoon$",
+    "flags" : 2,
+    "replacement" : "zoa"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([csx])is$",
+    "flags" : 2,
+    "replacement" : "$1es"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "codex", "murex", "silex" ],
+    "singular" : "ex",
+    "replacement" : "ices"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "radix", "helix" ],
+    "singular" : "ix",
+    "replacement" : "ices"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "bacterium", "agendum", "desideratum", "erratum", "stratum", "datum", "ovum", "extremum", "candelabrum" ],
+    "singular" : "um",
+    "replacement" : "a"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "criterion", "perihelion", "aphelion", "phenomenon", "prolegomenon", "noumenon", "organon", "asyndeton", "hyperbaton" ],
+    "singular" : "on",
+    "replacement" : "a"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "alumna", "alga", "vertebra", "persona" ],
+    "singular" : "a",
+    "replacement" : "ae"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "alumnus", "alveolus", "bacillus", "bronchus", "locus", "nucleus", "stimulus", "meniscus", "thesaurus" ],
+    "singular" : "us",
+    "replacement" : "i"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([cs]h|[zx])$",
+    "flags" : 2,
+    "replacement" : "$1es"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "acropolis", "chaos", "lens", "aegis", "cosmos", "mantis", "alias", "dais", "marquis", "asbestos", "digitalis", "metropolis", "atlas", "epidermis", "pathos", "bathos", "ethos", "pelvis", "bias", "gas", "polis", "caddis", "glottis", "rhinoceros", "cannabis", "glottis", "sassafras", "canvas", "ibis", "trellis" ],
+    "singular" : "",
+    "replacement" : "es"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "iris", "clitoris" ],
+    "singular" : "",
+    "replacement" : "es"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "apparatus", "impetus", "prospectus", "cantus", "nexus", "sinus", "coitus", "plexus", "status", "hiatus" ],
+    "singular" : "",
+    "replacement" : "es"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(us)$",
+    "flags" : 2,
+    "replacement" : "$1es"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "anathema", "enema", "oedema", "bema", "enigma", "sarcoma", "carcinoma", "gumma", "schema", "charisma", "lemma", "soma", "diploma", "lymphoma", "stigma", "dogma", "magma", "stoma", "drama", "melisma", "trauma", "edema", "miasma" ],
+    "singular" : "",
+    "replacement" : "s"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([cs])h$",
+    "flags" : 2,
+    "replacement" : "$1hes"
+  }, {
+    "kind" : "regex",
+    "pattern" : "ss$",
+    "flags" : 2,
+    "replacement" : "sses"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([aeo]l)f$",
+    "flags" : 2,
+    "replacement" : "$1ves"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([^d]ea)f$",
+    "flags" : 2,
+    "replacement" : "$1ves"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(ar)f$",
+    "flags" : 2,
+    "replacement" : "$1ves"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([nlw]i)fe$",
+    "flags" : 2,
+    "replacement" : "$1ves"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([aeiou]y)$",
+    "flags" : 2,
+    "replacement" : "$1s"
+  }, {
+    "kind" : "regex",
+    "pattern" : "y$",
+    "flags" : 2,
+    "replacement" : "ies"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "solo", "soprano", "basso", "alto", "contralto", "tempo", "piano", "virtuoso" ],
+    "singular" : "o",
+    "replacement" : "os"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "albino", "archipelago", "armadillo", "commando", "crescendo", "fiasco", "ditto", "dynamo", "embryo", "ghetto", "guano", "inferno", "jumbo", "lumbago", "magneto", "manifesto", "medico", "octavo", "photo", "pro", "quarto", "canto", "lingo", "generalissimo", "stylo", "rhino", "casino", "auto", "macro", "zero", "todo" ],
+    "singular" : "o",
+    "replacement" : "os"
+  }, {
+    "kind" : "regex",
+    "pattern" : "([aeiou]o)$",
+    "flags" : 2,
+    "replacement" : "$1s"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(o)$",
+    "flags" : 2,
+    "replacement" : "$1es"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(ul)um$",
+    "flags" : 2,
+    "replacement" : "$1a"
+  }, {
+    "kind" : "category",
+    "suffixes" : [ "anathema", "enema", "oedema", "bema", "enigma", "sarcoma", "carcinoma", "gumma", "schema", "charisma", "lemma", "soma", "diploma", "lymphoma", "stigma", "dogma", "magma", "stoma", "drama", "melisma", "trauma", "edema", "miasma" ],
+    "singular" : "",
+    "replacement" : "es"
+  }, {
+    "kind" : "regex",
+    "pattern" : "(s)$",
+    "flags" : 2,
+    "replacement" : "$1es"
+  }, {
+    "kind" : "regex",
+    "pattern" : "^$",
+    "flags" : 2,
+    "replacement" : ""
+  }, {
+    "kind" : "regex",
+    "pattern" : "$",
+    "flags" : 2,
+    "replacement" : "s"
+  } ]
+}

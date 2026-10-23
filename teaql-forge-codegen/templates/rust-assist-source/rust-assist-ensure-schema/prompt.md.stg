@@ -1,0 +1,17 @@
+index(domain) ::= <<
+\<!-- ephemeral -->
+# TeaQL Rust Ensure Schema
+
+Schema reconciliation is an explicit application action. Creating or installing `module()` or
+`module_with_behaviors_and_checkers()` is passive.
+
+```rust
+let context = service_runtime(config).await?;
+context.ensure_schema().await?;
+```
+
+`ensure_schema()` reads the generated module metadata already installed in the context. Never
+duplicate its entity list or emit handwritten DDL. Propagate provider errors and run it only from
+startup, an administrative command, or an explicit test fixture. Do not run it per request, from a
+liveness endpoint, module installation, or telemetry attachment.
+>>

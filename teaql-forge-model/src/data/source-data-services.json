@@ -1,0 +1,626 @@
+{
+  "source_commit": "6f2d0a33699277b943148db948bdec2d5725df37",
+  "data_services": [
+    {
+      "name": "postgres",
+      "is_default": true,
+      "support_stack": "java,rust,golang,dotnet,python,typescript",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.sql.SQLRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-postgres"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "org.postgresql"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "postgresql"
+        },
+        {
+          "name": "driverClass",
+          "value": "org.postgresql.Driver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:postgresql://localhost:5432/${databaseName}"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "mysql",
+      "is_default": false,
+      "support_stack": "java,rust,golang,dotnet,python,typescript",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.mysql.MysqlRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-mysql"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.mysql"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "mysql-connector-j"
+        },
+        {
+          "name": "driverClass",
+          "value": "com.mysql.cj.jdbc.Driver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:mysql://localhost:3306/${databaseName}?useSSL=false&serverTimezone=UTC"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "`"
+        }
+      ]
+    },
+    {
+      "name": "oracle",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.oracle.OracleRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-oracle"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.oracle.database.jdbc"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "ojdbc11"
+        },
+        {
+          "name": "driverClass",
+          "value": "oracle.jdbc.OracleDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:oracle:thin:@//localhost:1521/${databaseName}"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "hana",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.hana.HanaRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-hana"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.sap.cloud.db.jdbc"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "ngdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "com.sap.db.jdbc.Driver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:sap://localhost:39015/?databaseName=${databaseName}"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "db2",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.db2.DB2Repository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-db2"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.ibm.db2"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "jcc"
+        },
+        {
+          "name": "driverClass",
+          "value": "com.ibm.db2.jcc.DB2Driver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:db2://localhost:50000/${databaseName}"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "dm8",
+      "is_default": false,
+      "support_stack": "java",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.sql.SQLRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-dm8"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.dameng"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "DmJdbcDriver18"
+        },
+        {
+          "name": "driverVersion",
+          "value": "8.1.2.141"
+        },
+        {
+          "name": "driverClass",
+          "value": "dm.jdbc.driver.DmDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:dm://localhost:5236"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "mssql",
+      "is_default": false,
+      "support_stack": "java,dotnet",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.mssql.MSSqlRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-mssql"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.microsoft.sqlserver"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "mssql-jdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:sqlserver://localhost:1433;databaseName=${databaseName};encrypt=false"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "sqlserver",
+      "is_default": false,
+      "support_stack": "java,dotnet",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.mssql.MSSqlRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-mssql"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "com.microsoft.sqlserver"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "mssql-jdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:sqlserver://localhost:1433;databaseName=${databaseName};encrypt=false"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "snowflake",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.snowflake.SnowflakeRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-snowflake"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "net.snowflake"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "snowflake-jdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "net.snowflake.client.jdbc.SnowflakeDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:snowflake://account.snowflakecomputing.com/?db=${databaseName}"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "mem",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "false"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.memory.MemoryRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.data.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-memory"
+        },
+        {
+          "name": "driverGroupId",
+          "value": ""
+        },
+        {
+          "name": "driverArtifactId",
+          "value": ""
+        },
+        {
+          "name": "driverClass",
+          "value": ""
+        },
+        {
+          "name": "jdbcUrl",
+          "value": ""
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "duck",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.duck.DuckRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-duckdb"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "org.duckdb"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "duckdb_jdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "org.duckdb.DuckDBDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:duckdb:${databaseName}.duckdb"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "duckdb",
+      "is_default": false,
+      "support_stack": "java,rust",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.duck.DuckRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-duckdb"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "org.duckdb"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "duckdb_jdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "org.duckdb.DuckDBDriver"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:duckdb:${databaseName}.duckdb"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "sqlite",
+      "is_default": false,
+      "support_stack": "java,rust,golang,dotnet,python,typescript",
+      "attributes": [
+        {
+          "name": "sqlRepository",
+          "value": "true"
+        },
+        {
+          "name": "repositoryClass",
+          "value": "io.teaql.data.sqlite.SQLiteRepository"
+        },
+        {
+          "name": "entityClass",
+          "value": "io.teaql.core.meta.EntityDescriptor"
+        },
+        {
+          "name": "dependency",
+          "value": "io.teaql:teaql-sqlite"
+        },
+        {
+          "name": "driverGroupId",
+          "value": "org.xerial"
+        },
+        {
+          "name": "driverArtifactId",
+          "value": "sqlite-jdbc"
+        },
+        {
+          "name": "driverClass",
+          "value": "org.sqlite.JDBC"
+        },
+        {
+          "name": "driverVersion",
+          "value": "3.45.2.0"
+        },
+        {
+          "name": "jdbcUrl",
+          "value": "jdbc:sqlite:${databaseName}.db"
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\\\""
+        }
+      ]
+    },
+    {
+      "name": "linux",
+      "is_default": false,
+      "support_stack": "rust",
+      "attributes": [
+        {
+          "name": "driverGroupId",
+          "value": ""
+        },
+        {
+          "name": "driverArtifactId",
+          "value": ""
+        },
+        {
+          "name": "driverClass",
+          "value": ""
+        },
+        {
+          "name": "jdbcUrl",
+          "value": ""
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\""
+        }
+      ]
+    },
+    {
+      "name": "rusqlite",
+      "is_default": false,
+      "support_stack": "rust",
+      "attributes": [
+        {
+          "name": "driverGroupId",
+          "value": ""
+        },
+        {
+          "name": "driverArtifactId",
+          "value": ""
+        },
+        {
+          "name": "driverClass",
+          "value": ""
+        },
+        {
+          "name": "jdbcUrl",
+          "value": ""
+        },
+        {
+          "name": "quoteCharForKeywords",
+          "value": "\""
+        }
+      ]
+    }
+  ]
+}

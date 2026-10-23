@@ -1,0 +1,238 @@
+index(domain, objectDescriptor) ::= <<
+
+use teaql_runtime::{CheckObjectStatus, CheckResults, ObjectLocation, TypedChecker, UserContext};
+
+<entityChecker(objectDescriptor)>
+>>
+
+entityChecker(objectDescriptor) ::= <<
+pub trait <objectDescriptor.rustStructName>CheckerLogic: Send + Sync {
+    fn check_and_fix_<objectDescriptor.rustModuleName>(
+        &self,
+        _context: &UserContext,
+        _entity: &mut crate::<objectDescriptor.rustStructName>,
+        _status: CheckObjectStatus,
+        _location: &ObjectLocation,
+        _results: &mut CheckResults,
+    ) {
+    }
+
+    fn required(
+        &self,
+        value: bool,
+        field: &str,
+        location: &ObjectLocation,
+        results: &mut CheckResults,
+    ) {
+        if !value {
+            results.push(teaql_runtime::CheckResult::required(location.clone().member(field)));
+        }
+    }
+
+    fn required_option\<V\>(
+        &self,
+        value: Option\<&V\>,
+        field: &str,
+        location: &ObjectLocation,
+        results: &mut CheckResults,
+    ) {
+        if value.is_none() {
+            results.push(teaql_runtime::CheckResult::required(location.clone().member(field)));
+        }
+    }
+
+    fn required_text(
+        &self,
+        value: &str,
+        field: &str,
+        location: &ObjectLocation,
+        results: &mut CheckResults,
+    ) {
+        if value.trim().is_empty() {
+            results.push(teaql_runtime::CheckResult::required(location.clone().member(field)));
+        }
+    }
+
+    fn min_string_length(
+        &self,
+        value: &str,
+        field: &str,
+        min_len: usize,
+        location: &ObjectLocation,
+        results: &mut CheckResults,
+    ) {
+        if value.chars().count() \< min_len {
+            results.push(teaql_runtime::CheckResult::min_str(
+                location.clone().member(field),
+                min_len as u64,
+                value.to_owned(),
+            ));
+        }
+    }
+
+    fn max_string_length(
+        &self,
+        value: &str,
+        field: &str,
+        max_len: usize,
+        location: &ObjectLocation,
+        results: &mut CheckResults,
+    ) {
+        if value.chars().count() \> max_len {
+            results.push(teaql_runtime::CheckResult::max_str(
+                location.clone().member(field),
+                max_len as u64,
+                value.to_owned(),
+            ));
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Noop<objectDescriptor.rustStructName>Checker;
+
+impl <objectDescriptor.rustStructName>CheckerLogic for Noop<objectDescriptor.rustStructName>Checker {}
+
+#[derive(Clone, Debug)]
+pub struct <objectDescriptor.rustStructName>Checker\<L = Noop<objectDescriptor.rustStructName>Checker\> {
+    logic: L,
+}
+
+impl Default for <objectDescriptor.rustStructName>Checker\<Noop<objectDescriptor.rustStructName>Checker\> {
+    fn default() -> Self {
+        Self {
+            logic: Noop<objectDescriptor.rustStructName>Checker,
+        }
+    }
+}
+
+impl\<L\> <objectDescriptor.rustStructName>Checker\<L\>
+where
+    L: <objectDescriptor.rustStructName>CheckerLogic,
+{
+    pub fn new(logic: L) -> Self {
+        Self { logic }
+    }
+}
+
+impl\<L\> TypedChecker\<crate::<objectDescriptor.rustStructName>\> for <objectDescriptor.rustStructName>Checker\<L\>
+where
+    L: <objectDescriptor.rustStructName>CheckerLogic,
+{
+    fn check_and_fix_typed(
+        &self,
+        context: &UserContext,
+        entity: &mut crate::<objectDescriptor.rustStructName>,
+        status: CheckObjectStatus,
+        location: &ObjectLocation,
+        results: &mut CheckResults,
+    ) {
+<objectDescriptor.fields:rustGeneratedFix();separator="\n">
+<objectDescriptor.fields:rustRequireLoadedForUpdate();separator="\n">
+        self.logic
+            .check_and_fix_<objectDescriptor.rustModuleName>(context, entity, status, location, results);
+    }
+}
+>>
+
+rustRequireLoadedForUpdate(field) ::= <<
+        if status.is_update() && !entity.is_loaded("<field.rustStorageMemberName>") {
+            results.push(
+                teaql_runtime::CheckResult::new(
+                    teaql_runtime::CheckRule::InvalidType,
+                    location.clone().member("<field.canonicalPropertyName>"),
+                )
+                .with_message("Mutation requires a fully loaded entity"),
+            );
+        }
+<if(field.isBusinessId)>        if status.is_update()
+            && teaql_core::Entity::dirty_fields(entity)
+                .is_some_and(|fields| fields.contains("<field.rustStorageFieldName>")) {
+            results.push(
+                teaql_runtime::CheckResult::new(
+                    teaql_runtime::CheckRule::InvalidType,
+                    location.clone().member("<field.canonicalPropertyName>"),
+                )
+                .with_message("Business ID is immutable after create"),
+            );
+        }
+<endif>
+>>
+
+rustGeneratedFix(field) ::= <<
+<if(field.isBusinessId)>        if status.is_create() {
+            let was_missing = entity.<field.rustStorageMemberName>().as_str().is_empty();
+            match context.require_active_root("<if(objectDescriptor.businessIdRootField)><objectDescriptor.businessIdRootField.fieldType.refer.rustStructName><else><objectDescriptor.rustStructName><endif>") {
+                Ok(root) => match context.business_ids() {
+                    Ok(service) => {
+                        let mut slot = super::entity::<field.rustBusinessIdSlotTypeName>(entity, status.is_create());
+                        match service.ensure(
+                            context,
+                            &crate::<field.objectDescriptor.rustModuleName>::<field.rustBusinessIdTypeName>::definition(),
+                            &root.id.to_string(),
+                            "<objectDescriptor.rustStructName>",
+                            &mut slot,
+                        ) {
+                            Ok(_) if was_missing => context.record_fix_evidence(teaql_runtime::FixEvidence::new(
+                                    "<objectDescriptor.rustStructName>",
+                                    "<field.canonicalPropertyName>",
+                                    teaql_runtime::FixEvidenceSource::Context,
+                                    "businessIdAllocator",
+                                )),
+                            Ok(_) => {},
+                            Err(error) => results.push(
+                                teaql_runtime::CheckResult::new(
+                                    teaql_runtime::CheckRule::InvalidType,
+                                    location.clone().member("<field.canonicalPropertyName>"),
+                                )
+                                .with_message(error.to_string()),
+                            ),
+                        }
+                    }
+                    Err(error) => results.push(
+                        teaql_runtime::CheckResult::new(
+                            teaql_runtime::CheckRule::InvalidType,
+                            location.clone().member("<field.canonicalPropertyName>"),
+                        )
+                        .with_message(error.to_string()),
+                    ),
+                },
+                Err(error) => results.push(
+                    teaql_runtime::CheckResult::new(
+                        teaql_runtime::CheckRule::ContextRootMissing,
+                        location.clone().member("<field.canonicalPropertyName>"),
+                    )
+                    .with_message(error.to_string()),
+                ),
+            }
+        }
+<endif>
+<if(field.contextRoot)>        if status.is_create() {
+            match context.require_active_root("<field.fieldType.refer.rustStructName>") {
+                Ok(root) if entity.<field.rustStorageMemberName>() == 0 => {
+                    entity.update_<field.rustStorageMemberName>(root.id);
+                    context.record_fix_evidence(teaql_runtime::FixEvidence::new("<objectDescriptor.rustStructName>", "<field.canonicalPropertyName>", teaql_runtime::FixEvidenceSource::Context, "activeRoot:<field.fieldType.refer.rustStructName>"));
+                }
+                Ok(root) if entity.<field.rustStorageMemberName>() != root.id => results.push(teaql_runtime::CheckResult::new(teaql_runtime::CheckRule::ContextRootMismatch, location.clone().member("<field.canonicalPropertyName>"))),
+                Ok(_) => {}
+                Err(error) => results.push(teaql_runtime::CheckResult::new(teaql_runtime::CheckRule::ContextRootMissing, location.clone().member("<field.canonicalPropertyName>")).with_message(error.to_string())),
+            }
+        } else if status.is_update() && entity.<field.rustStorageMemberName>() != 0 {
+            match context.require_active_root("<field.fieldType.refer.rustStructName>") {
+                Ok(root) if entity.<field.rustStorageMemberName>() != root.id => results.push(teaql_runtime::CheckResult::new(teaql_runtime::CheckRule::ContextRootMismatch, location.clone().member("<field.canonicalPropertyName>"))),
+                Ok(_) => {}
+                Err(error) => results.push(teaql_runtime::CheckResult::new(teaql_runtime::CheckRule::ContextRootMissing, location.clone().member("<field.canonicalPropertyName>")).with_message(error.to_string())),
+            }
+        }
+<endif>
+<if(field.createFunction)>        if status.is_create() {
+            entity.update_<field.rustStorageMemberName>(context.fix_time());
+            context.record_fix_evidence(teaql_runtime::FixEvidence::new("<objectDescriptor.rustStructName>", "<field.canonicalPropertyName>", teaql_runtime::FixEvidenceSource::Clock, "graphClock"));
+        }
+<endif>
+<if(field.updateFunction)>        if status.is_create() || status.is_update() {
+            entity.update_<field.rustStorageMemberName>(context.fix_time());
+            context.record_fix_evidence(teaql_runtime::FixEvidence::new("<objectDescriptor.rustStructName>", "<field.canonicalPropertyName>", teaql_runtime::FixEvidenceSource::Clock, "graphClock"));
+        }
+<endif>
+>>

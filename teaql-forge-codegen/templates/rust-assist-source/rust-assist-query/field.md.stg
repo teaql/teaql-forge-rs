@@ -1,0 +1,35 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+# Rust Query Field Assist — `<objectLocation>`
+
+KSML entity: `<entity.name>`  
+KSML field: `<field.name>`  
+Type: `<field.fieldType.name>`
+
+| Capability | Generated API |
+| --- | --- |
+<if(field.objectProperty)>| Select | `select_<field.rustMemberName>()`, `select_<field.rustMemberName>_with(Q::<field.fieldType.refer.rustPluralName>_minimal())` |
+<else>| Select | `select_<field.rustStorageMemberName>()` |
+| Entity accessor | `<field.rustStorageMemberName>()` |
+<endif>
+<if(field.isBool)>| Filter true | `<field.snakeBooleanPredicateExpr>()` |
+| Filter false | `<field.snakeBooleanNegativePredicateExpr>()` |
+| Null state | `<field.rustAttributePredicatePrefixExpr>_is_known()`, `<field.rustAttributePredicatePrefixExpr>_is_unknown()` |
+<else><if(field.objectProperty)>| Filter nested request | `with_<field.rustMemberName>_matching(request)`, `without_<field.rustMemberName>_matching(request)` |
+| Presence | `have_<field.rustMemberName>()`, `have_no_<field.rustMemberName>()` |
+<field.candidateForConst:{c | | Constant | `<field.rustAttributePredicatePrefixExpr>_is_<c.rustCandidateMethodValue>()`, `<field.rustAttributePredicatePrefixExpr>_is_not_<c.rustCandidateMethodValue>()` |
+}><else>| Equality/set | `<field.rustAttributePredicatePrefixExpr>_is(value)`, `<field.rustAttributePredicatePrefixExpr>_is_not(value)`, `<field.rustAttributePredicatePrefixExpr>_in(values)`, `<field.rustAttributePredicatePrefixExpr>_not_in(values)` |
+| Comparison | `<field.rustAttributePredicatePrefixExpr>_greater_than(value)`, `<field.rustAttributePredicatePrefixExpr>_greater_than_or_equal_to(value)`, `<field.rustAttributePredicatePrefixExpr>_less_than(value)`, `<field.rustAttributePredicatePrefixExpr>_less_than_or_equal_to(value)`, `<field.rustAttributePredicatePrefixExpr>_between(lower, upper)` |
+| Null state | `<field.rustAttributePredicatePrefixExpr>_is_known()`, `<field.rustAttributePredicatePrefixExpr>_is_unknown()` |
+<if(field.isString)>| String | `<field.rustAttributePredicatePrefixExpr>_contain<field.rustAttributePredicateSuffixExpr>(value)`, `<field.rustAttributePredicatePrefixExpr>_not_contain<field.rustAttributePredicateSuffixExpr>(value)`, `<field.rustAttributePredicatePrefixExpr>_start<field.rustAttributePredicateSuffixExpr>_with(value)`, `<field.rustAttributePredicatePrefixExpr>_end<field.rustAttributePredicateSuffixExpr>_with(value)`, `<field.rustAttributePredicatePrefixExpr>_sound<field.rustAttributePredicateSuffixExpr>_like(value)` |
+<endif><if(field.isDate)>| Date | `<field.rustAttributePredicatePrefixExpr>_before(value)`, `<field.rustAttributePredicatePrefixExpr>_after(value)`, `<field.rustAttributePredicatePrefixExpr>_between(from, to)` |
+<endif><endif><endif>| Order | `order_by_<field.rustStorageMemberName>_asc()`, `order_by_<field.rustStorageMemberName>_desc()` |
+| Group | `group_by_<field.rustMemberName>()`, `group_by_<field.rustMemberName>_as(alias)` |
+<field.aggregationFunctions:{a | | Aggregate | `<a.snakeNoun>_<field.rustStorageMemberName>()`, `<a.snakeNoun>_<field.rustStorageMemberName>_as(alias)` |
+}><if(field.objectProperty)>| Facet | `facet_by_<field.rustMemberName>_as(name, request)`, `facet_by_<field.rustMemberName>_as_with_options(name, request, include_all_facets)` |
+<endif>
+Apply methods before `.purpose(...)`; execution still requires non-empty
+`.comment(...)`, `.purpose(...)`, and exactly one context argument.
+
+>>
