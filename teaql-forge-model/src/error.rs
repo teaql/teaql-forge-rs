@@ -3,6 +3,12 @@ use thiserror::Error;
 
 #[derive(Error, Diagnostic, Debug)]
 pub enum ParseError {
+    #[error("Handler dispatch failed; nested exception is java.lang.StackOverflowError")]
+    TypeInheritanceCycle,
+    #[error("{0}")]
+    UndefinedTypeParent(String),
+    #[error("{0}")]
+    UndefinedDataService(String),
     #[error("Failed to read file")]
     #[diagnostic(code(teaql::io_error))]
     IoError(#[from] std::io::Error),

@@ -1,0 +1,61 @@
+\<!-- ephemeral -->
+# KSML Evaluation Report
+## 📊 Summary
+- **Errors**: <length(response.errors)>
+- **Warnings**: <length(response.warnings)>
+- **Suggestions**: <length(response.suggestions)>
+- **Solids**: <length(response.solids)>
+
+<if(response.errors)>
+## Error Pattern Summary
+
+<length(response.errors)> errors total. Fix the largest repeated pattern first, then rerun evaluation.
+
+| Count | Pattern | Explanation | Action |
+|-------|---------|-------------|--------|
+<response.errorSummaries: {summary | | <summary.count> | `<summary.category>` (`<summary.ruleId>`) | <summary.message> | <summary.action> |
+}>
+
+## ❌ Errors (Must Fix)
+
+| Rule ID | Target | Source | Error Message | Action |
+|---------|--------|--------|---------------|--------|
+<response.errors: {err | | `<err.ruleId>` | `<err.reportTarget>` | <if(err.xmlPath)>`<err.xmlPath><if(err.lineNumber)>:<err.lineNumber><endif>`<else>—<endif> | <err.message> | <err.action> |
+}>
+<endif>
+
+<if(response.warnings)>
+## ⚠️ Warnings
+
+| Rule ID | Target | Source | Warning Message |
+|---------|--------|--------|-----------------|
+<response.warnings: {warn | | `<warn.ruleId>` | `<warn.objectName><if(warn.fieldName)>.<warn.fieldName><endif>` | <if(warn.xmlPath)>`<warn.xmlPath><if(warn.lineNumber)>:<warn.lineNumber><endif>`<else>—<endif> | <warn.message> |
+}>
+<endif>
+
+<if(response.suggestions)>
+## 💡 Suggestions
+
+| Rule ID | Target | Source | Suggestion |
+|---------|--------|--------|------------|
+<response.suggestions: {sugg | | `<sugg.ruleId>` | `<sugg.objectName><if(sugg.fieldName)>.<sugg.fieldName><endif>` | <if(sugg.xmlPath)>`<sugg.xmlPath><if(sugg.lineNumber)>:<sugg.lineNumber><endif>`<else>—<endif> | <sugg.message> |
+}>
+<endif>
+
+<if(response.privacyFindings)>
+## Privacy Findings
+
+| Severity | Target | Reason | Recommended Action | Regulatory Basis |
+|----------|--------|--------|--------------------|------------------|
+<response.privacyFindings: {finding | | <finding.severity> | `<finding.target>` | <finding.reason> | <finding.recommendedAction> | <finding.regulatoryBasis> |
+}>
+<endif>
+
+<if(response.solids)>
+## ✅ Solids
+
+| Rule ID | Target | Source | Message |
+|---------|--------|--------|---------|
+<response.solids: {sol | | `<sol.ruleId>` | `<sol.objectName><if(sol.fieldName)>.<sol.fieldName><endif>` | <if(sol.xmlPath)>`<sol.xmlPath><if(sol.lineNumber)>:<sol.lineNumber><endif>`<else>—<endif> | <sol.message> |
+}>
+<endif>

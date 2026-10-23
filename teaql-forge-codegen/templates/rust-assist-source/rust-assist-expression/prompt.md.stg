@@ -1,0 +1,67 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+Please help me implement safe generated expression access for `<entity.name>`.
+
+TeaQL expressions preserve three states until evaluation:
+
+- `Value(value)` becomes `Some(value)`.
+- `Null` means the field or relation was loaded and is legitimately absent, so
+  it becomes `None`.
+- `NotLoaded` means the query did not preload required data. This is a coding
+  error and `.eval()` intentionally panics with the missing access path.
+
+When a default is required only for loaded Null, the underlying generated API
+provides `.or_if_null(value)`, `.or_else_if_null(|| value)`, and
+`.or_default_if_null()`. These deliberately preserve the same fail-fast behavior for `NotLoaded`.
+
+The following is complete model-derived Rust source, not pseudocode. Scalar,
+forward-relation, and generated reverse-list methods are emitted only when they
+exist in the generated `E` facade.
+
+```rust
+use <entity.domain.rustModuleName>::{E, <entity.rustStructName>};
+<entity.rustObjectFields:{f | use <entity.domain.rustModuleName>::<f.fieldType.refer.rustStructName>;
+}>
+
+<entity.rustScalarFields:{f | pub fn extract_<entity.rustModuleName>_<f.rustStorageMemberName>(entity: &<entity.rustStructName>) -> Option\<<f.rustType> > {
+    E::<entity.rustModuleName>(entity).get_<f.rustStorageMemberName>().eval()
+\}
+
+pub fn extract_<entity.rustModuleName>_<f.rustStorageMemberName>_or_if_null(entity: &<entity.rustStructName>, fallback: <f.rustType>) -> <f.rustType> {
+    E::<entity.rustModuleName>(entity).get_<f.rustStorageMemberName>().or_if_null(fallback)
+\}
+
+}><entity.rustObjectFields:{f | pub fn extract_<entity.rustModuleName>_<f.rustStorageMemberName>(entity: &<entity.rustStructName>) -> Option\<<f.rustStorageType> > {
+    E::<entity.rustModuleName>(entity).get_<f.rustStorageMemberName>().eval()
+\}
+
+pub fn traverse_<entity.rustModuleName>_<f.rustMemberName>\<'a>(entity: &'a <entity.rustStructName>) -> Option\<&'a <f.fieldType.refer.rustStructName>> {
+    E::<entity.rustModuleName>(entity).get_<f.rustMemberName>().eval()
+\}
+
+}><entity.rustOneToOneRelations:{r | pub fn traverse_<entity.rustModuleName>_<r.rustMemberName>\<'a>(entity: &'a <entity.rustStructName>) -> Option\<&'a <r.child.rustStructName>> {
+    E::<entity.rustModuleName>(entity).get_<r.rustMemberName>().eval()
+\}
+
+}><entity.rustOneToManyRelations:{r | pub fn aggregate_<entity.rustModuleName>_<r.rustMemberName>_size(entity: &<entity.rustStructName>) -> Option\<usize> {
+    E::<entity.rustModuleName>(entity).get_<r.rustMemberName>().size().eval()
+\}
+
+pub fn first_<entity.rustModuleName>_<r.rustMemberName>_id(entity: &<entity.rustStructName>) -> Option\<u64> {
+    E::<entity.rustModuleName>(entity).get_<r.rustMemberName>().first().get_id().eval()
+\}
+
+pub fn get_<entity.rustModuleName>_<r.rustMemberName>_id(entity: &<entity.rustStructName>, index: usize) -> Option\<u64> {
+    E::<entity.rustModuleName>(entity).get_<r.rustMemberName>().get(index).get_id().eval()
+\}
+
+}>
+```
+
+Use only the generated functions above. Select every traversed field or
+relation in the corresponding query. A loaded null/list miss may be handled as
+`None`; do not catch or default a NotLoaded panic.
+\>\>
+
+>>

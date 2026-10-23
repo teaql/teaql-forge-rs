@@ -1,0 +1,168 @@
+index(domain) ::= <<
+\<!-- ephemeral -->
+
+# TeaQL Rust Runtime Customization
+
+The generated runtime owns provider creation and schema setup. Customize the returned
+`UserContext`; do not add provider, policy, or sink parameters to generated execute/save APIs.
+
+```rust
+use <domain.rustModuleName>::{service_runtime, ServiceRuntime, ServiceRuntimeConfig, ServiceRuntimeError};
+use std::sync::{Arc, Mutex};
+use teaql_runtime::{RequestPolicy, RuntimeError, SafeAuditEvent, SafeAuditEventSink, UserContext};
+
+#[derive(Clone, Default)]
+pub struct AppAuditSink {
+    events: Arc\<Mutex\<Vec\<SafeAuditEvent\>\>\>,
+}
+
+impl AppAuditSink {
+    pub fn events(&self) -> Vec\<SafeAuditEvent\> {
+        self.events.lock().expect("App Audit Sink lock poisoned").clone()
+    }
+}
+
+impl SafeAuditEventSink for AppAuditSink {
+    fn on_safe_event(&self, _context: &UserContext, event: &SafeAuditEvent) -> Result\<(), RuntimeError\> {
+        self.events.lock().expect("App Audit Sink lock poisoned").push(event.clone());
+        Ok(())
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct TrustedRequestPolicy;
+impl RequestPolicy for TrustedRequestPolicy {}
+
+pub async fn configured_runtime(
+    database_url: String,
+    app_audit_sink: AppAuditSink,
+) -> Result\<ServiceRuntime, ServiceRuntimeError\> {
+    let mut context = service_runtime(ServiceRuntimeConfig { database_url }).await?;
+    context.set_request_policy(TrustedRequestPolicy);
+    context.set_custom_event_sink(app_audit_sink);
+    context.insert_named_resource("trusted_tenant", "system".to_owned());
+    Ok(context)
+}
+
+pub async fn readiness(context: &ServiceRuntime) -> Result\<(), RuntimeError\> {
+    context.get_named_resource::\<String\>("trusted_tenant")
+        .ok_or_else(|| RuntimeError::Behavior("missing trusted tenant".to_owned()))?;
+    context.ensure_schema().await
+}
+
+pub fn reject_governance_override(input: &serde_json::Value) -> Result\<(), String\> {
+    const FORBIDDEN: [&str; 6] = [
+        "tenant", "provider", "requestPolicy", "auditSink", "hardLimit", "continuousPage",
+    ];
+    match input {
+        serde_json::Value::Object(values) => {
+            for (key, value) in values {
+                if FORBIDDEN.iter().any(|forbidden| forbidden.eq_ignore_ascii_case(key)) {
+                    return Err(format!("forbidden governance override: {key}"));
+                }
+                reject_governance_override(value)?;
+            }
+        }
+        serde_json::Value::Array(values) => {
+            for value in values { reject_governance_override(value)?; }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+```
+
+## Executable contract
+
+- Workspace startup creates the provider once through `service_runtime_from_env`,
+  `service_runtime`, or `service_runtime_from_pool`; provider failures propagate.
+- `UserContext` initialization is the trusted boundary for request policy, tenant resources,
+  and the customizable App Audit Sink. The immutable raw row audit path remains separate.
+- `/health` may be liveness-only; readiness must call the generated schema/provider path and
+  fail when a trusted dependency is absent.
+- Web, console, and batch workspaces pass only `&UserContext` to generated query/save methods.
+- The public write path is the generated `.audit_as(...)` followed by the context-only `save`
+  call. Do not bypass it with raw SQL or low-level mutation commands.
+- Dynamic JSON and TFP input must reject governance keys recursively. Add negative governance
+  tests plus missing dependency, missing intent/audit, and provider failure tests.
+- A complete integration test also runs the generated Query/Create Assist against SQLite;
+  do not claim runtime customization from a route-only `/health` smoke test.
+
+## Context-bound aggregate document round trips
+
+Use this advanced boundary only when a client opens an Aggregate by Business ID,
+edits a projected child graph, and returns it. The Rust runtime owns the opaque
+`tqd1` snapshot and the `UserContext` entry points. The application owns the
+domain adapter because visibility, writable fields, lifecycle actions, Checker/Fix,
+and the transaction cannot be inferred safely from transport JSON alone.
+
+```rust
+use async_trait::async_trait;
+use teaql_runtime::{
+    AcceptedContextualDocument, ContextBoundDocumentService, ContextualDocument,
+    DocumentAcceptRequest, DocumentOpenRequest, DocumentRoundTripError,
+    TrustedReferencePrincipal, UserContext,
+};
+
+pub struct OrderDocumentService;
+
+#[async_trait]
+impl ContextBoundDocumentService for OrderDocumentService {
+    async fn open_document(
+        &self,
+        context: &UserContext,
+        principal: &TrustedReferencePrincipal,
+        request: DocumentOpenRequest,
+    ) -> Result\<ContextualDocument, DocumentRoundTripError\> {
+        // 1. Authorize principal + Domain Root + purpose.
+        // 2. Load one bounded, complete editing projection through generated Q APIs.
+        // 3. Build DocumentSnapshot with loaded/writable fields, relation completeness,
+        //    allowed mutations, Aggregate revision, and child versions.
+        // 4. Call context.issue_document_snapshot(snapshot, request.lifetime).
+        todo!("application-owned Order projection")
+    }
+
+    async fn accept_document(
+        &self,
+        context: &UserContext,
+        principal: &TrustedReferencePrincipal,
+        request: DocumentAcceptRequest,
+    ) -> Result\<AcceptedContextualDocument, DocumentRoundTripError\> {
+        // 1. context.consume_document_snapshot(...) authenticates actor, Domain Root,
+        //    service, environment, purpose, Aggregate, lifetime, and the row map.
+        // 2. Recheck current authorization and intersect it with the issued writable surface.
+        // 3. Reject unknown/read-only fields and cross-document row keys.
+        // 4. Treat omission as no change. Remove only an explicit row reference from a
+        //    complete writable relation. New rows use clientKey, never a fabricated ref.
+        // 5. Check Aggregate + child versions, run Checker/Fix, build one Mutation Ledger,
+        //    save atomically with audit intent, then issue a refreshed document.
+        todo!("application-owned mutation reconstruction")
+    }
+}
+```
+
+Install the adapter only during trusted runtime assembly:
+
+```rust
+context.set_context_bound_document_service(Arc::new(OrderDocumentService));
+```
+
+Do not expose `issue_document_snapshot` or `consume_document_snapshot` as remote
+utility endpoints. A token is not authorization, a missing child is not deletion,
+and decoded persistence identities never become application input. The retained
+Order/Items implementation is currently a Rust single-backend POC; do not claim
+seven-runtime parity or a published generated adapter.
+
+## Runtime telemetry
+
+Observability is optional and application-owned. Enable the `opentelemetry`
+feature, construct `teaql_runtime::OpenTelemetryRuntimeTelemetry` from the
+application tracer and meter, wrap it in `Arc`, and call
+`context.set_runtime_telemetry(telemetry)`. Keep `NoopRuntimeTelemetry` when it
+is absent. The application owns bounded processors, OTLP exporters,
+`force_flush` and shutdown; telemetry failure must never change business results.
+Installing telemetry does not call `ensure_schema`.
+TeaQL derives `teaql.error.category` from the native error type. Sampling never
+controls or replaces App Audit Sink delivery. Do not generate a Collector,
+additional exporters, auto-discovery, or a telemetry configuration DSL.
+>>

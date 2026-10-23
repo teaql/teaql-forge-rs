@@ -1,0 +1,31 @@
+<root>
+    <user_domain
+            name="sec user全名空间"
+    />
+
+    <sec_user
+            name="张三?|[0,20]"
+            system_root="超级管理员:true"
+            user_domain="user_domain()"
+    />
+
+    <!-- login可以是id, name, email, mobile等， 如果需要支持多种登录, 登记多条实体在sec_user下 -->
+    <password_identity
+            _audit_mask_fields="user_password_hash"
+            user_login="登录账号:login|[1,100]"
+            user_password_hash="登录密码哈希:password()"
+            sec_user="sec_user()"
+    />
+
+
+    <user_app
+            _name="应用"
+            title='标题:审车平台|账户管理|接车公司|审车公司|维修公司|顾客|[1,300]'
+            sec_user="系统用户:sec_user()"
+            app_icon="图标:users|bank|wechat|bar-chart|user|users|[1,20]"
+            app_type="对象类型:Platform|[1,100]"
+            app_id="对象ID:1l"
+            ctx_type="上下文类型:Job|[1,100]"
+            ctx_id="上下文类型:1l"
+    />
+</root>

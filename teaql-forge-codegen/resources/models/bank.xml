@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root name="gateway"
+      org="doublechaintech"
+      cfg_mask_china_mobile="false"
+      version = "1.0"
+>
+
+    <platform
+            name="好平台"
+            founded="createTime()"
+            contact_number="121212-1212"
+            _createFunction="rootPlatform"
+    />
+
+    <merchant
+            name="好商家"
+            code="uniStr(prefix=MM)"
+            owner="user(relationType=oneToOne reverseName=company)"
+            status="merchant_status(createFunction=defaultMerchantStatus)"
+            platform="platform()"
+    />
+
+    <good_merchant
+            _parent="merchant"
+            good_name="text()"
+            quantity="45.00"
+    />
+
+    <merchant_status
+            _name="商户状态001"
+            _constant="true"
+            _identifier="code"
+            code="open,closed,hee"
+            name="1|2|3|string()?"
+            platform="platform()"
+    />
+
+    <user
+            name="张三"
+            nice="true"
+            platform="platform()"
+            _cat="human"
+    />
+
+    <cylinder
+            _parent="asset"
+            size="规格:11234|[1,100]"
+    />
+
+    <asset
+            name="一个好东西?"
+            barcode="1231aa|[0,100]"
+            price="1.5"
+            nice="true"
+            merchant="merchant()"
+    />
+
+    <good_cylinder
+            _parent="cylinder"
+            level="level1|level2?"
+    />
+
+    <dewar
+            _parent="asset"
+            weight="33.22"
+            thinness="厚度:number(sqlType=NUMERIC(10,2))?"
+    />
+
+    <my_view
+            _ui_action="确定:submit,取消:submitCancel"
+            _viewObject="true"
+            name="aaaa"
+            asset="asset(ui_onChange_action=submitAsset ui_with-custom-candidate)"
+            service_request="service_request()"
+    />
+
+    <another_view
+            _viewObject="true"
+            name="aaaa"
+            merchant="merchant()"
+            service_request="service_request()"
+    />
+
+    <service_request
+            action_type="request_type()"
+            snapshot="jsonMe()"
+    />
+
+    <request_type
+            id="id()"
+            name="xxx"
+            code="string(scenarioCode)"
+            entrance_view="string(entranceView)"
+            _constant="true"
+            _identifier="code"
+    >
+    </request_type>
+    <request_type
+    >
+        <_value id="1" name="场景1" code="SCENARIO1" entrance_view="my_view"/>
+        <_value id="2" name="场景2" code="SCENARIO2" entrance_view="another_view"/>
+        <_value id="3" name="场景3" code="SCENARIO3" entrance_view="another_view"/>
+    </request_type>
+</root>

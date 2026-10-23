@@ -1,0 +1,22 @@
+<root>
+
+    <!-- autoFunction会在引用该对象时，如果没有设置对象的值，会调用userContext.rootPlatform方法 -->
+    <platform
+            name="网关服务"
+            create_time="createTime()"
+            last_update_time="updateTime()"
+            _autoFunction="rootPlatform"
+    />
+
+    <merchant
+            _name="工厂"
+            name="广钢集团|珠江气体|南沙工厂|武汉工厂|[1,100]"
+            platform="platform()"
+    />
+
+    <job
+            _name="岗位"
+            name="管理员|审评员|检验员|[1,200]"
+            merchant="merchant()"
+    />
+</root>

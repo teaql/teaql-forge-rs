@@ -1,0 +1,47 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+# Rust Assist — List page `<entity.name>`
+
+Use the exact generated `Q::<entity.rustPluralName>_minimal()` entry point.
+Apply only model-derived filters and projections, a deterministic ID tie-breaker,
+and the runtime's trusted materialization ceiling. Do not accept raw dynamic
+query JSON or let a client override the hard limit.
+
+```rust
+use teaql_core::SmartList;
+use <entity.domain.rustModuleName>::{
+    Q, <entity.rustStructName>, TeaqlRuntime,
+};
+
+pub async fn list_<entity.rustModuleName>_page(
+    context: &impl TeaqlRuntime,
+    offset: u64,
+    limit: u64,
+) -> Result\<SmartList\<<entity.rustStructName>>, Box\<dyn std::error::Error>> {
+    let page = Q::<entity.rustPluralName>_minimal()
+<entity.fields:{f | <if(f.id)><else><if(f.version)><else><if(f.objectProperty)><else>        .select_<f.rustMemberName>()
+<endif><endif><endif>}><entity.fields:{f | <if(f.objectProperty)>        .select_<f.rustMemberName>_with(Q::<f.fieldType.refer.rustPluralName>_minimal())
+<endif>}><entity.rustOneToOneRelations:{r |         .select_<r.rustMemberName>()
+}><entity.rustOneToManyRelations:{r |         .select_<r.rustMemberName>()
+}><entity.fields:{f | <if(f.candidateForConst)>        .<f.rustAttributePredicatePrefixExpr>_is_<first(f.candidateForConst).rustCandidateMethodValue>()
+<endif>}>        .order_by_id_asc()
+        .comment("what: load a stable page of <entity.name> rows")
+        .purpose("why: serve the authorized bounded <entity.name> list")
+        .execute_for_page(context, offset, limit)
+        .await?;
+
+    Ok(page)
+}
+```
+
+Request field-level Assist before adding or changing a field predicate. Boolean
+field Assist documents the distinct `true`, `false`, `unknown`, and `known`
+states without expanding every field vocabulary into this entity overview.
+
+Compile the source unchanged. Prove exact filtering, projection and relation
+selection, stable non-overlapping pages, filtered total count, enforcement of
+the default 10,000-row hard limit, intent checks, and compilation failure for
+unknown fields or client-controlled hard-limit APIs.
+
+>>

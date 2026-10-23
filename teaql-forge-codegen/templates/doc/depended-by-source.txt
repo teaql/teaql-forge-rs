@@ -1,0 +1,9 @@
+                    <h5 class="mt-4">Depended by</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr><th>#</th><th>Table Name</th><th>Reference Column</th><th>Remark</th></tr>
+                        </thead>
+                        <tbody>
+__ROWS__
+                        </tbody>
+                    </table>

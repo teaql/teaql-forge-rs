@@ -1,0 +1,41 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+# Rust Assist — Soft delete `<entity.name>`
+
+Load the current generated entity so its original optimistic version is used.
+Deletion is soft: never issue raw SQL or a physical delete command.
+
+```rust
+use <entity.domain.rustModuleName>::teaql_core::Entity;
+use <entity.domain.rustModuleName>::{Q, TeaqlRuntime, AuditedSave};
+
+pub async fn delete_example(
+    context: &impl TeaqlRuntime,
+    entity_id: u64,
+) -> Result\<bool, Box\<dyn std::error::Error>> {
+    let Some(mut entity) = Q::<entity.rustPluralName>()
+<entity.fields:{f | <if(f.id)>        .<f.rustAttributePredicatePrefixExpr>_is(entity_id)
+<endif>}>        .comment("what: load current <entity.name> for soft delete")
+        .purpose("why: preserve original version and authorize deletion")
+        .execute_for_one(context)
+        .await?
+    else {
+        return Ok(false);
+    };
+
+    entity.mark_for_deletion();
+    entity
+        .audit_as("business reason: soft delete authorized <entity.name>")
+        .save(context)
+        .await?;
+    Ok(true)
+}
+```
+
+Compile and execute this source unchanged. Prove the row disappears from normal
+queries but remains visible through generated deleted-row queries, an
+independently loaded stale copy conflicts, missing rows return false, and
+missing audit or invented physical-delete APIs fail compilation.
+
+>>

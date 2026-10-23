@@ -1,0 +1,17 @@
+index(domain) ::= <<
+#[tokio::main]
+async fn main() -> Result\<(), Box\<dyn std::error::Error\>\> {
+<if(domain.dataService.rustHasSqlProvider)>    let bootstrap_context = <domain.rustModuleName>::service_runtime_from_env().await?;
+    bootstrap_context.ensure_schema().await?;
+<else><if(domain.dataService.rustIsLinuxProvider)>    let _bootstrap_context = <domain.rustModuleName>::service_runtime_from_env().await?;
+<else>    let _module = <domain.rustModuleName>::module_with_behaviors_and_checkers();
+<endif><endif>
+    let bind_addr = std::env::var("<domain.rustEnvPrefix>_BIND_ADDR")
+        .unwrap_or_else(|_| "127.0.0.1:3000".to_owned());
+    let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
+
+    println!("listening on http://{bind_addr}");
+    topcoat::serve(listener, <domain.rustWebTopcoatModuleName>::router()).await?;
+    Ok(())
+}
+>>

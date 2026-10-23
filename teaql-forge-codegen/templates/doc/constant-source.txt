@@ -1,0 +1,9 @@
+                    <h5 class="mt-4">Internal Data</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            __HEADER__
+                        </thead>
+                        <tbody>
+__ROWS__
+                        </tbody>
+                    </table>

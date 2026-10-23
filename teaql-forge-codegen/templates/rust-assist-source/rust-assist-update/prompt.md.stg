@@ -1,0 +1,74 @@
+index(domain,entity,field,path,objectLocation,moduleName,moduleContent) ::= <<
+\<!-- ephemeral -->
+
+Please help me complete the update (Update/Modify) service business code for the `<entity.name>` object.
+
+An entity update is not a partial DTO patch. Load every scalar field before
+modification so the checker can validate the complete business state. Do not
+load the mutation target with a minimal request or a reduced `select_xxx()`
+projection: if you have not seen the complete entity, you must not change it.
+
+To ensure absolute correctness of the API, please refer to and strictly imitate the following **real update code example for `<entity.name>`**.
+
+### Standard Update Example (Reference)
+Please carefully observe the querying mechanism, the `update_xxx()` property setting methods, and the strictly required `.audit_as()` and `.save()` cascade in the example code:
+
+```rust
+use <entity.domain.rustModuleName>::teaql_core::Entity;
+use <entity.domain.rustModuleName>::{Q, <entity.rustStructName>, TeaqlRuntime, AuditedSave};
+
+pub async fn update_example(
+    context: &impl TeaqlRuntime,
+    entity_id: u64,
+<entity.fields:{f | <if(f.id)><else><if(f.version)><else><if(f.objectProperty)><else><if(f.candidateForConst)><else>    new_<f.rustStorageMemberName>: <f.rustType>,
+<endif><endif><endif><endif>}>
+) -> Result\<Option\<<entity.rustStructName>>, Box\<dyn std::error::Error>>
+{
+    let Some(mut existing_entity) = Q::<entity.rustPluralName>()
+<entity.fields:{f | <if(f.id)>        .<f.rustAttributePredicatePrefixExpr>_is(entity_id)
+<endif>}>
+        .comment("what: Find entity for modification")
+        .purpose("why: Need to update properties")
+        .execute_for_one(context)
+        .await?
+    else { return Ok(None); };
+
+<entity.fields:{f | <if(f.id)><else><if(f.version)><else><if(f.objectProperty)><else><if(f.candidateForConst)><else>    existing_entity.update_<f.rustStorageMemberName>(new_<f.rustStorageMemberName>);
+<endif><endif><endif><endif>}>
+
+    let persisted = existing_entity
+        .audit_as("business reason: update authorized fields")
+        .save(context).await?;
+
+    Ok(Some(persisted))
+}
+```
+
+<if(entity.domain.rustGraphCompositionAvailable)>
+### Adding a newly created child to this entity's save graph
+
+Only when the business operation needs one graph save: load this entity with
+the full non-minimal request above, create the child with its own exact
+`rust-assist-create/[child]` API, and set the child's modeled parent-reference
+ID before composing. The generated library re-exports the public trait:
+
+```rust
+use <entity.domain.rustModuleName>::LedgerEntity as _;
+
+existing_entity.include_pending_mutations_from(&new_child)?;
+let persisted = existing_entity.audit_as("business reason: save the graph")
+    .save(context).await?;
+```
+
+This only includes pending mutations. It does not load relations, issue SQL,
+or save automatically. Never join independent operations through
+`UserContext`, clone before save, or invent a relationship setter; request
+the child Assist and report `MISSING_ASSIST` if the exact operation is absent.
+<endif>
+
+### Your Task
+Please completely imitate the framework, imports, and syntax features of the above code to implement the real update logic for `<entity.name>` based on my specific business needs. Please output the Rust source code directly.
+
+**CRITICAL**: We have already generated the correct plural/singular form for the `Q::` method in the example above. Copy its EXACT spelling. Do not replace it with the `_minimal()` form or add a reduced projection for an entity that will be saved.
+
+>>

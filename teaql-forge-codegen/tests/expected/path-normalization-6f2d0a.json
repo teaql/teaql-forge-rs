@@ -1,0 +1,857 @@
+{
+  "user_home" : "/home/philip",
+  "blank_chars" : [ 0, 9, 10, 11, 12, 13, 28, 29, 30, 31, 32, 160, 5760, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8232, 8233, 8234, 8239, 8287, 12288, 65279 ],
+  "ascii_case_characters" : {
+    "a" : [ 65, 97 ],
+    "b" : [ 66, 98 ],
+    "c" : [ 67, 99 ],
+    "d" : [ 68, 100 ],
+    "e" : [ 69, 101 ],
+    "f" : [ 70, 102 ],
+    "g" : [ 71, 103 ],
+    "h" : [ 72, 104 ],
+    "i" : [ 73, 105, 304, 305 ],
+    "j" : [ 74, 106 ],
+    "k" : [ 75, 107, 8490 ],
+    "l" : [ 76, 108 ],
+    "m" : [ 77, 109 ],
+    "n" : [ 78, 110 ],
+    "o" : [ 79, 111 ],
+    "p" : [ 80, 112 ],
+    "q" : [ 81, 113 ],
+    "r" : [ 82, 114 ],
+    "s" : [ 83, 115, 383 ],
+    "t" : [ 84, 116 ],
+    "u" : [ 85, 117 ],
+    "v" : [ 86, 118 ],
+    "w" : [ 87, 119 ],
+    "x" : [ 88, 120 ],
+    "y" : [ 89, 121 ],
+    "z" : [ 90, 122 ]
+  },
+  "paths" : [ {
+    "stored" : "",
+    "input" : "",
+    "normalized" : ""
+  }, {
+    "stored" : "",
+    "input" : "/",
+    "normalized" : "/"
+  }, {
+    "stored" : "",
+    "input" : "//",
+    "normalized" : "/"
+  }, {
+    "stored" : "",
+    "input" : "\\",
+    "normalized" : "/"
+  }, {
+    "stored" : "\\",
+    "input" : "\\\\",
+    "normalized" : "\\/"
+  }, {
+    "stored" : "",
+    "input" : ".",
+    "normalized" : ""
+  }, {
+    "stored" : "..",
+    "input" : "..",
+    "normalized" : ".."
+  }, {
+    "stored" : "..",
+    "input" : "../",
+    "normalized" : "../"
+  }, {
+    "stored" : "../..",
+    "input" : "../../",
+    "normalized" : "../../"
+  }, {
+    "stored" : "",
+    "input" : "a/..",
+    "normalized" : ""
+  }, {
+    "stored" : "",
+    "input" : "a/../",
+    "normalized" : ""
+  }, {
+    "stored" : "..",
+    "input" : "a/../..",
+    "normalized" : ".."
+  }, {
+    "stored" : "..",
+    "input" : "a/../../",
+    "normalized" : "../"
+  }, {
+    "stored" : "a",
+    "input" : "a/./",
+    "normalized" : "a/"
+  }, {
+    "stored" : "a/b",
+    "input" : "a//b///",
+    "normalized" : "a/b/"
+  }, {
+    "stored" : "a",
+    "input" : "/../a",
+    "normalized" : "/a"
+  }, {
+    "stored" : "",
+    "input" : "/../../a/../",
+    "normalized" : "/"
+  }, {
+    "stored" : "C:",
+    "input" : "C:",
+    "normalized" : "C:"
+  }, {
+    "stored" : "C:",
+    "input" : "C:/",
+    "normalized" : "C:/"
+  }, {
+    "stored" : "C:",
+    "input" : "/C:",
+    "normalized" : "C:"
+  }, {
+    "stored" : "C:",
+    "input" : "//C:/",
+    "normalized" : "C:/"
+  }, {
+    "stored" : "scheme:",
+    "input" : "scheme:",
+    "normalized" : "scheme:"
+  }, {
+    "stored" : "a/d",
+    "input" : "a/b:c/../d",
+    "normalized" : "a/d"
+  }, {
+    "stored" : "\\/server/share/main.xml",
+    "input" : "\\\\server\\share\\main.xml",
+    "normalized" : "\\/server/share/main.xml"
+  }, {
+    "stored" : "\\/main.xml",
+    "input" : "\\\\server\\..\\main.xml",
+    "normalized" : "\\/main.xml"
+  }, {
+    "stored" : "home/philip",
+    "input" : "~",
+    "normalized" : "/home/philip"
+  }, {
+    "stored" : "home/philip",
+    "input" : "~/",
+    "normalized" : "/home/philip/"
+  }, {
+    "stored" : "home/philipname/main.xml",
+    "input" : "~name/main.xml",
+    "normalized" : "/home/philipname/main.xml"
+  }, {
+    "stored" : "~ /main.xml",
+    "input" : " ~ /main.xml",
+    "normalized" : "~ /main.xml"
+  }, {
+    "stored" : "classpath:main.xml",
+    "input" : "file:classpath:main.xml",
+    "normalized" : "classpath:main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "classpath:file:main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "fıle:main.xml",
+    "input" : "fıle:main.xml",
+    "normalized" : "fıle:main.xml"
+  }, {
+    "stored" : "FİLE:main.xml",
+    "input" : "FİLE:main.xml",
+    "normalized" : "FİLE:main.xml"
+  }, {
+    "stored" : "claſſpath:main.xml",
+    "input" : "claſſpath:main.xml",
+    "normalized" : "claſſpath:main.xml"
+  }, {
+    "stored" : "claſspath:FiLe:~/main.xml",
+    "input" : "claſspath:FiLe:~/main.xml",
+    "normalized" : "claſspath:FiLe:~/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "a/../main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "a/../../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "a/./main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "a//main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "a\\..\\main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "main.xml/",
+    "normalized" : "main.xml/"
+  }, {
+    "stored" : "main.xml  ",
+    "input" : "main.xml  ",
+    "normalized" : "main.xml  "
+  }, {
+    "stored" : "main.xml",
+    "input" : "/main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "/a/../main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "/../main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "/a/../../main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "/a/./main.xml",
+    "normalized" : "/a/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "/a//main.xml",
+    "normalized" : "/a/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "/a\\..\\main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "/main.xml/",
+    "normalized" : "/main.xml/"
+  }, {
+    "stored" : "main.xml  ",
+    "input" : "/main.xml  ",
+    "normalized" : "/main.xml  "
+  }, {
+    "stored" : "main.xml",
+    "input" : "//main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "//a/../main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "//../main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "//a/../../main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "//a/./main.xml",
+    "normalized" : "/a/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "//a//main.xml",
+    "normalized" : "/a/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "//a\\..\\main.xml",
+    "normalized" : "/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "//main.xml/",
+    "normalized" : "/main.xml/"
+  }, {
+    "stored" : "main.xml  ",
+    "input" : "//main.xml  ",
+    "normalized" : "/main.xml  "
+  }, {
+    "stored" : "C:main.xml",
+    "input" : "C:main.xml",
+    "normalized" : "C:main.xml"
+  }, {
+    "stored" : "C:main.xml",
+    "input" : "C:a/../main.xml",
+    "normalized" : "C:main.xml"
+  }, {
+    "stored" : "C:main.xml",
+    "input" : "C:../main.xml",
+    "normalized" : "C:main.xml"
+  }, {
+    "stored" : "C:main.xml",
+    "input" : "C:a/../../main.xml",
+    "normalized" : "C:main.xml"
+  }, {
+    "stored" : "C:a/main.xml",
+    "input" : "C:a/./main.xml",
+    "normalized" : "C:a/main.xml"
+  }, {
+    "stored" : "C:a/main.xml",
+    "input" : "C:a//main.xml",
+    "normalized" : "C:a/main.xml"
+  }, {
+    "stored" : "C:main.xml",
+    "input" : "C:a\\..\\main.xml",
+    "normalized" : "C:main.xml"
+  }, {
+    "stored" : "C:main.xml",
+    "input" : "C:main.xml/",
+    "normalized" : "C:main.xml/"
+  }, {
+    "stored" : "C:main.xml  ",
+    "input" : "C:main.xml  ",
+    "normalized" : "C:main.xml  "
+  }, {
+    "stored" : "C:/main.xml",
+    "input" : "/C:/main.xml",
+    "normalized" : "C:/main.xml"
+  }, {
+    "stored" : "C:/main.xml",
+    "input" : "/C:/a/../main.xml",
+    "normalized" : "C:/main.xml"
+  }, {
+    "stored" : "C:/main.xml",
+    "input" : "/C:/../main.xml",
+    "normalized" : "C:/main.xml"
+  }, {
+    "stored" : "C:/main.xml",
+    "input" : "/C:/a/../../main.xml",
+    "normalized" : "C:/main.xml"
+  }, {
+    "stored" : "C:/a/main.xml",
+    "input" : "/C:/a/./main.xml",
+    "normalized" : "C:/a/main.xml"
+  }, {
+    "stored" : "C:/a/main.xml",
+    "input" : "/C:/a//main.xml",
+    "normalized" : "C:/a/main.xml"
+  }, {
+    "stored" : "C:/main.xml",
+    "input" : "/C:/a\\..\\main.xml",
+    "normalized" : "C:/main.xml"
+  }, {
+    "stored" : "C:/main.xml",
+    "input" : "/C:/main.xml/",
+    "normalized" : "C:/main.xml/"
+  }, {
+    "stored" : "C:/main.xml  ",
+    "input" : "/C:/main.xml  ",
+    "normalized" : "C:/main.xml  "
+  }, {
+    "stored" : "scheme:main.xml",
+    "input" : "scheme:main.xml",
+    "normalized" : "scheme:main.xml"
+  }, {
+    "stored" : "scheme:main.xml",
+    "input" : "scheme:a/../main.xml",
+    "normalized" : "scheme:main.xml"
+  }, {
+    "stored" : "scheme:main.xml",
+    "input" : "scheme:../main.xml",
+    "normalized" : "scheme:main.xml"
+  }, {
+    "stored" : "scheme:main.xml",
+    "input" : "scheme:a/../../main.xml",
+    "normalized" : "scheme:main.xml"
+  }, {
+    "stored" : "scheme:a/main.xml",
+    "input" : "scheme:a/./main.xml",
+    "normalized" : "scheme:a/main.xml"
+  }, {
+    "stored" : "scheme:a/main.xml",
+    "input" : "scheme:a//main.xml",
+    "normalized" : "scheme:a/main.xml"
+  }, {
+    "stored" : "scheme:main.xml",
+    "input" : "scheme:a\\..\\main.xml",
+    "normalized" : "scheme:main.xml"
+  }, {
+    "stored" : "scheme:main.xml",
+    "input" : "scheme:main.xml/",
+    "normalized" : "scheme:main.xml/"
+  }, {
+    "stored" : "scheme:main.xml  ",
+    "input" : "scheme:main.xml  ",
+    "normalized" : "scheme:main.xml  "
+  }, {
+    "stored" : "main.xml",
+    "input" : "classpath:main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "classpath:a/../main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "classpath:../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "classpath:a/../../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "classpath:a/./main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "classpath:a//main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "classpath:a\\..\\main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "classpath:main.xml/",
+    "normalized" : "main.xml/"
+  }, {
+    "stored" : "main.xml  ",
+    "input" : "classpath:main.xml  ",
+    "normalized" : "main.xml  "
+  }, {
+    "stored" : "main.xml",
+    "input" : "FILE:main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "FILE:a/../main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "FILE:../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "FILE:a/../../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "FILE:a/./main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "FILE:a//main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "FILE:a\\..\\main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "FILE:main.xml/",
+    "normalized" : "main.xml/"
+  }, {
+    "stored" : "main.xml  ",
+    "input" : "FILE:main.xml  ",
+    "normalized" : "main.xml  "
+  }, {
+    "stored" : "main.xml",
+    "input" : "CLASSPATH:FiLe:main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "CLASSPATH:FiLe:a/../main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "CLASSPATH:FiLe:../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "../main.xml",
+    "input" : "CLASSPATH:FiLe:a/../../main.xml",
+    "normalized" : "../main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "CLASSPATH:FiLe:a/./main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "a/main.xml",
+    "input" : "CLASSPATH:FiLe:a//main.xml",
+    "normalized" : "a/main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "CLASSPATH:FiLe:a\\..\\main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "CLASSPATH:FiLe:main.xml/",
+    "normalized" : "main.xml/"
+  }, {
+    "stored" : "main.xml  ",
+    "input" : "CLASSPATH:FiLe:main.xml  ",
+    "normalized" : "main.xml  "
+  }, {
+    "stored" : "home/philip/main.xml",
+    "input" : "~/main.xml",
+    "normalized" : "/home/philip/main.xml"
+  }, {
+    "stored" : "home/philip/main.xml",
+    "input" : "~/a/../main.xml",
+    "normalized" : "/home/philip/main.xml"
+  }, {
+    "stored" : "home/main.xml",
+    "input" : "~/../main.xml",
+    "normalized" : "/home/main.xml"
+  }, {
+    "stored" : "home/main.xml",
+    "input" : "~/a/../../main.xml",
+    "normalized" : "/home/main.xml"
+  }, {
+    "stored" : "home/philip/a/main.xml",
+    "input" : "~/a/./main.xml",
+    "normalized" : "/home/philip/a/main.xml"
+  }, {
+    "stored" : "home/philip/a/main.xml",
+    "input" : "~/a//main.xml",
+    "normalized" : "/home/philip/a/main.xml"
+  }, {
+    "stored" : "home/philip/main.xml",
+    "input" : "~/a\\..\\main.xml",
+    "normalized" : "/home/philip/main.xml"
+  }, {
+    "stored" : "home/philip/main.xml",
+    "input" : "~/main.xml/",
+    "normalized" : "/home/philip/main.xml/"
+  }, {
+    "stored" : "home/philip/main.xml  ",
+    "input" : "~/main.xml  ",
+    "normalized" : "/home/philip/main.xml  "
+  }, {
+    "stored" : "\\/server/main.xml",
+    "input" : "\\\\server\\main.xml",
+    "normalized" : "\\/server/main.xml"
+  }, {
+    "stored" : "\\/server/main.xml",
+    "input" : "\\\\server\\a/../main.xml",
+    "normalized" : "\\/server/main.xml"
+  }, {
+    "stored" : "\\/main.xml",
+    "input" : "\\\\server\\../main.xml",
+    "normalized" : "\\/main.xml"
+  }, {
+    "stored" : "\\/main.xml",
+    "input" : "\\\\server\\a/../../main.xml",
+    "normalized" : "\\/main.xml"
+  }, {
+    "stored" : "\\/server/a/main.xml",
+    "input" : "\\\\server\\a/./main.xml",
+    "normalized" : "\\/server/a/main.xml"
+  }, {
+    "stored" : "\\/server/a/main.xml",
+    "input" : "\\\\server\\a//main.xml",
+    "normalized" : "\\/server/a/main.xml"
+  }, {
+    "stored" : "\\/server/main.xml",
+    "input" : "\\\\server\\a\\..\\main.xml",
+    "normalized" : "\\/server/main.xml"
+  }, {
+    "stored" : "\\/server/main.xml",
+    "input" : "\\\\server\\main.xml/",
+    "normalized" : "\\/server/main.xml/"
+  }, {
+    "stored" : "\\/server/main.xml  ",
+    "input" : "\\\\server\\main.xml  ",
+    "normalized" : "\\/server/main.xml  "
+  }, {
+    "stored" : "main.xml",
+    "input" : "\u0000main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\u0000",
+    "input" : "main.xml\u0000",
+    "normalized" : "main.xml\u0000"
+  }, {
+    "stored" : "\bmain.xml",
+    "input" : "\bmain.xml",
+    "normalized" : "\bmain.xml"
+  }, {
+    "stored" : "main.xml\b",
+    "input" : "main.xml\b",
+    "normalized" : "main.xml\b"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\tmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\t",
+    "input" : "main.xml\t",
+    "normalized" : "main.xml\t"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\nmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\n",
+    "input" : "main.xml\n",
+    "normalized" : "main.xml\n"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\u000Bmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\u000B",
+    "input" : "main.xml\u000B",
+    "normalized" : "main.xml\u000B"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\fmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\f",
+    "input" : "main.xml\f",
+    "normalized" : "main.xml\f"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\rmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\r",
+    "input" : "main.xml\r",
+    "normalized" : "main.xml\r"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\u001Cmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\u001C",
+    "input" : "main.xml\u001C",
+    "normalized" : "main.xml\u001C"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\u001Dmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\u001D",
+    "input" : "main.xml\u001D",
+    "normalized" : "main.xml\u001D"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\u001Emain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\u001E",
+    "input" : "main.xml\u001E",
+    "normalized" : "main.xml\u001E"
+  }, {
+    "stored" : "main.xml",
+    "input" : "\u001Fmain.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml\u001F",
+    "input" : "main.xml\u001F",
+    "normalized" : "main.xml\u001F"
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : "main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : "main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "᠎main.xml",
+    "input" : "᠎main.xml",
+    "normalized" : "᠎main.xml"
+  }, {
+    "stored" : "main.xml᠎",
+    "input" : "main.xml᠎",
+    "normalized" : "main.xml᠎"
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "​main.xml",
+    "input" : "​main.xml",
+    "normalized" : "​main.xml"
+  }, {
+    "stored" : "main.xml​",
+    "input" : "main.xml​",
+    "normalized" : "main.xml​"
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : "‪main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml‪",
+    "input" : "main.xml‪",
+    "normalized" : "main.xml‪"
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "main.xml",
+    "input" : " main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml ",
+    "input" : "main.xml ",
+    "normalized" : "main.xml "
+  }, {
+    "stored" : "⁠main.xml",
+    "input" : "⁠main.xml",
+    "normalized" : "⁠main.xml"
+  }, {
+    "stored" : "main.xml⁠",
+    "input" : "main.xml⁠",
+    "normalized" : "main.xml⁠"
+  }, {
+    "stored" : "main.xml",
+    "input" : "　main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml　",
+    "input" : "main.xml　",
+    "normalized" : "main.xml　"
+  }, {
+    "stored" : "main.xml",
+    "input" : "﻿main.xml",
+    "normalized" : "main.xml"
+  }, {
+    "stored" : "main.xml﻿",
+    "input" : "main.xml﻿",
+    "normalized" : "main.xml﻿"
+  } ]
+}

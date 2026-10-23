@@ -1,0 +1,347 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<domain>
+    <type name="root">
+        <attribute name="isNumber" value="false" />
+        <attribute name="isBool" value="false" />
+        <attribute name="isString" value="false" />
+        <attribute name="isDate" value="false" />
+        <attribute name="isTime" value="false" />
+        <attribute name="isText" value="false" />
+        <attribute name="isId" value="false" />
+        <attribute name="isVersion" value="false" />
+        <attribute name="isBaseEntityField" value="false" />
+        <attribute name="isPassword" value="false" />
+    </type>
+
+    <type name="id">
+        <attribute name="javaType" value="java.lang.Long" />
+        <attribute name="sqlType" value="BIGINT" />
+        <attribute name="graphqlType" value="Long" />
+        <attribute name="oracle_sqlType" value="number(11)" />
+        <attribute name="snowflake_sqlType" value="number" />
+        <attribute name="isId" value="true" />
+        <attribute name="isBaseEntityField" value="true" />
+    </type>
+
+    <type name="version">
+        <attribute name="javaType" value="java.lang.Long" />
+        <attribute name="sqlType" value="BIGINT" />
+        <attribute name="graphqlType" value="Long" />
+        <attribute name="oracle_sqlType" value="number(11)" />
+        <attribute name="snowflake_sqlType" value="number" />
+        <attribute name="isVersion" value="true" />
+        <attribute name="isBaseEntityField" value="true" />
+    </type>
+
+    <type name="string" default="true">
+        <attribute name="max" value="100" />
+        <attribute name="isString" value="true" />
+        <attribute name="graphqlType" value="String" />
+        <attribute name="sqlType" value="VARCHAR(&lt;max&gt;)" />
+        <attribute name="javaType" value="java.lang.String" />
+    </type>
+
+    <type name="businessId" parent="string">
+        <attribute name="isBusinessId" value="true" />
+        <attribute name="profile" value="daily-permuted-v1" />
+        <attribute name="splitbydate" value="true" />
+        <attribute name="dateFormat" value="yyyyMMdd" />
+        <attribute name="reset" value="daily" />
+        <attribute name="preserve_digits" value="6" />
+        <attribute name="separator" value="-" />
+        <attribute name="policyVersion" value="1" />
+        <attribute name="max" value="100" />
+    </type>
+
+    <type name="business_id" parent="businessId" />
+
+    <type name="text" parent="string">
+        <attribute name="sqlType" value="LARGE_TEXT" />
+        <attribute name="isText" value="true" />
+        <attribute name="optional" value="true" />
+        <attribute name="max" deleted="true" />
+        <attribute name="javaType" value="java.lang.String" />
+    </type>
+
+    <type name="jsonMe" parent="text">
+        <attribute name="zip" value="true" />
+        <attribute name="propertyDescriptor" value="io.teaql.data.sql.JsonMeProperty" />
+    </type>
+
+    <type name="number">
+        <attribute name="javaType" value="java.math.BigDecimal" />
+        <attribute name="graphqlType" value="BigDecimal" />
+        <attribute name="sqlType" value="NUMERIC(19,7)" />
+        <attribute name="oracle_sqlType" value="number(19,7)" />
+        <attribute name="db2_sqlType" value="decimal(19,7)" />
+        <attribute name="isNumber" value="true" />
+    </type>
+
+    <type name="float" parent="number">
+        <attribute name="javaType" value="java.lang.Float" />
+        <attribute name="graphqlType" value="Float" />
+        <attribute name="sqlType" value="REAL" />
+        <attribute name="oracle_sqlType" value="binary_float" />
+        <attribute name="isFloat" value="true" />
+    </type>
+
+    <type name="double" parent="number">
+        <attribute name="javaType" value="java.lang.Double" />
+        <attribute name="graphqlType" value="Float" />
+        <attribute name="sqlType" value="DOUBLE PRECISION" />
+        <attribute name="mysql_sqlType" value="DOUBLE" />
+        <attribute name="oracle_sqlType" value="binary_double" />
+        <attribute name="mssql_sqlType" value="FLOAT" />
+        <attribute name="isDouble" value="true" />
+    </type>
+
+    <type name="integer" parent="number">
+        <attribute name="graphqlType" value="Int" />
+        <attribute name="javaType" value="java.lang.Integer" />
+        <attribute name="sqlType" value="INTEGER" />
+        <attribute name="isInt" value="true" />
+    </type>
+
+    <type name="long" parent="number">
+        <attribute name="graphqlType" value="Long" />
+        <attribute name="javaType" value="java.lang.Long" />
+        <attribute name="sqlType" value="BIGINT" />
+        <attribute name="oracle_sqlType" value="number(11)" />
+        <attribute name="snowflake_sqlType" value="number" />
+    </type>
+
+    <type name="bool">
+        <attribute name="javaType" value="java.lang.Boolean" />
+        <attribute name="sqlType" value="BOOLEAN" />
+        <attribute name="graphqlType" value="Boolean" />
+        <attribute name="oracle_sqlType" value="number(1)" />
+        <attribute name="mssql_sqlType" value="bit" />
+        <attribute name="isBool" value="true" />
+    </type>
+
+    <type name="date">
+        <attribute name="isDate" value="true" />
+        <attribute name="javaType" value="java.time.LocalDate" />
+        <attribute name="graphqlType" value="Date" />
+        <attribute name="sqlType" value="DATE" />
+    </type>
+
+    <type name="time">
+        <attribute name="isTime" value="true" />
+        <attribute name="javaType" value="java.time.LocalTime" />
+        <attribute name="graphqlType" value="Time" />
+        <attribute name="sqlType" value="TIME" />
+    </type>
+
+    <type name="dateTime">
+        <attribute name="isDate" value="true" />
+        <attribute name="isTime" value="true" />
+        <attribute name="mssql_sqlType" value="dateTime" />
+        <attribute name="isDateTime" value="true" />
+        <attribute name="javaType" value="java.time.LocalDateTime" />
+        <attribute name="graphqlType" value="LocalTime" />
+        <attribute name="sqlType" value="TIMESTAMP" />
+    </type>
+
+    <type name="createTime" parent="dateTime">
+        <attribute name="createFunction" value="now" />
+    </type>
+
+    <type name="updateTime" parent="dateTime">
+        <attribute name="createFunction" value="now" />
+        <attribute name="updateFunction" value="now" />
+    </type>
+
+    <type name="password" parent="string">
+        <attribute name="isPassword" value="true" />
+    </type>
+
+    <type name="uniStr" parent="string">
+        <attribute name="createFunction" value="uniStr" />
+        <attribute name="createFunctionArgNames" value="prefix" />
+        <attribute name="prefix" value="" />
+    </type>
+
+
+    <type_matcher pattern="^\d+$" type="integer" order="1" />
+    <type_matcher pattern="^\d+(l|L)$" type="long" order="2" />
+    <type_matcher pattern="^[+-]?(\d+(\.\d*)?|\.\d+)(f|F)$" type="float" order="3" />
+    <type_matcher pattern="^[+-]?(\d+(\.\d*)?|\.\d+)(d|D)$" type="double" order="4" />
+    <type_matcher pattern="^\d+\.\d+$" type="number" order="5" />
+    <type_matcher pattern="^(true)|(false)|(on)|(off)|(yes)|(no)$" type="bool" order="6" />
+    <type_matcher pattern="^\d{4}-\d{1,2}-\d{1,2}T\d{1,2}\:\d{1,2}\:\d{1,2}$" type="dateTime" order="7" />
+    <type_matcher pattern="^\d{4}-\d{1,2}-\d{1,2}$" type="date" order="8" />
+
+    <data-service name="postgres" default="true" support_stack="java,rust,golang,dotnet,python,typescript">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.sql.SQLRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-postgres" />
+        <attribute name="driverGroupId" value="org.postgresql" />
+        <attribute name="driverArtifactId" value="postgresql" />
+        <attribute name="driverClass" value="org.postgresql.Driver" />
+        <attribute name="jdbcUrl" value="jdbc:postgresql://localhost:5432/${databaseName}" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="mysql" support_stack="java,rust,golang,dotnet,python,typescript">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.mysql.MysqlRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-mysql" />
+        <attribute name="driverGroupId" value="com.mysql" />
+        <attribute name="driverArtifactId" value="mysql-connector-j" />
+        <attribute name="driverClass" value="com.mysql.cj.jdbc.Driver" />
+        <attribute name="jdbcUrl" value="jdbc:mysql://localhost:3306/${databaseName}?useSSL=false&amp;serverTimezone=UTC" />
+        <attribute name="quoteCharForKeywords" value="`" />
+    </data-service>
+
+    <data-service name="oracle" support_stack="java,rust">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.oracle.OracleRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-oracle" />
+        <attribute name="driverGroupId" value="com.oracle.database.jdbc" />
+        <attribute name="driverArtifactId" value="ojdbc11" />
+        <attribute name="driverClass" value="oracle.jdbc.OracleDriver" />
+        <attribute name="jdbcUrl" value="jdbc:oracle:thin:@//localhost:1521/${databaseName}" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="hana" support_stack="java,rust">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.hana.HanaRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-hana" />
+        <attribute name="driverGroupId" value="com.sap.cloud.db.jdbc" />
+        <attribute name="driverArtifactId" value="ngdbc" />
+        <attribute name="driverClass" value="com.sap.db.jdbc.Driver" />
+        <attribute name="jdbcUrl" value="jdbc:sap://localhost:39015/?databaseName=${databaseName}" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="db2" support_stack="java,rust">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.db2.DB2Repository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-db2" />
+        <attribute name="driverGroupId" value="com.ibm.db2" />
+        <attribute name="driverArtifactId" value="jcc" />
+        <attribute name="driverClass" value="com.ibm.db2.jcc.DB2Driver" />
+        <attribute name="jdbcUrl" value="jdbc:db2://localhost:50000/${databaseName}" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="dm8" support_stack="java">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.sql.SQLRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-dm8" />
+        <attribute name="driverGroupId" value="com.dameng" />
+        <attribute name="driverArtifactId" value="DmJdbcDriver18" />
+        <attribute name="driverVersion" value="8.1.2.141" />
+        <attribute name="driverClass" value="dm.jdbc.driver.DmDriver" />
+        <attribute name="jdbcUrl" value="jdbc:dm://localhost:5236" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="mssql" support_stack="java,dotnet">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.mssql.MSSqlRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-mssql" />
+        <attribute name="driverGroupId" value="com.microsoft.sqlserver" />
+        <attribute name="driverArtifactId" value="mssql-jdbc" />
+        <attribute name="driverClass" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
+        <attribute name="jdbcUrl" value="jdbc:sqlserver://localhost:1433;databaseName=${databaseName};encrypt=false" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="sqlserver" support_stack="java,dotnet">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.mssql.MSSqlRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-mssql" />
+        <attribute name="driverGroupId" value="com.microsoft.sqlserver" />
+        <attribute name="driverArtifactId" value="mssql-jdbc" />
+        <attribute name="driverClass" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
+        <attribute name="jdbcUrl" value="jdbc:sqlserver://localhost:1433;databaseName=${databaseName};encrypt=false" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="snowflake" support_stack="java,rust">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.snowflake.SnowflakeRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-snowflake" />
+        <attribute name="driverGroupId" value="net.snowflake" />
+        <attribute name="driverArtifactId" value="snowflake-jdbc" />
+        <attribute name="driverClass" value="net.snowflake.client.jdbc.SnowflakeDriver" />
+        <attribute name="jdbcUrl" value="jdbc:snowflake://account.snowflakecomputing.com/?db=${databaseName}" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="mem" support_stack="java,rust">
+        <attribute name="sqlRepository" value="false" />
+        <attribute name="repositoryClass" value="io.teaql.data.memory.MemoryRepository" />
+        <attribute name="entityClass" value="io.teaql.data.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-memory" />
+        <attribute name="driverGroupId" value="" />
+        <attribute name="driverArtifactId" value="" />
+        <attribute name="driverClass" value="" />
+        <attribute name="jdbcUrl" value="" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+
+    <data-service name="duck" support_stack="java,rust">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.duck.DuckRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-duckdb" />
+        <attribute name="driverGroupId" value="org.duckdb" />
+        <attribute name="driverArtifactId" value="duckdb_jdbc" />
+        <attribute name="driverClass" value="org.duckdb.DuckDBDriver" />
+        <attribute name="jdbcUrl" value="jdbc:duckdb:${databaseName}.duckdb" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+    <data-service name="duckdb" support_stack="java,rust">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.duck.DuckRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-duckdb" />
+        <attribute name="driverGroupId" value="org.duckdb" />
+        <attribute name="driverArtifactId" value="duckdb_jdbc" />
+        <attribute name="driverClass" value="org.duckdb.DuckDBDriver" />
+        <attribute name="jdbcUrl" value="jdbc:duckdb:${databaseName}.duckdb" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+    
+    <data-service name="sqlite" support_stack="java,rust,golang,dotnet,python,typescript">
+        <attribute name="sqlRepository" value="true" />
+        <attribute name="repositoryClass" value="io.teaql.data.sqlite.SQLiteRepository" />
+        <attribute name="entityClass" value="io.teaql.core.meta.EntityDescriptor" />
+        <attribute name="dependency" value="io.teaql:teaql-sqlite" />
+        <attribute name="driverGroupId" value="org.xerial" />
+        <attribute name="driverArtifactId" value="sqlite-jdbc" />
+        <attribute name="driverClass" value="org.sqlite.JDBC" />
+        <attribute name="driverVersion" value="3.45.2.0" />
+        <attribute name="jdbcUrl" value="jdbc:sqlite:${databaseName}.db" />
+        <attribute name="quoteCharForKeywords" value="\&quot;" />
+    </data-service>
+
+
+
+
+<data-service name="linux" support_stack="rust">
+    <attribute name="driverGroupId" value="" />
+        <attribute name="driverArtifactId" value="" />
+        <attribute name="driverClass" value="" />
+    <attribute name="jdbcUrl" value="" />
+    <attribute name="quoteCharForKeywords" value="&quot;" />
+</data-service>
+
+<data-service name="rusqlite" support_stack="rust"><attribute name="driverGroupId" value="" />
+        <attribute name="driverArtifactId" value="" />
+        <attribute name="driverClass" value="" /><attribute name="jdbcUrl" value="" /><attribute name="quoteCharForKeywords" value="&quot;" /></data-service></domain>

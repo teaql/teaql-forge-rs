@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root cfg_mask_china_mobile="false"
+      data_service="postgres"
+      name="crm-erp-service"
+      org="doublechaintech"
+      _module_key="root">
+
+    <platform
+            name="CRPERPPlatform"
+            create_time="createTime()"
+            last_update_time="updateTime()"
+            _module_key="platform"
+            _module="platform"
+            _name="System Platform"
+    />
+
+    <merchant
+            _module_key="organizational_structure"
+            _name="Organization"
+            _module="organization"
+            name="Global Logistics and Service Corporation"
+            tax_number="91XXXXXXXXXXXXX"
+            address="Headquarters Address"
+            external_id="MERCHANT_GLOBAL_ID"
+            platform="platform()"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <gender_type
+            _name="Gender Type"
+            _module="platform_data"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Male" code="MALE"/>
+        <_value id="2" name="Female" code="FEMALE"/>
+        <_value id="3" name="Undisclosed" code="OTHER"/>
+    </gender_type>
+
+    <employee
+            _name="Employee"
+            _module="employee_and_payroll"
+            _module_key="employee_management"
+            employee_number="EMP00001"
+            name="Liisa Koivisto"
+            gender="gender_type()"
+            birth_date="1985-01-01"
+            mobile_phone="+358401234567"
+            email="liisa.koivisto@corp.com"
+            job_title="Department Manager"
+            hiring_date="2020-01-01"
+            amount="12000.00"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+    <discount_code
+            _name="Discount Code"
+            _module="marketing_and_sales"
+            _module_key="discount_codes"
+            code="SAVE10PERCENT"
+            discount_value="0.10"
+            max_uses="1000"
+            is_active="true"
+            merchant="merchant(context)"
+            create_time="createTime()"
+    />
+
+    <shipment_status_type
+            _name="Shipment Status"
+            _module="operations_and_logistics"
+            _module_key="basic_data"
+            id="id()"
+            name="string()"
+            code="string()"
+            merchant="merchant(context)"
+            _constant="true"
+            _identifier="code"
+    >
+        <_value id="1" name="Pending" code="PENDING"/>
+        <_value id="2" name="Assigned" code="ASSIGNED"/>
+        <_value id="3" name="In Transit" code="IN_TRANSIT"/>
+        <_value id="4" name="Delivered" code="DELIVERED"/>
+        <_value id="5" name="Canceled" code="CANCELED"/>
+    </shipment_status_type>
+
+    <shipment
+            _name="Shipment"
+            _module="operations_and_logistics"
+            _module_key="moves"
+            shipment_number="SHP00001"
+            scheduled_date="2025-12-01"
+            status="shipment_status_type()"
+            total_value="12000.50"
+            merchant="merchant(context)"
+            create_time="createTime()"
+            update_time="updateTime()"
+    />
+
+</root>

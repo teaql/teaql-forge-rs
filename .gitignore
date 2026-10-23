@@ -23,6 +23,6 @@ target
 server.log
 teaql-forge-server-bin
 *.py
+!scripts/*.py
 __pycache__/
 *.pyc
-

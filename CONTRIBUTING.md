@@ -1,6 +1,6 @@
 # Contributing to teaql-forge-rs
 
-First off, thank you for considering contributing to `teaql-forge-rs`. 
+First off, thank you for considering contributing to `teaql-forge-rs`.
 
 ## Where do I go from here?
 

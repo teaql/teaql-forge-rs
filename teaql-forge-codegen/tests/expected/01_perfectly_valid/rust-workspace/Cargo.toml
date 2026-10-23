@@ -1,7 +1,0 @@
-[workspace]
-members = [
-    "lib",
-    "rust-app-console",
-    "rust-web-axum"
-]
-resolver = "2"

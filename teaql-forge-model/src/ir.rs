@@ -2,8 +2,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Domain {
+    #[serde(skip)]
+    pub source_field_attributes: crate::field_attributes::Fields,
     pub name: String,
     pub entities: Vec<Entity>,
+    #[serde(default)]
+    pub root_attributes: std::collections::BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub root_attributes_ordered: Vec<(String, String)>,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub source_types: std::collections::BTreeMap<String, Vec<crate::types::TypeAttribute>>,
+    #[serde(skip)]
+    pub source_type_states: Vec<crate::types::TypeState>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_data_services: Vec<crate::data_services::DataService>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,6 +28,8 @@ pub struct Entity {
     pub audit_mask_fields: Option<String>,
     pub audit_value_max_len: Option<usize>,
     pub metadata: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub metadata_ordered: Vec<(String, String)>,
     pub seed_values: Vec<SeedValue>,
     #[serde(default)]
     pub line_number: usize,
@@ -38,6 +52,12 @@ pub enum EntityMember {
 pub struct Field {
     pub name: String,
     pub ty: FieldType,
+    #[serde(default)]
+    pub source_type_name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub type_attributes: Vec<crate::types::TypeAttribute>,
+    #[serde(default)]
+    pub source_order: usize,
     pub required: bool,
     pub unique: bool,
     #[serde(default)]
@@ -46,6 +66,19 @@ pub struct Field {
     pub xml_path: String,
     #[serde(default)]
     pub metadata: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub source_value: String,
+}
+
+impl Field {
+    pub fn attribute(&self, name: &str) -> Option<&str> {
+        self.metadata.get(name).map(String::as_str).or_else(|| {
+            self.type_attributes
+                .iter()
+                .find(|attribute| attribute.name == name)
+                .map(|attribute| attribute.value.as_str())
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -85,9 +118,15 @@ impl std::str::FromStr for FieldType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Relation {
     pub name: String,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub metadata: std::collections::BTreeMap<String, String>,
     pub target: String,
+    #[serde(default)]
+    pub source_order: usize,
     pub cardinality: Cardinality,
     pub required: bool,
+    #[serde(default)]
+    pub source_value: String,
     #[serde(default)]
     pub line_number: usize,
     #[serde(default)]

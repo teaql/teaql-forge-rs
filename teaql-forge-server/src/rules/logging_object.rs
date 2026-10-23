@@ -2,26 +2,64 @@ use crate::eval::{EvaluationItem, EvaluationResponse};
 use roxmltree::Document;
 use std::collections::HashSet;
 
-pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationResponse, xml_path: &str) {
+pub fn evaluate_logging_object_rule(
+    doc: &Document,
+    response: &mut EvaluationResponse,
+    xml_path: &str,
+) {
     let timestamp_names: HashSet<&str> = [
-        "log_timestamp", "event_time", "created_at", "create_time",
-        "log_time", "action_time", "occurred_at", "event_date"
-    ].iter().cloned().collect();
+        "log_timestamp",
+        "event_time",
+        "created_at",
+        "create_time",
+        "log_time",
+        "action_time",
+        "occurred_at",
+        "event_date",
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let user_names: HashSet<&str> = [
-        "action_user", "user_id", "action_operator", "operator_id",
-        "log_author", "created_by", "actor_id"
-    ].iter().cloned().collect();
+        "action_user",
+        "user_id",
+        "action_operator",
+        "operator_id",
+        "log_author",
+        "created_by",
+        "actor_id",
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let user_display_name_names: HashSet<&str> = [
-        "action_user_name", "user_name", "action_operator_name", "operator_name",
-        "log_author_name", "created_by_name", "actor_name"
-    ].iter().cloned().collect();
+        "action_user_name",
+        "user_name",
+        "action_operator_name",
+        "operator_name",
+        "log_author_name",
+        "created_by_name",
+        "actor_name",
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let purpose_names: HashSet<&str> = [
-        "log_purpose", "log_reason", "log_description", "log_message",
-        "action_type", "event_type", "log_type", "log_category"
-    ].iter().cloned().collect();
+        "log_purpose",
+        "log_reason",
+        "log_description",
+        "log_message",
+        "action_type",
+        "event_type",
+        "log_type",
+        "log_category",
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let root = doc.root_element();
     if root.tag_name().name() != "root" && root.tag_name().name() != "_root" {
@@ -37,14 +75,35 @@ pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationRes
         let path = format!("/root/{}", tag);
         let line_number = doc.text_pos_at(obj_el.range().start).row as usize;
 
-        let is_log = obj_el.attribute("_log").map(|v| v == "true").unwrap_or(false) || is_log_via_features(&obj_el);
-        let is_constant = obj_el.attribute("_constant").map(|v| v == "true").unwrap_or(false);
-        let is_view_object = obj_el.attribute("_viewObject").map(|v| v == "true").unwrap_or(false);
-        let is_value_object = obj_el.attribute("_valueObject").map(|v| v == "true").unwrap_or(false);
-        let is_transient = obj_el.attribute("_transient").map(|v| v == "true").unwrap_or(false);
+        let is_log = obj_el
+            .attribute("_log")
+            .map(|v| v == "true")
+            .unwrap_or(false)
+            || is_log_via_features(&obj_el);
+        let is_constant = obj_el
+            .attribute("_constant")
+            .map(|v| v == "true")
+            .unwrap_or(false);
+        let is_view_object = obj_el
+            .attribute("_viewObject")
+            .map(|v| v == "true")
+            .unwrap_or(false);
+        let is_value_object = obj_el
+            .attribute("_valueObject")
+            .map(|v| v == "true")
+            .unwrap_or(false);
+        let is_transient = obj_el
+            .attribute("_transient")
+            .map(|v| v == "true")
+            .unwrap_or(false);
 
         if !is_log {
-            if tag.ends_with("_log") && !is_constant && !is_view_object && !is_value_object && !is_transient {
+            if tag.ends_with("_log")
+                && !is_constant
+                && !is_view_object
+                && !is_value_object
+                && !is_transient
+            {
                 response.warnings.push(EvaluationItem {
                     rule_id: "KSML-LOG-007".to_string(),
                     title: "Object name suggests logging semantics".to_string(),
@@ -124,7 +183,9 @@ pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationRes
             }
         }
 
-        let has_timestamp = field_names.iter().any(|name| timestamp_names.contains(name.as_str()));
+        let has_timestamp = field_names
+            .iter()
+            .any(|name| timestamp_names.contains(name.as_str()));
         if !has_timestamp {
             response.errors.push(EvaluationItem {
                 rule_id: "KSML-LOG-003".to_string(),
@@ -138,7 +199,9 @@ pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationRes
             });
         }
 
-        let has_user = field_names.iter().any(|name| user_names.contains(name.as_str()));
+        let has_user = field_names
+            .iter()
+            .any(|name| user_names.contains(name.as_str()));
         if !has_user {
             response.errors.push(EvaluationItem {
                 rule_id: "KSML-LOG-004".to_string(),
@@ -152,7 +215,9 @@ pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationRes
             });
         }
 
-        let has_user_display_name = field_names.iter().any(|name| user_display_name_names.contains(name.as_str()));
+        let has_user_display_name = field_names
+            .iter()
+            .any(|name| user_display_name_names.contains(name.as_str()));
         if has_user && !has_user_display_name {
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-LOG-008".to_string(),
@@ -179,7 +244,9 @@ pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationRes
             });
         }
 
-        let has_purpose = field_names.iter().any(|name| purpose_names.contains(name.as_str()));
+        let has_purpose = field_names
+            .iter()
+            .any(|name| purpose_names.contains(name.as_str()));
         if !has_purpose {
             response.warnings.push(EvaluationItem {
                 rule_id: "KSML-LOG-006".to_string(),
@@ -192,7 +259,7 @@ pub fn evaluate_logging_object_rule(doc: &Document, response: &mut EvaluationRes
                 line_number,
             });
         }
-        
+
         // Note: Java also adds solids for KSML-LOG-001, but response struct only has errors and warnings in Rust version.
     }
 }

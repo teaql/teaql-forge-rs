@@ -1,0 +1,381 @@
+index(domain, objectDescriptor) ::= <<
+
+// ⛔ AI agents: DO NOT read this file for API discovery. Instead run: cargo teaql --input modeling/MODEL.xml rust-assist-query/<objectDescriptor.rustModuleName>
+use std::collections::BTreeMap;
+
+use teaql_macros::{teaql_entity, TeaqlEntity};
+
+<objectDescriptor.businessIdFields:businessIdValueType();separator="\n\n">
+
+<if(objectDescriptor.xmlPath)>
+// @source <objectDescriptor.xmlPath>:<objectDescriptor.lineNumber>
+<endif>
+/// [TEAQL AI WARNING]
+/// TeaQL was explicitly designed to PREVENT AI hallucinations and random guessing.
+/// DO NOT GUESS METHOD NAMES!
+/// The methods listed below are the ONLY valid ways to interact with this entity.
+/// If you encounter compilation errors (e.g., method not found), DO NOT guess another method name.
+/// Read the method signatures in this file before proceeding.
+#[teaql_entity]
+#[derive(Clone, Debug, PartialEq, TeaqlEntity)]
+<objectDescriptor.rustOneToOneRelations:reverseRelationDescriptorAttr();separator="\n">
+<objectDescriptor.rustOneToManyRelations:reverseRelationDescriptorAttr();separator="\n">
+<if(objectDescriptor.dataService)>
+#[teaql(entity = "<objectDescriptor.rustStructName>", table = "<objectDescriptor.rustTableName>", data_service = "<objectDescriptor.dataService.name>", audit_mask_fields = "<objectDescriptor.canonicalAuditMaskFields>"<if(objectDescriptor.audit_value_max_len)>, audit_value_max_len = <objectDescriptor.audit_value_max_len><endif>)]
+<else>
+#[teaql(entity = "<objectDescriptor.rustStructName>", table = "<objectDescriptor.rustTableName>", audit_mask_fields = "<objectDescriptor.canonicalAuditMaskFields>"<if(objectDescriptor.audit_value_max_len)>, audit_value_max_len = <objectDescriptor.audit_value_max_len><endif>)]
+<endif>
+pub struct <objectDescriptor.rustStructName> {
+<objectDescriptor.rustScalarFields:storageField();separator="\n">
+<objectDescriptor.rustObjectFields:storageField();separator="\n">
+<objectDescriptor.rustObjectFields:objectRelationField();separator="\n">
+    #[teaql(dynamic)]
+    dynamic: BTreeMap\<String, teaql_core::Value\>,
+    #[teaql(skip)]
+    pub __load_state: teaql_core::eval::LoadState,
+}
+
+impl <objectDescriptor.rustStructName> {
+    pub const ENTITY_NAME: &'static str = "<objectDescriptor.name>";
+
+    pub fn with_id(id: u64) -> teaql_core::Value {
+        teaql_core::Value::U64(id)
+    }
+
+    pub(crate) fn runtime_new(root: teaql_runtime::EntityRuntimeState) -> Self {
+        Self {
+<objectDescriptor.rustScalarFields:defaultStorageField();separator="\n">
+<objectDescriptor.rustObjectFields:defaultStorageField();separator="\n">
+<objectDescriptor.rustObjectFields:defaultObjectRelationField();separator="\n">
+            dynamic: BTreeMap::new(),
+            __teaql_runtime_state: root,
+            __load_state: teaql_core::eval::LoadState::FullyLoaded,
+        }
+    }
+
+    pub fn attach_runtime_state_recursive(&mut self, root: teaql_runtime::EntityRuntimeState) {
+        root.adopt_mutations_from(self.__teaql_runtime_state());
+        self.__teaql_replace_runtime_state(root.clone());
+<objectDescriptor.rustObjectFields:attachObjectRoot();separator="\n">
+    }
+
+    pub fn is_loaded(&self, field_or_relation: &str) -> bool {
+        self.__load_state.is_loaded(field_or_relation)
+    }
+
+    pub fn set_load_state(&mut self, state: teaql_core::eval::LoadState) {
+        self.__load_state = state;
+    }
+
+<objectDescriptor.rustScalarFields:changeSetMethods();separator="\n\n">
+<objectDescriptor.rustObjectFields:objectChangeSetMethods();separator="\n\n">
+<objectDescriptor.constantObjectFields:constantObjectUpdateMethods();separator="\n\n">
+<objectDescriptor.rustObjectFields:objectRelationMethods();separator="\n\n">
+<objectDescriptor.rustOneToOneRelations:oneToOneReverseRelationMethods();separator="\n\n">
+<objectDescriptor.rustOneToManyRelations:oneToManyReverseRelationMethods();separator="\n\n">
+
+}
+
+<objectDescriptor.businessIdFields:businessIdSlot(objectDescriptor);separator="\n\n">
+
+>>
+
+businessIdValueType(field) ::= <<
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct <field.rustBusinessIdTypeName>(String);
+
+impl <field.rustBusinessIdTypeName> {
+    pub fn new(value: impl Into\<String\>) -> Result\<Self, &'static str\> {
+        let value = value.into().trim().to_owned();
+        if value.is_empty() {
+            return Err("<field.canonicalPropertyName> must not be blank");
+        }
+        Ok(Self(value))
+    }
+
+    pub(crate) fn from_canonical(value: impl Into\<String\>) -> Self {
+        Self(value.into())
+    }
+
+    pub fn as_str(&self) -> &str { &self.0 }
+
+    pub fn definition() -> teaql_core::business_id::BusinessIdDefinition {
+        teaql_core::business_id::BusinessIdDefinition {
+            field_name: "<field.canonicalPropertyName>".to_owned(),
+            profile: "<field.businessIdProfile>".to_owned(),
+            prefix: "<field.businessIdPrefix>".to_owned(),
+            namespace: "<field.businessIdNamespace>".to_owned(),
+            split_by_date: <field.businessIdSplitByDate>,
+            preserve_digits: <field.businessIdDigits>,
+            separator: "<field.businessIdSeparator>".to_owned(),
+        }
+    }
+}
+
+impl From\<<field.rustBusinessIdTypeName>\> for teaql_core::Value {
+    fn from(value: <field.rustBusinessIdTypeName>) -> Self {
+        teaql_core::Value::Text(value.0)
+    }
+}
+
+impl From\<&<field.rustBusinessIdTypeName>\> for teaql_core::Value {
+    fn from(value: &<field.rustBusinessIdTypeName>) -> Self {
+        teaql_core::Value::Text(value.0.clone())
+    }
+}
+>>
+
+businessIdSlot(field, objectDescriptor) ::= <<
+pub(crate) struct <field.rustBusinessIdSlotTypeName>\<'a\>(
+    pub(crate) &'a mut <objectDescriptor.rustStructName>,
+    pub(crate) bool,
+);
+
+impl teaql_core::business_id::BusinessIdSlot for <field.rustBusinessIdSlotTypeName>\<'_\> {
+    fn current_business_id(&self) -> Option\<&str\> {
+        (!self.0.<field.rustStorageMemberName>.is_empty()).then_some(self.0.<field.rustStorageMemberName>.as_str())
+    }
+
+    fn is_new_aggregate(&self) -> bool {
+        self.1
+    }
+
+    fn assign_business_id(&mut self, value: teaql_core::business_id::BusinessIdValue) {
+        self.0.update_<field.rustStorageMemberName>(<field.rustBusinessIdTypeName>::from_canonical(value.0));
+    }
+}
+>>
+
+storageField(fieldDescriptor) ::= <<
+<if(fieldDescriptor.xmlPath)>
+// @source <fieldDescriptor.xmlPath>:<fieldDescriptor.lineNumber>
+<endif>
+<if(fieldDescriptor.rustFieldAttr)><fieldDescriptor.rustFieldAttr>
+<endif>    <fieldDescriptor.rustStorageMemberName>: <fieldDescriptor.rustStorageType>,
+>>
+
+defaultStorageField(fieldDescriptor) ::= <<
+            <fieldDescriptor.rustStorageMemberName>: <fieldDescriptor.rustDefaultValue>,
+>>
+
+objectRelationField(fieldDescriptor) ::= <<
+<if(fieldDescriptor.xmlPath)>
+// @source <fieldDescriptor.xmlPath>:<fieldDescriptor.lineNumber>
+<endif>
+<fieldDescriptor.rustRelationAttr>
+    <fieldDescriptor.rustMemberName>: Option\<Box\<<fieldDescriptor.rustRelationBorrowType>\>\>,
+>>
+
+defaultObjectRelationField(fieldDescriptor) ::= <<
+            <fieldDescriptor.rustMemberName>: None,
+>>
+
+reverseRelationField(relation) ::= <<
+<if(relation.xmlPath)>
+// @source <relation.xmlPath>:<relation.lineNumber>
+<endif>
+<relation.rustRelationAttr>
+    <relation.rustMemberName>: <relation.rustType>,
+>>
+
+reverseRelationDescriptorAttr(relation) ::= <<
+<relation.rustDescriptorAttr>
+>>
+
+defaultReverseRelationField(relation) ::= <<
+            <relation.rustMemberName>: Default::default(),
+>>
+
+attachObjectRoot(fieldDescriptor) ::= <<
+        if let Some(entity) = &mut self.<fieldDescriptor.rustMemberName> {
+            entity.attach_runtime_state_recursive(root.clone());
+        }
+>>
+
+attachReverseRoot(relation) ::= <<
+        for entity in &mut self.<relation.rustMemberName> {
+            entity.attach_runtime_state_recursive(root.clone());
+        }
+>>
+
+changeSetMethods(fieldDescriptor) ::= <<
+<if(fieldDescriptor.isBusinessId)><businessIdChangeSetMethods(fieldDescriptor)><else>
+    pub fn <fieldDescriptor.rustStorageMemberName>(&self) -> <fieldDescriptor.rustStorageType> {
+        <fieldDescriptor.rustGetterBody>
+    }
+
+<if(fieldDescriptor.rustTimestamp)>
+    pub fn update_<fieldDescriptor.rustStorageMemberName>(&mut self, value: <if(fieldDescriptor.required)>teaql_core::time::Timestamp<else>Option\<teaql_core::time::Timestamp\><endif>) -> &mut Self {
+        self.<fieldDescriptor.rustStorageMemberName> = value;
+        let value = <if(fieldDescriptor.required)>teaql_core::Value::from(value)<else>value.map(teaql_core::Value::from).unwrap_or(teaql_core::Value::Null)<endif>;
+        self.__teaql_runtime_state().set(self.entity_key(), "<fieldDescriptor.rustStorageFieldName>", value);
+        self
+    }
+<else>
+    pub fn update_<fieldDescriptor.rustStorageMemberName>(&mut self, value: impl Into\<teaql_core::Value\>) -> &mut Self {
+        let value = value.into();
+        self.<fieldDescriptor.rustStorageMemberName> = <fieldDescriptor.rustUpdateAssignment>;
+        self.__teaql_runtime_state().set(self.entity_key(), "<fieldDescriptor.rustStorageFieldName>", value);
+        self
+    }
+<endif>
+
+    pub fn changed_<fieldDescriptor.rustStorageMemberName>(&self) -> Option\<teaql_core::Value\> {
+        self.__teaql_runtime_state().get(&self.entity_key(), "<fieldDescriptor.rustStorageFieldName>")
+    }
+
+    pub fn eval_<fieldDescriptor.rustStorageMemberName>(&self) -> teaql_core::eval::EvalResult\<<fieldDescriptor.rustType>\> {
+        <if(fieldDescriptor.required)>if !self.is_loaded("<fieldDescriptor.rustStorageFieldName>") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "<fieldDescriptor.rustStorageFieldName>".to_string(), attempted_path: "<fieldDescriptor.rustStorageFieldName>".to_string() }
+        } else {
+            teaql_core::eval::EvalResult::Value(self.<fieldDescriptor.rustStorageMemberName>())
+        }<else>if !self.is_loaded("<fieldDescriptor.rustStorageFieldName>") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "<fieldDescriptor.rustStorageFieldName>".to_string(), attempted_path: "<fieldDescriptor.rustStorageFieldName>".to_string() }
+        } else {
+            match &self.<fieldDescriptor.rustStorageMemberName> {
+                Some(v) => teaql_core::eval::EvalResult::Value(Some(v.clone())),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }<endif>
+    }
+<endif>
+>>
+
+businessIdChangeSetMethods(fieldDescriptor) ::= <<
+    pub fn <fieldDescriptor.rustStorageMemberName>(&self) -> <fieldDescriptor.rustBusinessIdTypeName> {
+        let value = self.changed_<fieldDescriptor.rustStorageMemberName>()
+            .and_then(|value| value.try_text().map(str::to_owned))
+            .unwrap_or_else(|| self.<fieldDescriptor.rustStorageMemberName>.clone());
+        <fieldDescriptor.rustBusinessIdTypeName>::from_canonical(value)
+    }
+
+    pub fn update_<fieldDescriptor.rustStorageMemberName>(&mut self, value: <fieldDescriptor.rustBusinessIdTypeName>) -> &mut Self {
+        let canonical = value.0.clone();
+        self.<fieldDescriptor.rustStorageMemberName> = canonical.clone();
+        self.__teaql_runtime_state().set(
+            self.entity_key(),
+            "<fieldDescriptor.rustStorageFieldName>",
+            teaql_core::Value::Text(canonical),
+        );
+        self
+    }
+
+    pub fn changed_<fieldDescriptor.rustStorageMemberName>(&self) -> Option\<teaql_core::Value\> {
+        self.__teaql_runtime_state().get(&self.entity_key(), "<fieldDescriptor.rustStorageFieldName>")
+    }
+
+    pub fn eval_<fieldDescriptor.rustStorageMemberName>(&self) -> teaql_core::eval::EvalResult\<<fieldDescriptor.rustBusinessIdTypeName>\> {
+        if !self.is_loaded("<fieldDescriptor.rustStorageFieldName>") {
+            teaql_core::eval::EvalResult::NotLoaded {
+                failed_node: "<fieldDescriptor.rustStorageFieldName>".to_string(),
+                attempted_path: "<fieldDescriptor.rustStorageFieldName>".to_string(),
+            }
+        } else {
+            teaql_core::eval::EvalResult::Value(self.<fieldDescriptor.rustStorageMemberName>())
+        }
+    }
+>>
+
+objectChangeSetMethods(fieldDescriptor) ::= <<
+    pub fn <fieldDescriptor.rustStorageMemberName>(&self) -> <fieldDescriptor.rustStorageType> {
+        <fieldDescriptor.rustGetterBody>
+    }
+
+    <if(fieldDescriptor.contextRoot)>pub(crate) fn<else><if(fieldDescriptor.constantObjectField)>pub(crate) fn<else>pub fn<endif><endif> update_<fieldDescriptor.rustStorageMemberName>(&mut self, value: impl Into\<teaql_core::Value\>) -> &mut Self {
+        let value = value.into();
+        self.<fieldDescriptor.rustStorageMemberName> = <fieldDescriptor.rustUpdateAssignment>;
+        self.__teaql_runtime_state().set(self.entity_key(), "<fieldDescriptor.rustStorageFieldName>", value);
+        self
+    }
+
+    pub fn changed_<fieldDescriptor.rustStorageMemberName>(&self) -> Option\<teaql_core::Value\> {
+        self.__teaql_runtime_state().get(&self.entity_key(), "<fieldDescriptor.rustStorageFieldName>")
+    }
+
+    pub fn eval_<fieldDescriptor.rustStorageMemberName>(&self) -> teaql_core::eval::EvalResult\<<fieldDescriptor.rustStorageType>\> {
+        <if(fieldDescriptor.required)>if !self.is_loaded("<fieldDescriptor.rustStorageFieldName>") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "<fieldDescriptor.rustStorageFieldName>".to_string(), attempted_path: "<fieldDescriptor.rustStorageFieldName>".to_string() }
+        } else {
+            teaql_core::eval::EvalResult::Value(self.<fieldDescriptor.rustStorageMemberName>())
+        }<else>if !self.is_loaded("<fieldDescriptor.rustStorageFieldName>") {
+            teaql_core::eval::EvalResult::NotLoaded { failed_node: "<fieldDescriptor.rustStorageFieldName>".to_string(), attempted_path: "<fieldDescriptor.rustStorageFieldName>".to_string() }
+        } else {
+            match &self.<fieldDescriptor.rustStorageMemberName> {
+                Some(v) => teaql_core::eval::EvalResult::Value(Some(v.clone())),
+                None => teaql_core::eval::EvalResult::Null,
+            }
+        }<endif>
+    }
+>>
+
+constantObjectUpdateMethods(fieldDescriptor) ::= <<
+<fieldDescriptor.candidateForConst:{candidate | <constantObjectUpdateMethod(fieldDescriptor, candidate)>};separator="\n">
+>>
+
+constantObjectUpdateMethod(fieldDescriptor, candidate) ::= <<
+    pub fn update_<fieldDescriptor.rustMemberName>_to_<candidate.rustCandidateMethodValue>(&mut self) -> &mut Self {
+        self.update_<fieldDescriptor.rustStorageMemberName>(<candidate.id>_u64)
+    }
+
+    pub fn <fieldDescriptor.rustMemberName>_is_<candidate.rustCandidateMethodValue>(&self) -> bool {
+        self.<fieldDescriptor.rustStorageMemberName>() == <candidate.id>_u64
+    }
+>>
+
+objectRelationMethods(fieldDescriptor) ::= <<
+    pub fn <fieldDescriptor.rustMemberName>(&self) -> Option\<&<fieldDescriptor.rustRelationBorrowType>\> {
+        self.<fieldDescriptor.rustMemberName>.as_deref().or_else(|| {
+            <if(fieldDescriptor.required)>self.__teaql_runtime_state().resolve_entity(self.<fieldDescriptor.rustStorageMemberName>())<else>self.<fieldDescriptor.rustStorageMemberName>()
+                .and_then(|id| self.__teaql_runtime_state().resolve_entity(id))<endif>
+        })
+    }
+
+    pub fn eval_<fieldDescriptor.rustMemberName>(&self) -> teaql_core::eval::EvalResult\<&<fieldDescriptor.rustRelationBorrowType>\> {
+        match self.<fieldDescriptor.rustMemberName>() {
+            Some(v) => teaql_core::eval::EvalResult::Value(v),
+            None if self.is_loaded("<fieldDescriptor.rustMemberName>") => teaql_core::eval::EvalResult::Null,
+            None => teaql_core::eval::EvalResult::NotLoaded { failed_node: "<fieldDescriptor.rustMemberName>".to_string(), attempted_path: "<fieldDescriptor.rustMemberName>".to_string() },
+        }
+    }
+>>
+
+oneToOneReverseRelationMethods(relation) ::= <<
+    /// Returns the relation view installed by the query that loaded this entity.
+    /// This method never performs an implicit database query.
+    pub fn <relation.rustMemberName>(&self) -> teaql_runtime::RelationHandle\<'_, crate::<relation.child.rustStructName>\> {
+        self.__teaql_runtime_state().relation_option(
+            \<Self as teaql_core::TeaqlEntity\>::ENTITY_NAME,
+            self.id(),
+            "<relation.rustMemberName>",
+        )
+    }
+
+    pub fn eval_<relation.rustMemberName>(&self) -> teaql_core::eval::EvalResult\<&crate::<relation.child.rustStructName>\> {
+        let relation = self.<relation.rustMemberName>();
+        match relation.state() {
+            teaql_runtime::LoadedRelation::Loaded => teaql_core::eval::EvalResult::Value(relation.value().expect("loaded relation must have a value")),
+            teaql_runtime::LoadedRelation::Empty => teaql_core::eval::EvalResult::Null,
+            teaql_runtime::LoadedRelation::NotLoaded => teaql_core::eval::EvalResult::NotLoaded { failed_node: "<relation.rustMemberName>".to_string(), attempted_path: "<relation.rustMemberName>".to_string() },
+        }
+    }
+>>
+
+oneToManyReverseRelationMethods(relation) ::= <<
+    /// Returns the relation view installed by the query that loaded this entity.
+    /// This method never performs an implicit database query.
+    pub fn <relation.rustMemberName>(&self) -> teaql_runtime::RelationHandle\<'_, teaql_core::SmartList\<crate::<relation.child.rustStructName>\>\> {
+        self.__teaql_runtime_state().relation_list(
+            \<Self as teaql_core::TeaqlEntity\>::ENTITY_NAME,
+            self.id(),
+            "<relation.rustMemberName>",
+        )
+    }
+
+    pub fn eval_<relation.rustMemberName>(&self) -> teaql_core::eval::EvalResult\<&teaql_core::SmartList\<crate::<relation.child.rustStructName>\>\> {
+        let relation = self.<relation.rustMemberName>();
+        match relation.state() {
+            teaql_runtime::LoadedRelation::Loaded | teaql_runtime::LoadedRelation::Empty => teaql_core::eval::EvalResult::Value(relation.value().expect("loaded list relation must have a value")),
+            teaql_runtime::LoadedRelation::NotLoaded => teaql_core::eval::EvalResult::NotLoaded { failed_node: "<relation.rustMemberName>".to_string(), attempted_path: "<relation.rustMemberName>".to_string() },
+        }
+    }
+>>

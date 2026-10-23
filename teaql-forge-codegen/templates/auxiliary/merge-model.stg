@@ -1,0 +1,27 @@
+index(naming, domain) ::= <<
+
+\<root
+        <domain.attributes:domainAttr();separator="\n">
+\>
+
+
+   <domain.objectDescriptors:od();separator="\n">
+
+
+\</root>
+>>
+
+domainAttr(domainAttr) ::=<< <domainAttr.name>="<domainAttr.value>" >>
+
+
+od(objectDescriptor)  ::= <<
+    \<<objectDescriptor.originalName>
+        <objectDescriptor.attributes:attribute();separator="\n">
+        <objectDescriptor.properties:prop();separator="\n">
+    /\>
+
+>>
+
+attribute(attr) ::= <<_<attr.name>="<attr.value>">>
+
+prop(fd)  ::= <<<fd.originalName>="<fd.originalValue>">>
