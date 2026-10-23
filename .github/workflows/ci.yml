@@ -7,9 +7,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      LANG: zh_CN.UTF-8
+      LC_ALL: zh_CN.UTF-8
+      LANGUAGE: zh_CN:zh
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - run: sudo locale-gen zh_CN.UTF-8
       - run: cargo check --locked --workspace
       - run: cargo test --locked --workspace
